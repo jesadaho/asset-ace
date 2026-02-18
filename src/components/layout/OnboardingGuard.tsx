@@ -49,6 +49,14 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const { isReady, isLoggedIn, liffId } = useLiff();
   const [checked, setChecked] = useState(false);
 
+  // Redirect based on liff.state/path/redirect immediately, regardless of login
+  useEffect(() => {
+    const queryPath = getIntendedPathFromQuery();
+    if (queryPath && pathname !== queryPath) {
+      router.replace(queryPath);
+    }
+  }, [pathname, router]);
+
   useEffect(() => {
     if (!isReady || !liffId || isLoggedIn !== true) {
       setChecked(true);
