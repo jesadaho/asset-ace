@@ -43,10 +43,6 @@ export default function OnboardingPage() {
     }
   }, [profile?.displayName, name]);
 
-  const handleRoleContinue = () => {
-    if (role) setStep(2);
-  };
-
   const validateStep2 = (): boolean => {
     const next: { name?: string; phone?: string } = {};
     if (!name.trim()) next.name = "Name is required";
@@ -80,8 +76,21 @@ export default function OnboardingPage() {
     <div className="min-h-dvh bg-[#0F172A] text-white safe-area-top">
       <div className="max-w-lg mx-auto px-4 py-12">
         <header className="text-center mb-8">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#10B981]/20 text-[#10B981] mb-4">
-            <User className="h-7 w-7" aria-hidden />
+          <div className="flex flex-col items-center gap-3 mb-4">
+            {profile?.pictureUrl ? (
+              <img
+                src={profile.pictureUrl}
+                alt={profile.displayName || "Profile"}
+                className="h-16 w-16 rounded-full object-cover ring-2 ring-[#10B981]/30"
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#10B981]/20 text-[#10B981]">
+                <User className="h-8 w-8" aria-hidden />
+              </div>
+            )}
+            {profile?.displayName && (
+              <p className="text-white font-medium">{profile.displayName}</p>
+            )}
           </div>
           <h1 className="text-2xl font-bold tracking-tight mb-2">
             Welcome to Asset Ace
@@ -101,7 +110,10 @@ export default function OnboardingPage() {
                 <button
                   key={opt.value}
                   type="button"
-                  onClick={() => setRole(opt.value)}
+                  onClick={() => {
+                  setRole(opt.value);
+                  setStep(2);
+                }}
                   className="w-full text-left"
                 >
                   <Card
@@ -129,15 +141,6 @@ export default function OnboardingPage() {
                 </button>
               );
             })}
-            <Button
-              type="button"
-              size="lg"
-              className="w-full mt-6"
-              onClick={handleRoleContinue}
-              disabled={!role || !isReady}
-            >
-              Continue
-            </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
