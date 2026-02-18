@@ -43,6 +43,13 @@ export default function OnboardingPage() {
     }
   }, [profile?.displayName, name]);
 
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'A,E',location:'onboarding/page.tsx',message:'Onboarding profile state',data:{isReady,profileNull:profile===null,hasPictureUrl:!!profile?.pictureUrl,hasDisplayName:!!profile?.displayName},timestamp:Date.now()})}).catch(()=>{});
+  },[isReady,profile]);
+  const debugData = { isReady, profileNull: profile === null, hasPictureUrl: !!profile?.pictureUrl, hasDisplayName: !!profile?.displayName, pictureUrl: profile?.pictureUrl ? "(set)" : "(empty)" };
+  // #endregion
+
   const validateStep2 = (): boolean => {
     const next: { name?: string; phone?: string } = {};
     if (!name.trim()) next.name = "Name is required";
@@ -76,6 +83,11 @@ export default function OnboardingPage() {
     <div className="min-h-dvh bg-[#0F172A] text-white safe-area-top">
       <div className="max-w-lg mx-auto px-4 py-12">
         <header className="text-center mb-8">
+          {/* #region agent log - visible debug for mobile */}
+          <div className="mb-4 rounded bg-amber-900/80 p-2 text-xs font-mono text-amber-100">
+            DEBUG: {JSON.stringify(debugData)}
+          </div>
+          {/* #endregion */}
           <div className="flex flex-col items-center gap-3 mb-4">
             {profile?.pictureUrl ? (
               <img

@@ -56,10 +56,17 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
 
     try {
       await liff.init({ liffId });
-      setIsLoggedIn(liff.isLoggedIn());
+      const loggedIn = liff.isLoggedIn();
+      setIsLoggedIn(loggedIn);
+      // #region agent log
+      fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'B',location:'LiffProvider.tsx:init',message:'LIFF init done',data:{isLoggedIn:loggedIn},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       if (liff.isLoggedIn()) {
         const profileData = await liff.getProfile();
+        // #region agent log
+        fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'C',location:'LiffProvider.tsx:getProfile',message:'Raw profile from LINE',data:{hasPictureUrl:!!profileData.pictureUrl,pictureUrlLen:profileData.pictureUrl?.length,hasDisplayName:!!profileData.displayName},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         setProfile({
           userId: profileData.userId,
           displayName: profileData.displayName ?? "",
@@ -68,6 +75,9 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
         });
       }
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'D',location:'LiffProvider.tsx:catch',message:'LIFF init error',data:{message:err instanceof Error?err.message:String(err)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       setError(err instanceof Error ? err.message : "Failed to initialize LIFF");
     } finally {
       setIsReady(true);
