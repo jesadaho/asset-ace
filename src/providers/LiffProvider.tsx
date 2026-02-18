@@ -56,33 +56,9 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
 
     try {
       await liff.init({ liffId });
-      const loggedIn = liff.isLoggedIn();
-      setIsLoggedIn(loggedIn);
+      setIsLoggedIn(liff.isLoggedIn());
 
-      if (typeof window !== "undefined") {
-        try {
-          fetch("http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
-            body: JSON.stringify({
-              sessionId: "d6e810",
-              location: "LiffProvider.tsx:initLiff",
-              message: "LIFF init complete",
-              data: {
-                hypothesisId: "H1",
-                loggedIn,
-                href: window.location.href,
-                search: window.location.search,
-                pathname: window.location.pathname,
-                pathParam: new URLSearchParams(window.location.search).get("path"),
-              },
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {});
-        } catch {}
-      }
-
-      if (loggedIn) {
+      if (liff.isLoggedIn()) {
         const profileData = await liff.getProfile();
         setProfile({
           userId: profileData.userId,
