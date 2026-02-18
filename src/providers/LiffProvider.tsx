@@ -57,6 +57,7 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
     try {
       await liff.init({ liffId });
       setIsLoggedIn(liff.isLoggedIn());
+      // Path/query redirect logic runs in OnboardingGuard after login
 
       if (liff.isLoggedIn()) {
         const profileData = await liff.getProfile();

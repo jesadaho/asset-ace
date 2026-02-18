@@ -10,6 +10,23 @@ import {
 
 const ONBOARDING_PATH = "/onboarding";
 
+const ALLOWED_PATHS = [
+  "/",
+  ONBOARDING_PATH,
+  "/owners",
+  "/agents",
+  "/tenants",
+];
+
+function getIntendedPathFromQuery(): string | null {
+  if (typeof window === "undefined") return null;
+  const params = new URLSearchParams(window.location.search);
+  const path = params.get("path") ?? params.get("redirect");
+  if (!path || !path.startsWith("/")) return null;
+  const normalized = path.split("?")[0];
+  return ALLOWED_PATHS.includes(normalized) ? normalized : null;
+}
+
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -28,14 +45,25 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       const status = await checkOnboardingStatus();
       if (cancelled) return;
 
-      if (pathname === ONBOARDING_PATH) {
-        if (status.onboarded && status.role) {
-          router.replace(getRoleDashboardPath(status.role));
+      const queryPath = getIntendedPathFromQuery();
+      let targetPath: string | null = null;
+
+      if (!status.onboarded) {
+        targetPath = ONBOARDING_PATH;
+      } else if (pathname === ONBOARDING_PATH && status.role) {
+        targetPath = getRoleDashboardPath(status.role);
+      } else if (queryPath && queryPath !== pathname) {
+        if (queryPath === ONBOARDING_PATH && status.onboarded && status.role) {
+          targetPath = getRoleDashboardPath(status.role);
+        } else {
+          targetPath = queryPath;
         }
-      } else {
-        if (!status.onboarded) {
-          router.replace(ONBOARDING_PATH);
-        }
+      }
+
+      if (targetPath && pathname !== targetPath) {
+        router.replace(targetPath);
+      } else if (queryPath && typeof window !== "undefined" && window.location.search) {
+        router.replace(pathname);
       }
       setChecked(true);
     }
