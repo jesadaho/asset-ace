@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Asset Ace
+
+A professional multi-tenant property management platform. Target users: **Asset Owners**, **Agents**, and **Tenants**. Built for LINE LIFF with a clean, high-end, mobile-optimized UI.
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Styling**: Tailwind CSS v4
+- **Icons**: Lucide React
+- **LINE Integration**: LIFF SDK (@line/liff)
+- **Database**: MongoDB (Mongoose)
+
+## Design System
+
+- **Deep Navy** (#0F172A) – Primary backgrounds, headers
+- **Mint Green** (#10B981) – Success states, CTAs, highlights
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Installation
+
+```bash
+npm install
+```
+
+### Environment Setup
+
+1. Copy `.env.local.example` to `.env.local`:
+
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. Obtain a LIFF ID from the [LINE Developers Console](https://developers.line.biz/console/):
+   - Create a LINE Login channel (or use an existing one)
+   - Add a LIFF app
+   - Set the endpoint URL to your deployed app URL (HTTPS required)
+   - Copy the LIFF ID and add it to `.env.local`:
+
+   ```
+   NEXT_PUBLIC_LIFF_ID=your-liff-id
+   ```
+
+3. Add your MongoDB connection string (required for onboarding persistence):
+
+   ```
+   MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/asset-ace
+   ```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## LINE LIFF Setup
 
-To learn more about Next.js, take a look at the following resources:
+1. **Register a LIFF app** in the LINE Developers Console
+2. **Set the endpoint URL** to your deployed HTTPS URL (e.g. `https://yourdomain.com`)
+3. **Deploy** – LIFF requires HTTPS in production
+4. **LIFF browser vs external** – In the LINE app, users get LIFF features (profile, share). In an external browser, basic web app behavior applies.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/
+│   ├── api/
+│   │   └── onboarding/     # POST/GET onboarding API
+│   ├── layout.tsx          # Root layout + LiffProvider
+│   ├── page.tsx            # Landing / role selection
+│   ├── onboarding/page.tsx # LIFF onboarding form
+│   ├── globals.css         # Design system + Tailwind
+│   └── (main)/
+│       ├── layout.tsx      # Main layout with BottomNav
+│       ├── owners/page.tsx
+│       ├── agents/page.tsx
+│       └── tenants/page.tsx
+├── components/
+│   ├── ui/                 # Button, Card, Badge, Input, Select
+│   └── layout/             # BottomNav, LiffWrapper, OnboardingGuard
+├── lib/
+│   ├── api/onboarding.ts   # Client API for onboarding
+│   ├── auth/liff.ts        # LIFF token verification
+│   └── db/
+│       ├── mongodb.ts      # MongoDB connection
+│       └── models/user.ts  # User schema
+└── providers/
+    └── LiffProvider.tsx
+```
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Private
