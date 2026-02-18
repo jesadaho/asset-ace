@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "elevated" | "outline";
+  variant?: "default" | "elevated" | "outline" | "light";
 }
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
@@ -18,6 +18,8 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
             "border-[#0F172A]/10 bg-[#0F172A] text-white shadow-lg shadow-[#0F172A]/20",
           variant === "outline" &&
             "border-white/10 bg-[#1E293B] text-white",
+          variant === "light" &&
+            "border-[#0F172A]/10 bg-white text-[#0F172A] shadow-sm",
           className
         )}
         {...props}
