@@ -28,7 +28,7 @@ function isValidPhone(phone: string): boolean {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { isReady, profile } = useLiff();
+  const { isReady, isLoggedIn, profile, openId, scope, error, login } = useLiff();
   const [step, setStep] = useState<1 | 2>(1);
   const [role, setRole] = useState<OnboardingData["role"] | "">("");
   const [name, setName] = useState("");
@@ -47,7 +47,7 @@ export default function OnboardingPage() {
   useEffect(() => {
     fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'A,E',location:'onboarding/page.tsx',message:'Onboarding profile state',data:{isReady,profileNull:profile===null,hasPictureUrl:!!profile?.pictureUrl,hasDisplayName:!!profile?.displayName},timestamp:Date.now()})}).catch(()=>{});
   },[isReady,profile]);
-  const debugData = { isReady, profileNull: profile === null, hasPictureUrl: !!profile?.pictureUrl, hasDisplayName: !!profile?.displayName, pictureUrl: profile?.pictureUrl ? "(set)" : "(empty)" };
+  const debugData = { isReady, isLoggedIn, profileNull: profile === null, hasPictureUrl: !!profile?.pictureUrl, hasDisplayName: !!profile?.displayName, pictureUrl: profile?.pictureUrl ? "(set)" : "(empty)", openId: openId ?? "(empty)", scope: scope ?? [], error: error ?? "(none)" };
   // #endregion
 
   const validateStep2 = (): boolean => {
@@ -103,6 +103,11 @@ export default function OnboardingPage() {
             {profile?.displayName && (
               <p className="text-white font-medium">{profile.displayName}</p>
             )}
+            {openId && (
+              <p className="text-white/60 text-xs font-mono truncate max-w-full" title={openId}>
+                openID: {openId}
+              </p>
+            )}
           </div>
           <h1 className="text-2xl font-bold tracking-tight mb-2">
             Welcome to Asset Ace
@@ -111,6 +116,23 @@ export default function OnboardingPage() {
             {step === 1 ? "Choose your role to continue" : "Complete your profile"}
           </p>
         </header>
+
+        {isReady && isLoggedIn === false && (
+          <div className="mb-6 rounded-lg border border-amber-500/50 bg-amber-900/30 p-4 text-center">
+            <p className="text-amber-200 text-sm mb-3">
+              Please log in with LINE to continue. Profile and openID will be available after login.
+            </p>
+            <Button type="button" onClick={login} size="lg" className="w-full">
+              Log in with LINE
+            </Button>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 rounded-lg border border-red-500/50 bg-red-900/20 p-4 text-center">
+            <p className="text-red-200 text-sm">{error}</p>
+          </div>
+        )}
 
         {step === 1 ? (
           <div className="space-y-4">

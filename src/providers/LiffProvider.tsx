@@ -20,6 +20,8 @@ interface LiffContextValue {
   isReady: boolean;
   isLoggedIn: boolean | null;
   profile: LiffProfile | null;
+  openId: string | null;
+  scope: string[] | null;
   error: string | null;
   liffId: string;
   login: () => void;
@@ -45,6 +47,8 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
   const [isReady, setIsReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [profile, setProfile] = useState<LiffProfile | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [scope, setScope] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const initLiff = useCallback(async () => {
@@ -63,16 +67,35 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
       // #endregion
 
       if (liff.isLoggedIn()) {
-        const profileData = await liff.getProfile();
-        // #region agent log
-        fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'C',location:'LiffProvider.tsx:getProfile',message:'Raw profile from LINE',data:{hasPictureUrl:!!profileData.pictureUrl,pictureUrlLen:profileData.pictureUrl?.length,hasDisplayName:!!profileData.displayName},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-        setProfile({
-          userId: profileData.userId,
-          displayName: profileData.displayName ?? "",
-          pictureUrl: profileData.pictureUrl,
-          statusMessage: profileData.statusMessage,
-        });
+        const ctx = liff.getContext();
+        if (ctx?.scope) setScope(ctx.scope);
+
+        let idToken: { sub?: string } | null = null;
+        try {
+          idToken = liff.getDecodedIDToken?.() ?? null;
+          if (idToken?.sub) setOpenId(idToken.sub);
+        } catch {
+          // openid scope may not be granted
+        }
+
+        try {
+          const profileData = await liff.getProfile();
+          // #region agent log
+          fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'C',location:'LiffProvider.tsx:getProfile',message:'Raw profile from LINE',data:{hasPictureUrl:!!profileData.pictureUrl,pictureUrlLen:profileData.pictureUrl?.length,hasDisplayName:!!profileData.displayName},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+          setProfile({
+            userId: profileData.userId,
+            displayName: profileData.displayName ?? "",
+            pictureUrl: profileData.pictureUrl,
+            statusMessage: profileData.statusMessage,
+          });
+        } catch (profileErr) {
+          const msg = profileErr instanceof Error ? profileErr.message : String(profileErr);
+          setError(`Profile: ${msg}. Unlink this app in LINE Settings > Linked apps, then open again.`);
+          // #region agent log
+          fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'getProfileFail',location:'LiffProvider.tsx:getProfile-catch',message:'getProfile failed',data:{message:msg},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+        }
       }
     } catch (err) {
       // #region agent log
@@ -105,6 +128,8 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
     isReady,
     isLoggedIn,
     profile,
+    openId,
+    scope,
     error,
     liffId,
     login,
