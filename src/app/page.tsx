@@ -28,7 +28,7 @@ const roles = [
 
 function SplashView() {
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center px-4 bg-[#F8FAFC] safe-area-top safe-area-bottom">
+    <div className="min-h-dvh flex flex-col items-center justify-center px-4 bg-white safe-area-top safe-area-bottom">
       <div className="flex flex-col items-center gap-6">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0F172A] text-[#10B981]">
           <Building2 className="h-8 w-8" aria-hidden />

@@ -19,6 +19,7 @@ interface LiffProfile {
 interface LiffContextValue {
   isReady: boolean;
   isLoggedIn: boolean | null;
+  isInClient: boolean;
   profile: LiffProfile | null;
   scope: string[] | null;
   error: string | null;
@@ -45,6 +46,7 @@ interface LiffProviderProps {
 export function LiffProvider({ children, liffId }: LiffProviderProps) {
   const [isReady, setIsReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [isInClient, setIsInClient] = useState(false);
   const [profile, setProfile] = useState<LiffProfile | null>(null);
   const [scope, setScope] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +60,7 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
 
     try {
       await liff.init({ liffId });
+      setIsInClient(liff.isInClient());
       const loggedIn = liff.isLoggedIn();
       setIsLoggedIn(loggedIn);
 
@@ -105,6 +108,7 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
   const value: LiffContextValue = {
     isReady,
     isLoggedIn,
+    isInClient,
     profile,
     scope,
     error,
