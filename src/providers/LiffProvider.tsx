@@ -54,6 +54,7 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
   const initLiff = useCallback(async () => {
     if (!liffId) {
       setError("LIFF ID is not configured");
+      setIsReady(true);
       return;
     }
 

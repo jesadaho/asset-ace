@@ -46,10 +46,10 @@ function getIntendedPathFromQuery(): string | null {
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isReady, isLoggedIn, profile, liffId } = useLiff();
+  const { isReady, isLoggedIn, profile, liffId, error } = useLiff();
   const [checked, setChecked] = useState(false);
 
-  const canRedirect = isReady && liffId && (isLoggedIn === false || profile !== null);
+  const canRedirect = isReady && (!liffId || isLoggedIn === false || profile !== null || error !== null);
 
   // Redirect based on liff.state/path/redirect only after LIFF state is resolved
   useEffect(() => {
@@ -103,7 +103,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [isReady, liffId, isLoggedIn, pathname, router]);
+  }, [canRedirect, isLoggedIn, pathname, router]);
 
   if (!canRedirect || (!checked && isLoggedIn === true)) {
     return (
