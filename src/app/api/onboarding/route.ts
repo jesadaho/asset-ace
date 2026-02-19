@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
       { upsert: true, new: true }
     );
 
+    let richMenuDebug: { attempted: boolean; linked: boolean; status?: number; message?: string; richMenuId?: string } | undefined;
     if (role === "owner") {
       const richMenuId =
         process.env.LINE_RICH_MENU_ID_OWNER ??
@@ -90,14 +91,23 @@ export async function POST(request: NextRequest) {
       fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'onboarding/route.ts',message:'Rich Menu link attempt',data:{role,richMenuId,hasToken},timestamp:Date.now()})}).catch(()=>{});
       // #endregion
       if (hasToken) {
-        const linked = await linkRichMenuToUser(lineUserId, richMenuId);
+        const result = await linkRichMenuToUser(lineUserId, richMenuId);
+        richMenuDebug = {
+          attempted: true,
+          linked: result.linked,
+          status: result.status,
+          message: result.message,
+          richMenuId,
+        };
         // #region agent log
-        fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'onboarding/route.ts',message:'Rich Menu link result',data:{linked,richMenuId},timestamp:Date.now()})}).catch(()=>{});
+        fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'onboarding/route.ts',message:'Rich Menu link result',data:{linked:result.linked,richMenuId,status:result.status},timestamp:Date.now()})}).catch(()=>{});
         // #endregion
+      } else {
+        richMenuDebug = { attempted: false, linked: false, message: "No channel token" };
       }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, debug: richMenuDebug ? { richMenu: richMenuDebug } : undefined });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     console.error("Onboarding POST error:", err);

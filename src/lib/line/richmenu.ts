@@ -1,18 +1,24 @@
+export interface RichMenuLinkResult {
+  linked: boolean;
+  status?: number;
+  message?: string;
+}
+
 /**
  * Link a Rich Menu to a LINE user via the Messaging API.
- * Does not throw; logs failures and returns false.
+ * Does not throw; logs failures and returns result with linked, status, message.
  */
 export async function linkRichMenuToUser(
   userId: string,
   richMenuId: string
-): Promise<boolean> {
+): Promise<RichMenuLinkResult> {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   if (!token?.trim()) {
     console.error("[Rich Menu] LINE_CHANNEL_ACCESS_TOKEN is not set");
     // #region agent log
     fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'richmenu.ts',message:'Rich Menu skip - no token',data:{userId,richMenuId},timestamp:Date.now()})}).catch(()=>{});
     // #endregion
-    return false;
+    return { linked: false, message: "LINE_CHANNEL_ACCESS_TOKEN not set" };
   }
 
   const url = `https://api.line.me/v2/bot/user/${encodeURIComponent(userId)}/richmenu/${encodeURIComponent(richMenuId)}`;
@@ -35,15 +41,18 @@ export async function linkRichMenuToUser(
         `[Rich Menu] Failed to link rich menu to user: ${res.status}`,
         resBody
       );
-      return false;
+      return { linked: false, status: res.status, message: resBody.slice(0, 300) };
     }
 
-    return true;
+    return { linked: true, status: res.status };
   } catch (err) {
     console.error("[Rich Menu] Error linking rich menu to user:", err);
     // #region agent log
     fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'richmenu.ts',message:'Rich Menu API throw',data:{error:err instanceof Error?err.message:String(err),userId,richMenuId},timestamp:Date.now()})}).catch(()=>{});
     // #endregion
-    return false;
+    return {
+      linked: false,
+      message: err instanceof Error ? err.message : String(err),
+    };
   }
 }

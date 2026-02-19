@@ -36,7 +36,20 @@ export interface OnboardingSubmitError {
   status: number;
 }
 
-export async function submitOnboarding(data: OnboardingData): Promise<void> {
+export interface OnboardingSuccessResponse {
+  success: true;
+  debug?: {
+    richMenu?: {
+      attempted: boolean;
+      linked: boolean;
+      status?: number;
+      message?: string;
+      richMenuId?: string;
+    };
+  };
+}
+
+export async function submitOnboarding(data: OnboardingData): Promise<OnboardingSuccessResponse | void> {
   const payload = {
     role: data.role,
     name: data.name,
@@ -63,6 +76,8 @@ export async function submitOnboarding(data: OnboardingData): Promise<void> {
       };
       throw submitErr;
     }
+    const json = (await res.json()) as OnboardingSuccessResponse;
+    return json;
   } else {
     // Mock: persist to localStorage when no LIFF token (web dev)
     if (typeof window !== "undefined") {
