@@ -73,6 +73,12 @@ export default function AddPropertyPage() {
   const [priceError, setPriceError] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  type ImageDebug = {
+    presign: { status: number; ok: boolean; error?: string; hasUploads?: boolean };
+    puts: { index: number; name: string; status: number; ok: boolean }[];
+    error?: string;
+  };
+  const [imageDebug, setImageDebug] = useState<ImageDebug | null>(null);
 
   const toggleAmenity = (id: string) => {
     setAmenities((prev) =>
@@ -114,6 +120,7 @@ export default function AddPropertyPage() {
     if (!hasName || !hasPrice) return;
 
     setSaving(true);
+    setImageDebug(null);
     try {
       if (imageFiles.length > 0) {
         const presignRes = await fetch("/api/upload/presign", {
@@ -124,23 +131,44 @@ export default function AddPropertyPage() {
           }),
         });
         const presignData = await presignRes.json().catch(() => ({}));
+        const uploads = presignData.uploads as Array<{ key: string; url: string }> | undefined;
+        const hasUploads = Array.isArray(uploads) && uploads.length === imageFiles.length;
+        setImageDebug({
+          presign: {
+            status: presignRes.status,
+            ok: presignRes.ok,
+            error: presignData.error,
+            hasUploads,
+          },
+          puts: [],
+        });
         if (!presignRes.ok) {
           setUploadError(presignData.error || `Upload setup failed (${presignRes.status})`);
           setSaving(false);
           return;
         }
-        const uploads = presignData.uploads as Array<{ key: string; url: string }>;
-        if (!Array.isArray(uploads) || uploads.length !== imageFiles.length) {
+        if (!hasUploads) {
           setUploadError("Invalid presign response");
+          setImageDebug((d) => d ? { ...d, error: "Invalid presign response" } : null);
           setSaving(false);
           return;
         }
+        const putResults: { index: number; name: string; status: number; ok: boolean }[] = [];
         for (let i = 0; i < imageFiles.length; i++) {
           const putRes = await fetch(uploads[i].url, {
             method: "PUT",
             body: imageFiles[i],
             headers: { "Content-Type": imageFiles[i].type || "image/jpeg" },
           });
+          putResults.push({
+            index: i,
+            name: imageFiles[i].name,
+            status: putRes.status,
+            ok: putRes.ok,
+          });
+          setImageDebug((d) =>
+            d ? { ...d, puts: [...putResults] } : null
+          );
           if (!putRes.ok) {
             setUploadError(`Failed to upload ${imageFiles[i].name}`);
             setSaving(false);
@@ -151,7 +179,9 @@ export default function AddPropertyPage() {
       alert("Property saved.");
       router.push("/owner/properties");
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Something went wrong");
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      setUploadError(msg);
+      setImageDebug((d) => (d ? { ...d, error: msg } : { presign: { status: 0, ok: false }, puts: [], error: msg }));
     } finally {
       setSaving(false);
     }
@@ -229,6 +259,24 @@ export default function AddPropertyPage() {
               <p className="mt-2 text-sm text-red-500" role="alert">
                 {uploadError}
               </p>
+            )}
+            {imageDebug && (
+              <details className="mt-3 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
+                <summary className="px-3 py-2 text-sm font-medium text-slate-600 cursor-pointer select-none">
+                  Debug: Image upload
+                </summary>
+                <pre className="p-3 text-xs text-slate-700 overflow-x-auto whitespace-pre-wrap break-words border-t border-slate-200">
+                  {JSON.stringify(
+                    {
+                      presign: imageDebug.presign,
+                      puts: imageDebug.puts,
+                      error: imageDebug.error,
+                    },
+                    null,
+                    2
+                  )}
+                </pre>
+              </details>
             )}
           </section>
 
