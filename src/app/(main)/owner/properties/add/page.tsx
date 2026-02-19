@@ -73,6 +73,7 @@ export default function AddPropertyPage() {
   const [agentLineId, setAgentLineId] = useState("");
   const [contractStartDate, setContractStartDate] = useState("");
   const [lineSelectMessage, setLineSelectMessage] = useState<string | null>(null);
+  const [lineSelectLoading, setLineSelectLoading] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nameError, setNameError] = useState(false);
   const [priceError, setPriceError] = useState(false);
@@ -114,36 +115,42 @@ export default function AddPropertyPage() {
   };
 
   const handleLineSelect = async (field: "tenant" | "agent") => {
-    const liff = (await import("@line/liff")).default;
-    const isAvailable =
-      typeof liff.isApiAvailable === "function" &&
-      liff.isApiAvailable("shareTargetPicker");
-    if (!isAvailable || typeof liff.shareTargetPicker !== "function") {
-      setLineSelectMessage(
-        "Send invite is only available in the LINE app. You can still enter their name and LINE ID below."
-      );
-      return;
-    }
-    const inviteUrl = `https://liff.line.me/${process.env.NEXT_PUBLIC_LIFF_ID ?? ""}`;
-    const label = field === "tenant" ? "tenant" : "agent";
-    const inviteText = inviteUrl
-      ? `You're invited as ${label} for a property. Open this link: ${inviteUrl}`
-      : `You're invited as ${label} for a property.`;
+    setLineSelectLoading(true);
+    setLineSelectMessage(null);
     try {
+      const liff = (await import("@line/liff")).default;
+      const isAvailable =
+        typeof liff.isApiAvailable === "function" &&
+        liff.isApiAvailable("shareTargetPicker");
+      if (!isAvailable || typeof liff.shareTargetPicker !== "function") {
+        setLineSelectMessage(
+          "Send invite is only available when you open this page inside the LINE app. You can still enter their name and LINE ID below."
+        );
+        return;
+      }
+      const inviteUrl = `https://liff.line.me/${process.env.NEXT_PUBLIC_LIFF_ID ?? ""}`;
+      const label = field === "tenant" ? "tenant" : "agent";
+      const inviteText = inviteUrl
+        ? `You're invited as ${label} for a property. Open this link: ${inviteUrl}`
+        : `You're invited as ${label} for a property.`;
       const result = await liff.shareTargetPicker(
         [{ type: "text", text: inviteText }],
         { isMultiple: false }
       );
       if (result?.status === "success") {
         setLineSelectMessage(
-          "Invite link sent. You can still enter their name and LINE ID below if you have it."
+          "Invite link sent. LINE does not share the friend's name or ID with the app—enter them below if you have them."
         );
       }
       // Cancel: Promise resolves with no value; no intrusive message
-    } catch {
+    } catch (err) {
+      console.error("[handleLineSelect]", err);
+      const msg = err instanceof Error ? err.message : String(err);
       setLineSelectMessage(
-        "Could not send invite. Check that Share target picker is enabled for this LIFF app. You can still enter their name and LINE ID below."
+        `Could not open friend picker: ${msg}. Open this page in the LINE app and ensure Share target picker is enabled for your LIFF app. You can still enter their name and LINE ID below.`
       );
+    } finally {
+      setLineSelectLoading(false);
     }
   };
 
@@ -665,6 +672,9 @@ export default function AddPropertyPage() {
               <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
                 Resident Details
               </h2>
+              <p className="text-xs text-slate-500">
+                Tap &quot;Send Invite Link&quot; to choose a LINE friend and send them an invite. LINE does not share the friend&apos;s name or ID with the app—enter them below if you have them.
+              </p>
               {lineSelectMessage && (
                 <p className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3">
                   {lineSelectMessage}
@@ -693,10 +703,13 @@ export default function AddPropertyPage() {
                   <button
                     type="button"
                     onClick={() => handleLineSelect("tenant")}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#06C755] px-4 text-sm font-medium text-white hover:bg-[#05b34a] tap-target min-h-[44px] shrink-0"
+                    disabled={lineSelectLoading}
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#06C755] px-4 text-sm font-medium text-white hover:bg-[#05b34a] tap-target min-h-[44px] shrink-0 disabled:opacity-60 disabled:pointer-events-none"
                   >
-                    <MessageCircle className="h-5 w-5" aria-hidden />
-                    <span className="hidden sm:inline">Send Invite Link to Tenant</span>
+                    <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
+                    <span className="hidden sm:inline">
+                      {lineSelectLoading ? "Opening…" : "Send Invite Link to Tenant"}
+                    </span>
                   </button>
                 </div>
                 <label htmlFor="tenant-line-id" className="block text-sm text-slate-500 mt-1 mb-0.5">
@@ -727,10 +740,13 @@ export default function AddPropertyPage() {
                   <button
                     type="button"
                     onClick={() => handleLineSelect("agent")}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#06C755] px-4 text-sm font-medium text-white hover:bg-[#05b34a] tap-target min-h-[44px] shrink-0"
+                    disabled={lineSelectLoading}
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#06C755] px-4 text-sm font-medium text-white hover:bg-[#05b34a] tap-target min-h-[44px] shrink-0 disabled:opacity-60 disabled:pointer-events-none"
                   >
-                    <MessageCircle className="h-5 w-5" aria-hidden />
-                    <span className="hidden sm:inline">Send Invite Link to Agent</span>
+                    <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
+                    <span className="hidden sm:inline">
+                      {lineSelectLoading ? "Opening…" : "Send Invite Link to Agent"}
+                    </span>
                   </button>
                 </div>
                 <label htmlFor="agent-line-id" className="block text-sm text-slate-500 mt-1 mb-0.5">
