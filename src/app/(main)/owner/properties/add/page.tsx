@@ -136,6 +136,8 @@ export default function AddPropertyPage() {
         });
         const presignData = await presignRes.json().catch(() => ({}));
         const uploads = presignData.uploads as Array<{ key: string; url: string; contentType: string }> | undefined;
+        const bucketNameFromApi = presignData.bucketName as string | null | undefined;
+        console.log("🎯 Uploading to Bucket:", bucketNameFromApi ?? "(not returned by API)");
         const hasUploads = Array.isArray(uploads) && uploads.length === imageFiles.length;
         setImageDebug({
           presign: {
@@ -167,6 +169,7 @@ export default function AddPropertyPage() {
               method: "PUT",
               body: file,
               headers: { "Content-Type": contentType },
+              credentials: "omit",
             });
             putResults.push({
               index: i,
@@ -178,7 +181,14 @@ export default function AddPropertyPage() {
               d ? { ...d, puts: [...putResults] } : null
             );
             if (!putRes.ok) {
-              setUploadError(`Failed to upload ${file.name} (${putRes.status})`);
+              const statusCode = putRes.status;
+              const errName = "HTTP " + statusCode;
+              console.error("[Add Property] S3 PUT failed - Status Code:", statusCode, "Response:", putRes);
+              const displayMsg = `Upload failed: ${bucketNameFromApi ?? "?"} - ${errName}`;
+              setUploadError(displayMsg);
+              setImageDebug((d) =>
+                d ? { ...d, puts: [...putResults], error: displayMsg, failedAt: `put_${i}`, errorName: errName } : null
+              );
               setSaving(false);
               return;
             }
@@ -190,6 +200,7 @@ export default function AddPropertyPage() {
             }
             const putMsg = putErr instanceof Error ? putErr.message : String(putErr);
             const putName = putErr instanceof Error ? putErr.constructor?.name ?? "Error" : "Unknown";
+            const displayMsg = `Upload failed: ${bucketNameFromApi ?? "?"} - ${putName}`;
             setImageDebug((d) =>
               d
                 ? {
@@ -201,7 +212,7 @@ export default function AddPropertyPage() {
                   }
                 : null
             );
-            setUploadError(putMsg);
+            setUploadError(displayMsg);
             setSaving(false);
             return;
           }

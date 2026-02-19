@@ -36,6 +36,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const bucket = process.env.AWS_S3_BUCKET?.trim();
+    const region = process.env.AWS_REGION;
+    console.log("📤 S3 Config - Bucket:", bucket ?? "(not set)", "Region:", region ?? "(not set)");
+
     const uploads = await getPresignedPutUrls(files);
     if (uploads.length === 0) {
       return NextResponse.json(
@@ -47,7 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ uploads });
+    return NextResponse.json({ uploads, bucketName: bucket ?? null });
   } catch (err) {
     console.error("[upload/presign]", err);
     return NextResponse.json(
