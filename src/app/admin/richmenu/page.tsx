@@ -25,6 +25,7 @@ export default function AdminRichMenuPage() {
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [createdWithoutImage, setCreatedWithoutImage] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [menuSize, setMenuSize] = useState<"2500x1686" | "1200x810">("2500x1686");
   const [useCustomJson, setUseCustomJson] = useState(false);
@@ -65,6 +66,7 @@ export default function AdminRichMenuPage() {
   const registerOwner = async () => {
     setRegisterError(null);
     setCreatedId(null);
+    setCreatedWithoutImage(false);
     setCustomJsonError(null);
     setRegisterLoading(true);
     try {
@@ -125,6 +127,13 @@ export default function AdminRichMenuPage() {
           setCreatedId(richMenuId);
           return;
         }
+        setCreatedWithoutImage(false);
+      } else {
+        setCreatedWithoutImage(true);
+        setUpdateImageMenuId(richMenuId);
+        setUpdateImageError(null);
+        setUpdateImageSuccess(false);
+        document.getElementById("update-image-card")?.scrollIntoView({ behavior: "smooth" });
       }
 
       setCreatedId(richMenuId);
@@ -508,6 +517,14 @@ export default function AdminRichMenuPage() {
 
             {createdId && (
               <div className="rounded-lg bg-[#0F172A]/50 p-4 space-y-2">
+                {createdWithoutImage && (
+                  <div className="rounded border border-amber-500/50 bg-amber-900/20 p-3 mb-2">
+                    <p className="text-amber-200 text-sm font-medium">Image required</p>
+                    <p className="text-amber-200/90 text-xs mt-1">
+                      LINE will not link this menu to users until an image is uploaded. Use &quot;Update image&quot; above, select this menu, and upload a JPEG/PNG that matches the menu size (e.g. 2500×1686 or 1200×810, max 1 MB).
+                    </p>
+                  </div>
+                )}
                 <p className="text-sm font-medium text-[#10B981]">Success</p>
                 <p className="text-sm text-white/80">
                   Set in .env:
