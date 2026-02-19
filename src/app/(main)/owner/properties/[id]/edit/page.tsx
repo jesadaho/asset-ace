@@ -213,35 +213,35 @@ export default function EditPropertyPage() {
   };
 
   const handleLineSelect = async (field: "tenant" | "agent") => {
+    const liff = (await import("@line/liff")).default;
+    const isAvailable =
+      typeof liff.isApiAvailable === "function" &&
+      liff.isApiAvailable("shareTargetPicker");
+    if (!isAvailable || typeof liff.shareTargetPicker !== "function") {
+      setLineSelectMessage(
+        "Send invite is only available in the LINE app. You can still enter their name and LINE ID below."
+      );
+      return;
+    }
+    const inviteUrl = `https://liff.line.me/${process.env.NEXT_PUBLIC_LIFF_ID ?? ""}`;
+    const label = field === "tenant" ? "tenant" : "agent";
+    const inviteText = inviteUrl
+      ? `You're invited as ${label} for a property. Open this link: ${inviteUrl}`
+      : `You're invited as ${label} for a property.`;
     try {
-      const liff = (await import("@line/liff")).default;
-      const isAvailable =
-        typeof liff.isApiAvailable === "function" &&
-        liff.isApiAvailable("shareTargetPicker");
-      if (isAvailable && typeof liff.shareTargetPicker === "function") {
-        const label = field === "tenant" ? "tenant" : "agent";
-        const result = await liff.shareTargetPicker(
-          [
-            {
-              type: "text",
-              text: `You have been set as ${label} for this property.`,
-            },
-          ],
-          { isMultiple: false }
-        );
-        if (result?.status === "success") {
-          setLineSelectMessage(
-            `Message sent. Paste the recipient's LINE ID in the LINE ID field below if you have it.`
-          );
-        }
-      } else {
+      const result = await liff.shareTargetPicker(
+        [{ type: "text", text: inviteText }],
+        { isMultiple: false }
+      );
+      if (result?.status === "success") {
         setLineSelectMessage(
-          "Paste the LINE user ID in the LINE ID field below. You can get it from LINE or your admin."
+          "Invite link sent. You can still enter their name and LINE ID below if you have it."
         );
       }
+      // Cancel: Promise resolves with no value; no intrusive message
     } catch {
       setLineSelectMessage(
-        "Paste the LINE user ID in the LINE ID field below."
+        "Could not send invite. Check that Share target picker is enabled for this LIFF app. You can still enter their name and LINE ID below."
       );
     }
   };
@@ -857,7 +857,7 @@ export default function EditPropertyPage() {
                     className="inline-flex items-center gap-2 rounded-lg bg-[#06C755] px-4 text-sm font-medium text-white hover:bg-[#05b34a] tap-target min-h-[44px] shrink-0"
                   >
                     <MessageCircle className="h-5 w-5" aria-hidden />
-                    <span className="hidden sm:inline">Select from LINE</span>
+                    <span className="hidden sm:inline">Send Invite Link to Tenant</span>
                   </button>
                 </div>
                 <label
@@ -897,7 +897,7 @@ export default function EditPropertyPage() {
                     className="inline-flex items-center gap-2 rounded-lg bg-[#06C755] px-4 text-sm font-medium text-white hover:bg-[#05b34a] tap-target min-h-[44px] shrink-0"
                   >
                     <MessageCircle className="h-5 w-5" aria-hidden />
-                    <span className="hidden sm:inline">Select from LINE</span>
+                    <span className="hidden sm:inline">Send Invite Link to Agent</span>
                   </button>
                 </div>
                 <label
