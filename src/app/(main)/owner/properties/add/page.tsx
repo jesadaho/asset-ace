@@ -13,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { uploadFilesWithProgress } from "@/lib/uploadWithProgress";
 
 const MAX_PHOTOS = 10;
 
@@ -72,6 +73,7 @@ export default function AddPropertyPage() {
   const [nameError, setNameError] = useState(false);
   const [priceError, setPriceError] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   type ImageDebug = {
     presign: { status: number; ok: boolean; error?: string; hasUploads?: boolean };
@@ -128,42 +130,53 @@ export default function AddPropertyPage() {
     let imageKeys: string[] = [];
     try {
       if (imageFiles.length > 0) {
-        const formData = new FormData();
-        imageFiles.forEach((file) => formData.append("files", file));
-        console.log("🎯 Uploading via proxy to Bucket (server will log bucket name)");
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const uploadData = await uploadRes.json().catch(() => ({}));
-        const bucketNameFromApi = uploadData.bucketName as string | null | undefined;
-        const uploadedKeys = (uploadData.uploads as Array<{ key: string }> | undefined) ?? [];
-        imageKeys = uploadedKeys.map((u) => u.key);
-        const hasUploads = Array.isArray(uploadData.uploads) && uploadedKeys.length === imageFiles.length;
-        setImageDebug({
-          presign: {
-            status: uploadRes.status,
-            ok: uploadRes.ok,
-            error: uploadData.error,
-            hasUploads,
-          },
-          puts: imageFiles.map((file, i) => ({
-            index: i,
-            name: file.name,
-            status: uploadRes.ok ? 200 : uploadRes.status,
-            ok: uploadRes.ok,
-          })),
-          ...(uploadRes.ok ? {} : { error: uploadData.error ?? `Upload failed (${uploadRes.status})`, failedAt: "upload", errorName: "HTTP " + uploadRes.status }),
-        });
-        if (!uploadRes.ok) {
-          const displayMsg = `Upload failed: ${bucketNameFromApi ?? "?"} - ${uploadData.error ?? uploadRes.status}`;
-          setUploadError(displayMsg);
-          setSaving(false);
-          return;
-        }
-        if (!hasUploads) {
-          setUploadError("Invalid upload response");
-          setImageDebug((d) => (d ? { ...d, error: "Invalid upload response" } : null));
+        setUploadProgress(0);
+        try {
+          console.log("🎯 Uploading via proxy to Bucket (server will log bucket name)");
+          const uploadData = await uploadFilesWithProgress(
+            imageFiles,
+            setUploadProgress
+          );
+          setUploadProgress(null);
+          const bucketNameFromApi = uploadData.bucketName;
+          const uploadedKeys = uploadData.uploads ?? [];
+          imageKeys = uploadedKeys.map((u) => u.key);
+          const hasUploads = uploadedKeys.length === imageFiles.length;
+          setImageDebug({
+            presign: {
+              status: 200,
+              ok: true,
+              hasUploads,
+            },
+            puts: imageFiles.map((file, i) => ({
+              index: i,
+              name: file.name,
+              status: 200,
+              ok: true,
+            })),
+          });
+          if (!hasUploads) {
+            setUploadError("Invalid upload response");
+            setImageDebug((d) => (d ? { ...d, error: "Invalid upload response" } : null));
+            setSaving(false);
+            return;
+          }
+        } catch (uploadErr) {
+          setUploadProgress(null);
+          const msg = uploadErr instanceof Error ? uploadErr.message : "Upload failed";
+          setUploadError(msg);
+          setImageDebug({
+            presign: { status: 0, ok: false },
+            puts: imageFiles.map((file, i) => ({
+              index: i,
+              name: file.name,
+              status: 0,
+              ok: false,
+            })),
+            error: msg,
+            failedAt: "upload",
+            errorName: uploadErr instanceof Error ? uploadErr.constructor?.name ?? "Error" : "Unknown",
+          });
           setSaving(false);
           return;
         }
@@ -253,6 +266,23 @@ export default function AddPropertyPage() {
             <label className="block text-sm font-medium text-[#0F172A] mb-2">
               Property Photos
             </label>
+            {uploadProgress != null && (
+              <div className="mb-3">
+                <p className="text-sm text-slate-600 mb-1.5">Uploading photos…</p>
+                <div
+                  className="w-full h-2 bg-slate-200 rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={uploadProgress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    className="h-full bg-[#10B981] rounded-full transition-all duration-200"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
             <button
               type="button"
               onClick={handleImageClick}

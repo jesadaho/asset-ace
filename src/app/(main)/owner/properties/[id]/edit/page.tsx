@@ -13,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { uploadFilesWithProgress } from "@/lib/uploadWithProgress";
 
 const MAX_PHOTOS = 10;
 
@@ -98,6 +99,7 @@ export default function EditPropertyPage() {
   const [nameError, setNameError] = useState(false);
   const [priceError, setPriceError] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -225,25 +227,25 @@ export default function EditPropertyPage() {
     let newKeys: string[] = [];
     try {
       if (imageFiles.length > 0) {
-        const formData = new FormData();
-        imageFiles.forEach((file) => formData.append("files", file));
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const uploadData = await uploadRes.json().catch(() => ({}));
-        const uploadedKeys =
-          (uploadData.uploads as Array<{ key: string }> | undefined) ?? [];
-        newKeys = uploadedKeys.map((u) => u.key);
-        if (!uploadRes.ok) {
-          setUploadError(
-            uploadData.error ?? `Upload failed (${uploadRes.status})`
+        setUploadProgress(0);
+        try {
+          const uploadData = await uploadFilesWithProgress(
+            imageFiles,
+            setUploadProgress
           );
-          setSaving(false);
-          return;
-        }
-        if (uploadedKeys.length !== imageFiles.length) {
-          setUploadError("Invalid upload response");
+          setUploadProgress(null);
+          const uploadedKeys = uploadData.uploads ?? [];
+          newKeys = uploadedKeys.map((u) => u.key);
+          if (uploadedKeys.length !== imageFiles.length) {
+            setUploadError("Invalid upload response");
+            setSaving(false);
+            return;
+          }
+        } catch (uploadErr) {
+          setUploadProgress(null);
+          setUploadError(
+            uploadErr instanceof Error ? uploadErr.message : "Upload failed"
+          );
           setSaving(false);
           return;
         }
@@ -356,6 +358,23 @@ export default function EditPropertyPage() {
             <label className="block text-sm font-medium text-[#0F172A] mb-2">
               Property Photos
             </label>
+            {uploadProgress != null && (
+              <div className="mb-3">
+                <p className="text-sm text-slate-600 mb-1.5">Uploading photos…</p>
+                <div
+                  className="w-full h-2 bg-slate-200 rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={uploadProgress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    className="h-full bg-[#10B981] rounded-full transition-all duration-200"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
             {existingImageKeys.length > 0 && (
               <ul className="mb-3 space-y-2">
                 {existingImageKeys.map((_key, index) => (
