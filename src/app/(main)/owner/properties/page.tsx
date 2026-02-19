@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { Search, ChevronRight, Plus, ImageIcon } from "lucide-react";
+import { Search, ChevronRight, Plus, ImageIcon, Eye, EyeOff, LayoutDashboard } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { useLiff } from "@/providers/LiffProvider";
 
 type PropertyType = "Condo" | "House" | "Apartment";
 type PropertyStatus = "Available" | "Occupied" | "Maintenance";
@@ -16,6 +17,8 @@ type Property = {
   price: number;
   address: string;
   image?: string;
+  agentName?: string;
+  agentLineId?: string;
 };
 
 const statusBadgeVariant: Record<
@@ -28,13 +31,18 @@ const statusBadgeVariant: Record<
 };
 
 type StatusFilter = "All" | PropertyStatus;
+type SummaryFilter = "all" | "available" | "pending";
 
 export default function OwnerPropertiesPage() {
+  const { profile } = useLiff();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
+  const [summaryFilter, setSummaryFilter] = useState<SummaryFilter>("all");
+  const [isAmountVisible, setIsAmountVisible] = useState(true);
+  const [isDashboardVisible, setIsDashboardVisible] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,7 +68,7 @@ export default function OwnerPropertiesPage() {
           return;
         }
         const data = await res.json();
-        const list = (data.properties ?? []).map((p: { id: string; name: string; type: string; status: string; price: number; address: string; imageUrl?: string }) => ({
+        const list = (data.properties ?? []).map((p: { id: string; name: string; type: string; status: string; price: number; address: string; imageUrl?: string; agentName?: string; agentLineId?: string }) => ({
           id: p.id,
           name: p.name,
           type: p.type as PropertyType,
@@ -68,6 +76,8 @@ export default function OwnerPropertiesPage() {
           price: p.price,
           address: p.address,
           image: p.imageUrl,
+          agentName: p.agentName,
+          agentLineId: p.agentLineId,
         }));
         setProperties(list);
         setError(null);
@@ -81,6 +91,17 @@ export default function OwnerPropertiesPage() {
     return () => { cancelled = true; };
   }, []);
 
+  const { totalMonthlyIncome, potentialIncome, total, available, pending } = useMemo(() => {
+    const totalMonthlyIncome = properties
+      .filter((p) => p.status === "Occupied")
+      .reduce((sum, p) => sum + (p.price ?? 0), 0);
+    const potentialIncome = properties.reduce((sum, p) => sum + (p.price ?? 0), 0);
+    const total = properties.length;
+    const available = properties.filter((p) => p.status === "Available").length;
+    const pending = properties.filter((p) => !(p.agentName || p.agentLineId)).length;
+    return { totalMonthlyIncome, potentialIncome, total, available, pending };
+  }, [properties]);
+
   const filteredProperties = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return properties.filter((p) => {
@@ -90,22 +111,117 @@ export default function OwnerPropertiesPage() {
         p.address.toLowerCase().includes(q);
       const matchesStatus =
         statusFilter === "All" || p.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesSummary =
+        summaryFilter === "all" ||
+        (summaryFilter === "available" && p.status === "Available") ||
+        (summaryFilter === "pending" && !(p.agentName || p.agentLineId));
+      return matchesSearch && matchesStatus && matchesSummary;
     });
-  }, [properties, searchQuery, statusFilter]);
+  }, [properties, searchQuery, statusFilter, summaryFilter]);
 
   const counts = useMemo(() => {
-    const total = properties.length;
     const occupied = properties.filter((p) => p.status === "Occupied").length;
-    const available = properties.filter((p) => p.status === "Available").length;
     const maintenance = properties.filter(
       (p) => p.status === "Maintenance"
     ).length;
-    return { total, occupied, available, maintenance };
-  }, [properties]);
+    return { total, occupied: occupied, available, maintenance };
+  }, [properties, total, available]);
+
+  const handleSearchFocus = () => setIsDashboardVisible(false);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    if (e.target.value.trim()) setIsDashboardVisible(false);
+  };
+  const handleFilterClick = (option: StatusFilter) => {
+    setStatusFilter(option);
+    setIsDashboardVisible(false);
+  };
 
   return (
     <div className="min-h-full bg-slate-50 p-4">
+      {isDashboardVisible && (
+        <>
+          <div className="mb-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-teal-600 p-5 text-white shadow-lg overflow-hidden transition-all duration-300">
+            <p className="text-sm text-white/80 mb-1">
+              Welcome{profile?.displayName ? `, ${profile.displayName}` : ""}
+            </p>
+            <p className="text-xs text-white/70 mb-3">Total Monthly Income</p>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold tracking-tight">
+                {isAmountVisible
+                  ? `฿${totalMonthlyIncome.toLocaleString()}`
+                  : "฿ ——"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsAmountVisible((v) => !v)}
+                className="p-1.5 rounded-lg text-white/80 hover:bg-white/10 tap-target"
+                aria-label={isAmountVisible ? "Hide amount" : "Show amount"}
+              >
+                {isAmountVisible ? (
+                  <Eye className="h-5 w-5" aria-hidden />
+                ) : (
+                  <EyeOff className="h-5 w-5" aria-hidden />
+                )}
+              </button>
+            </div>
+            <p className="text-sm text-white/70 mt-2">
+              Potential Income: ฿{potentialIncome.toLocaleString()}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <button
+              type="button"
+              onClick={() => setSummaryFilter("all")}
+              className={`rounded-xl border-2 p-4 text-center transition-colors tap-target ${
+                summaryFilter === "all"
+                  ? "border-[#0F172A] bg-slate-100"
+                  : "border-slate-200 bg-white hover:border-slate-300"
+              }`}
+            >
+              <span className="block text-xl font-bold text-[#0F172A]">{total}</span>
+              <span className="block text-xs text-slate-600 mt-0.5">Total</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSummaryFilter("available")}
+              className={`rounded-xl border-2 p-4 text-center transition-colors tap-target ${
+                summaryFilter === "available"
+                  ? "border-[#10B981] bg-emerald-50"
+                  : "border-slate-200 bg-white hover:border-slate-300"
+              }`}
+            >
+              <span className="block text-xl font-bold text-[#0D9668]">{available}</span>
+              <span className="block text-xs text-slate-600 mt-0.5">Available</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSummaryFilter("pending")}
+              className={`rounded-xl border-2 p-4 text-center transition-colors tap-target ${
+                summaryFilter === "pending"
+                  ? "border-amber-500 bg-amber-50"
+                  : "border-slate-200 bg-white hover:border-slate-300"
+              }`}
+            >
+              <span className="block text-xl font-bold text-amber-600">{pending}</span>
+              <span className="block text-xs text-slate-600 mt-0.5">Pending</span>
+            </button>
+          </div>
+        </>
+      )}
+
+      {!isDashboardVisible && (
+        <button
+          type="button"
+          onClick={() => setIsDashboardVisible(true)}
+          className="mb-4 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 tap-target w-full justify-center"
+        >
+          <LayoutDashboard className="h-4 w-4" aria-hidden />
+          Show summary
+        </button>
+      )}
+
       <h1 className="text-2xl font-bold text-[#0F172A] mb-4">
         My Properties
       </h1>
@@ -138,7 +254,8 @@ export default function OwnerPropertiesPage() {
           type="search"
           placeholder="Search by name or address..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onFocus={handleSearchFocus}
+          onChange={handleSearchChange}
           className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[#0F172A] placeholder:text-slate-400 focus:border-[#10B981] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 text-sm"
           aria-label="Search properties"
         />
@@ -150,7 +267,7 @@ export default function OwnerPropertiesPage() {
             <button
               key={option}
               type="button"
-              onClick={() => setStatusFilter(option)}
+              onClick={() => handleFilterClick(option)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 statusFilter === option
                   ? "bg-[#0F172A] text-white"

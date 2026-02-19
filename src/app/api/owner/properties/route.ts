@@ -34,6 +34,8 @@ export async function GET(request: NextRequest) {
           price: doc.price,
           address: doc.address,
           imageUrl: imageUrl ?? undefined,
+          agentName: doc.agentName ?? undefined,
+          agentLineId: doc.agentLineId ?? undefined,
         };
       })
     );
