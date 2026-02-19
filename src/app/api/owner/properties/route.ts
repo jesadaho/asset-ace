@@ -136,8 +136,12 @@ export async function POST(request: NextRequest) {
         : undefined,
       tenantName:
         typeof body.tenantName === "string" ? body.tenantName : undefined,
+      tenantLineId:
+        typeof body.tenantLineId === "string" ? body.tenantLineId : undefined,
       agentName:
         typeof body.agentName === "string" ? body.agentName : undefined,
+      agentLineId:
+        typeof body.agentLineId === "string" ? body.agentLineId : undefined,
     });
 
     return NextResponse.json(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, ImageIcon, Pencil } from "lucide-react";
@@ -26,6 +26,7 @@ type PropertyDetail = {
   price: number;
   address: string;
   imageUrl?: string;
+  imageUrls?: string[];
   imageKeys?: string[];
   listingType?: string;
   bedrooms?: string;
@@ -35,7 +36,9 @@ type PropertyDetail = {
   squareMeters?: string;
   amenities?: string[];
   tenantName?: string;
+  tenantLineId?: string;
   agentName?: string;
+  agentLineId?: string;
   createdAt?: string;
 };
 
@@ -45,6 +48,15 @@ export default function PropertyDetailPage() {
   const [property, setProperty] = useState<PropertyDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const handleCarouselScroll = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el || el.offsetWidth <= 0) return;
+    const index = Math.round(el.scrollLeft / el.offsetWidth);
+    setPhotoIndex(Math.min(index, (el.children.length ?? 1) - 1));
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -101,22 +113,22 @@ export default function PropertyDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white safe-area-top">
-        <div className="flex max-w-lg mx-auto items-center gap-3 px-4 py-3">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white safe-area-top pt-4">
+        <div className="flex max-w-lg mx-auto items-center gap-2 px-4 py-3">
           <Link
             href="/owner/properties"
-            className="flex items-center justify-center p-2 -m-2 text-[#0F172A] hover:text-[#003366] tap-target min-h-[44px] min-w-[44px]"
+            className="shrink-0 flex items-center justify-center p-2 -m-2 text-[#0F172A] hover:text-[#003366] tap-target min-h-[44px] min-w-[44px]"
             aria-label="Back to properties"
           >
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </Link>
-          <h1 className="flex-1 text-lg font-semibold text-[#0F172A] text-center truncate -ml-12 mr-2">
+          <h1 className="min-w-0 flex-1 text-lg font-semibold text-[#0F172A] text-center truncate">
             {property?.name ?? "Property Details"}
           </h1>
           {property && (
             <Link
               href={`/owner/properties/${id}/edit`}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[#10B981] font-medium hover:bg-[#10B981]/10 tap-target min-h-[44px]"
+              className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[#10B981] font-medium hover:bg-[#10B981]/10 tap-target min-h-[44px]"
               aria-label="Edit property"
             >
               <Pencil className="h-4 w-4" aria-hidden />
@@ -138,16 +150,66 @@ export default function PropertyDetailPage() {
           </p>
         )}
 
-        {!loading && property && (
+        {!loading && property && (() => {
+          const urls =
+            property.imageUrls?.length
+              ? property.imageUrls
+              : property.imageUrl
+                ? [property.imageUrl]
+                : [];
+          return (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="relative aspect-[4/3] bg-slate-200">
-                {property.imageUrl ? (
-                  <img
-                    src={property.imageUrl}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+              <div
+                className="relative aspect-[4/3] bg-slate-200"
+                role="region"
+                aria-label="Property photos"
+              >
+                {urls.length > 0 ? (
+                  <>
+                    <div
+                      ref={carouselRef}
+                      onScroll={handleCarouselScroll}
+                      className="flex h-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+                      style={{ WebkitOverflowScrolling: "touch" }}
+                    >
+                      {urls.map((url, i) => (
+                        <div
+                          key={i}
+                          className="min-w-full w-full flex-shrink-0 snap-center h-full bg-slate-200"
+                        >
+                          <img
+                            src={url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    {urls.length > 1 && (
+                      <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+                        {urls.map((_, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => {
+                              carouselRef.current?.scrollTo({
+                                left: i * (carouselRef.current?.offsetWidth ?? 0),
+                                behavior: "smooth",
+                              });
+                            }}
+                            className={`h-2 rounded-full transition-colors ${
+                              i === photoIndex
+                                ? "w-4 bg-white"
+                                : "w-2 bg-white/60 hover:bg-white/80"
+                            }`}
+                            aria-label={`Photo ${i + 1} of ${urls.length}`}
+                            aria-current={i === photoIndex ? true : undefined}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-slate-400">
                     <ImageIcon className="h-12 w-12" aria-hidden />
@@ -210,23 +272,34 @@ export default function PropertyDetailPage() {
               </section>
             )}
 
-            {(property.tenantName ?? property.agentName) && (
+            {(property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
                   Resident / Agent
                 </h3>
                 <div className="space-y-1 text-sm text-slate-600">
-                  {property.tenantName && (
-                    <p>Tenant: {property.tenantName}</p>
+                  {(property.tenantName || property.tenantLineId) && (
+                    <p>
+                      Tenant: {property.tenantName ?? "—"}
+                      {property.tenantLineId && (
+                        <span className="text-slate-500"> (LINE: {property.tenantLineId})</span>
+                      )}
+                    </p>
                   )}
-                  {property.agentName && (
-                    <p>Agent: {property.agentName}</p>
+                  {(property.agentName || property.agentLineId) && (
+                    <p>
+                      Agent: {property.agentName ?? "—"}
+                      {property.agentLineId && (
+                        <span className="text-slate-500"> (LINE: {property.agentLineId})</span>
+                      )}
+                    </p>
                   )}
                 </div>
               </section>
             )}
           </div>
-        )}
+          );
+        })()}
       </main>
     </div>
   );

@@ -68,7 +68,10 @@ export default function AddPropertyPage() {
   const [amenitySearch, setAmenitySearch] = useState("");
   const [status, setStatus] = useState<Status>("Available");
   const [tenantName, setTenantName] = useState("");
+  const [tenantLineId, setTenantLineId] = useState("");
   const [agentName, setAgentName] = useState("");
+  const [agentLineId, setAgentLineId] = useState("");
+  const [lineSelectMessage, setLineSelectMessage] = useState<string | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nameError, setNameError] = useState(false);
   const [priceError, setPriceError] = useState(false);
@@ -109,8 +112,38 @@ export default function AddPropertyPage() {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleLineSelect = () => {
-    alert("Connecting to LIFF Friend Picker...");
+  const handleLineSelect = async (field: "tenant" | "agent") => {
+    try {
+      const liff = (await import("@line/liff")).default;
+      const isAvailable =
+        typeof liff.isApiAvailable === "function" &&
+        liff.isApiAvailable("shareTargetPicker");
+      if (isAvailable && typeof liff.shareTargetPicker === "function") {
+        const label = field === "tenant" ? "tenant" : "agent";
+        const result = await liff.shareTargetPicker(
+          [
+            {
+              type: "text",
+              text: `You have been set as ${label} for this property.`,
+            },
+          ],
+          { isMultiple: false }
+        );
+        if (result?.status === "success") {
+          setLineSelectMessage(
+            `Message sent. Paste the recipient's LINE ID in the LINE ID field below if you have it.`
+          );
+        }
+      } else {
+        setLineSelectMessage(
+          "Paste the LINE user ID in the LINE ID field below. You can get it from LINE or your admin."
+        );
+      }
+    } catch {
+      setLineSelectMessage(
+        "Paste the LINE user ID in the LINE ID field below."
+      );
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -206,7 +239,9 @@ export default function AddPropertyPage() {
         squareMeters: squareMeters || undefined,
         amenities: amenities.length ? amenities : undefined,
         tenantName: tenantName.trim() || undefined,
+        tenantLineId: tenantLineId.trim() || undefined,
         agentName: agentName.trim() || undefined,
+        agentLineId: agentLineId.trim() || undefined,
       };
 
       const createRes = await fetch("/api/owner/properties", {
@@ -628,6 +663,18 @@ export default function AddPropertyPage() {
               <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
                 Resident Details
               </h2>
+              {lineSelectMessage && (
+                <p className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3">
+                  {lineSelectMessage}
+                  <button
+                    type="button"
+                    onClick={() => setLineSelectMessage(null)}
+                    className="ml-2 text-[#003366] font-medium"
+                  >
+                    Dismiss
+                  </button>
+                </p>
+              )}
               <div>
                 <label htmlFor="tenant" className="block text-sm font-medium text-[#0F172A] mb-1">
                   Tenant Name
@@ -643,13 +690,24 @@ export default function AddPropertyPage() {
                   />
                   <button
                     type="button"
-                    onClick={handleLineSelect}
+                    onClick={() => handleLineSelect("tenant")}
                     className="inline-flex items-center gap-2 rounded-lg bg-[#06C755] px-4 text-sm font-medium text-white hover:bg-[#05b34a] tap-target min-h-[44px] shrink-0"
                   >
                     <MessageCircle className="h-5 w-5" aria-hidden />
                     <span className="hidden sm:inline">Select from LINE</span>
                   </button>
                 </div>
+                <label htmlFor="tenant-line-id" className="block text-sm text-slate-500 mt-1 mb-0.5">
+                  LINE ID (optional)
+                </label>
+                <input
+                  id="tenant-line-id"
+                  type="text"
+                  value={tenantLineId}
+                  onChange={(e) => setTenantLineId(e.target.value)}
+                  placeholder="Paste tenant LINE user ID"
+                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                />
               </div>
               <div>
                 <label htmlFor="agent" className="block text-sm font-medium text-[#0F172A] mb-1">
@@ -666,13 +724,24 @@ export default function AddPropertyPage() {
                   />
                   <button
                     type="button"
-                    onClick={handleLineSelect}
+                    onClick={() => handleLineSelect("agent")}
                     className="inline-flex items-center gap-2 rounded-lg bg-[#06C755] px-4 text-sm font-medium text-white hover:bg-[#05b34a] tap-target min-h-[44px] shrink-0"
                   >
                     <MessageCircle className="h-5 w-5" aria-hidden />
                     <span className="hidden sm:inline">Select from LINE</span>
                   </button>
                 </div>
+                <label htmlFor="agent-line-id" className="block text-sm text-slate-500 mt-1 mb-0.5">
+                  LINE ID (optional)
+                </label>
+                <input
+                  id="agent-line-id"
+                  type="text"
+                  value={agentLineId}
+                  onChange={(e) => setAgentLineId(e.target.value)}
+                  placeholder="Paste agent LINE user ID"
+                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                />
               </div>
             </section>
           )}

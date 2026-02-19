@@ -27,7 +27,9 @@ function toResponse(doc: PropertyDoc) {
     squareMeters: doc.squareMeters,
     amenities: doc.amenities,
     tenantName: doc.tenantName,
+    tenantLineId: doc.tenantLineId,
     agentName: doc.agentName,
+    agentLineId: doc.agentLineId,
     createdAt: doc.createdAt,
   };
 }
@@ -53,13 +55,20 @@ export async function GET(
       return NextResponse.json({ message: "Property not found" }, { status: 404 });
     }
 
-    const firstKey =
-      doc.imageKeys && doc.imageKeys.length > 0 ? doc.imageKeys[0] : null;
-    const imageUrl = firstKey ? await getPresignedGetUrl(firstKey) : null;
-
+    const keys = doc.imageKeys && doc.imageKeys.length > 0 ? doc.imageKeys : [];
+    const urlResults = await Promise.all(
+      keys.map((key: string) => getPresignedGetUrl(key))
+    );
+    const imageUrls = urlResults.filter(
+      (u): u is string => u != null
+    );
     const property = toResponse(doc as unknown as PropertyDoc);
     return NextResponse.json({
-      property: { ...property, imageUrl: imageUrl ?? undefined },
+      property: {
+        ...property,
+        imageUrl: imageUrls[0] ?? undefined,
+        imageUrls,
+      },
     });
   } catch (err) {
     console.error("[GET /api/owner/properties/[id]]", err);
@@ -133,7 +142,9 @@ export async function PATCH(
       );
     }
     if (typeof body.tenantName === "string") property.tenantName = body.tenantName;
+    if (typeof body.tenantLineId === "string") property.tenantLineId = body.tenantLineId || undefined;
     if (typeof body.agentName === "string") property.agentName = body.agentName;
+    if (typeof body.agentLineId === "string") property.agentLineId = body.agentLineId || undefined;
 
     await property.save();
 

@@ -22,7 +22,9 @@ export interface IProperty {
   squareMeters?: string;
   amenities?: string[];
   tenantName?: string;
+  tenantLineId?: string;
   agentName?: string;
+  agentLineId?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -44,7 +46,9 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     squareMeters: String,
     amenities: [String],
     tenantName: String,
+    tenantLineId: String,
     agentName: String,
+    agentLineId: String,
   },
   { timestamps: true }
 );
