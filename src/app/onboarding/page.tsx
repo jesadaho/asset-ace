@@ -28,7 +28,7 @@ function isValidPhone(phone: string): boolean {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { isReady, isLoggedIn, profile, openId, scope, error, login } = useLiff();
+  const { isReady, isLoggedIn, profile, openId, error, login } = useLiff();
   const [step, setStep] = useState<1 | 2>(1);
   const [role, setRole] = useState<OnboardingData["role"] | "">("");
   const [name, setName] = useState("");
@@ -36,19 +36,6 @@ export default function OnboardingPage() {
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (profile?.displayName && !name) {
-      setName(profile.displayName);
-    }
-  }, [profile?.displayName, name]);
-
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'A,E',location:'onboarding/page.tsx',message:'Onboarding profile state',data:{isReady,profileNull:profile===null,hasPictureUrl:!!profile?.pictureUrl,hasDisplayName:!!profile?.displayName},timestamp:Date.now()})}).catch(()=>{});
-  },[isReady,profile]);
-  const debugData = { isReady, isLoggedIn, profileNull: profile === null, hasPictureUrl: !!profile?.pictureUrl, hasDisplayName: !!profile?.displayName, pictureUrl: profile?.pictureUrl ? "(set)" : "(empty)", openId: openId ?? "(empty)", scope: scope ?? [], error: error ?? "(none)" };
-  // #endregion
 
   const validateStep2 = (): boolean => {
     const next: { name?: string; phone?: string } = {};
@@ -83,11 +70,6 @@ export default function OnboardingPage() {
     <div className="min-h-dvh bg-[#0F172A] text-white safe-area-top">
       <div className="max-w-lg mx-auto px-4 py-12">
         <header className="text-center mb-8">
-          {/* #region agent log - visible debug for mobile */}
-          <div className="mb-4 rounded bg-amber-900/80 p-2 text-xs font-mono text-amber-100">
-            DEBUG: {JSON.stringify(debugData)}
-          </div>
-          {/* #endregion */}
           <div className="flex flex-col items-center gap-3 mb-4">
             {profile?.pictureUrl ? (
               <img
