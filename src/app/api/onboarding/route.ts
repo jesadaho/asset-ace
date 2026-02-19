@@ -80,9 +80,13 @@ export async function POST(request: NextRequest) {
     );
     return NextResponse.json({ success: true });
   } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
     console.error("Onboarding POST error:", err);
     return NextResponse.json(
-      { message: "Failed to save onboarding data" },
+      {
+        message: "Failed to save onboarding data",
+        ...(process.env.NODE_ENV === "development" && { detail: message }),
+      },
       { status: 500 }
     );
   }

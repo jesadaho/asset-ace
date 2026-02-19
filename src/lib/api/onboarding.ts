@@ -49,8 +49,9 @@ export async function submitOnboarding(data: OnboardingData): Promise<void> {
       body: JSON.stringify(payload),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error((err as { message?: string }).message ?? "Failed to submit");
+      const err = (await res.json().catch(() => ({}))) as { message?: string; detail?: string };
+      const msg = err.detail ?? err.message ?? "Failed to submit";
+      throw new Error(msg);
     }
   } else {
     // Mock: persist to localStorage when no LIFF token (web dev)

@@ -28,7 +28,7 @@ function isValidPhone(phone: string): boolean {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { isReady, isLoggedIn, profile, openId, error, login } = useLiff();
+  const { isReady, isLoggedIn, profile, error, login } = useLiff();
   const [step, setStep] = useState<1 | 2>(1);
   const [role, setRole] = useState<OnboardingData["role"] | "">("");
   const [name, setName] = useState("");
@@ -85,11 +85,6 @@ export default function OnboardingPage() {
             {profile?.displayName && (
               <p className="text-white font-medium">{profile.displayName}</p>
             )}
-            {openId && (
-              <p className="text-white/60 text-xs font-mono truncate max-w-full" title={openId}>
-                openID: {openId}
-              </p>
-            )}
           </div>
           <h1 className="text-2xl font-bold tracking-tight mb-2">
             Welcome to Asset Ace
@@ -102,7 +97,7 @@ export default function OnboardingPage() {
         {isReady && isLoggedIn === false && (
           <div className="mb-6 rounded-lg border border-amber-500/50 bg-amber-900/30 p-4 text-center">
             <p className="text-amber-200 text-sm mb-3">
-              Please log in with LINE to continue. Profile and openID will be available after login.
+              Please log in with LINE to continue.
             </p>
             <Button type="button" onClick={login} size="lg" className="w-full">
               Log in with LINE
