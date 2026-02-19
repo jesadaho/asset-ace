@@ -4,6 +4,13 @@ export interface RichMenuLinkResult {
   message?: string;
 }
 
+export type DebugRichMenuTarget = "onboarding" | "owner";
+
+const DEBUG_RICH_MENU_IDS: Record<DebugRichMenuTarget, string> = {
+  onboarding: "richmenu-824251cf7d41db2ec209b88539891c60",
+  owner: "richmenu-d46f17ab4f79310c50f3f286ee82e010",
+};
+
 /**
  * Link a Rich Menu to a LINE user via the Messaging API.
  * Does not throw; logs failures and returns result with linked, status, message.
@@ -55,4 +62,16 @@ export async function linkRichMenuToUser(
       message: err instanceof Error ? err.message : String(err),
     };
   }
+}
+
+/**
+ * Debug helper: force-switch a user's rich menu to a known target.
+ * Uses POST https://api.line.me/v2/bot/user/{userId}/richmenu/{richMenuId}.
+ */
+export async function debugSwitchRichMenu(
+  userId: string,
+  target: DebugRichMenuTarget
+): Promise<RichMenuLinkResult> {
+  const richMenuId = DEBUG_RICH_MENU_IDS[target];
+  return linkRichMenuToUser(userId, richMenuId);
 }
