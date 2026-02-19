@@ -58,6 +58,7 @@ type PropertyData = {
   address: string;
   imageUrl?: string;
   imageKeys?: string[];
+  imageUrls?: string[];
   listingType?: string;
   bedrooms?: string;
   bathrooms?: string;
@@ -101,7 +102,7 @@ export default function EditPropertyPage() {
   const [contractStartDate, setContractStartDate] = useState("");
   const [lineGroup, setLineGroup] = useState("");
   const [existingImageKeys, setExistingImageKeys] = useState<string[]>([]);
-  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nameError, setNameError] = useState(false);
   const [priceError, setPriceError] = useState(false);
@@ -171,7 +172,7 @@ export default function EditPropertyPage() {
         setContractStartDate(p.contractStartDate ?? "");
         setLineGroup(p.lineGroup ?? "");
         setExistingImageKeys(Array.isArray(p.imageKeys) ? p.imageKeys : []);
-        setExistingImageUrl(p.imageUrl ?? null);
+        setExistingImageUrls(Array.isArray(p.imageUrls) ? p.imageUrls : []);
         setLoadError(null);
       } catch (err) {
         if (!cancelled) {
@@ -213,7 +214,7 @@ export default function EditPropertyPage() {
 
   const removeExistingImage = (index: number) => {
     setExistingImageKeys((prev) => prev.filter((_, i) => i !== index));
-    if (index === 0) setExistingImageUrl(null);
+    setExistingImageUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -388,15 +389,17 @@ export default function EditPropertyPage() {
             )}
             {existingImageKeys.length > 0 && (
               <ul className="mb-3 space-y-2">
-                {existingImageKeys.map((_key, index) => (
+                {existingImageKeys.map((_key, index) => {
+                  const url = existingImageUrls[index];
+                  return (
                   <li
                     key={`existing-${index}`}
                     className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white overflow-hidden"
                   >
-                    {index === 0 && existingImageUrl ? (
-                      <div className="relative w-20 h-20 shrink-0 bg-slate-200">
+                    {url ? (
+                      <div className="relative w-20 h-20 shrink-0 bg-slate-200 overflow-hidden">
                         <img
-                          src={existingImageUrl}
+                          src={url}
                           alt=""
                           className="w-full h-full object-cover"
                         />
@@ -418,7 +421,8 @@ export default function EditPropertyPage() {
                       <X className="h-4 w-4" aria-hidden />
                     </button>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
             <button
