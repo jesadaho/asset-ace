@@ -31,6 +31,12 @@ export default function AdminRichMenuPage() {
   const [customJson, setCustomJson] = useState("");
   const [customJsonError, setCustomJsonError] = useState<string | null>(null);
 
+  const [updateImageMenuId, setUpdateImageMenuId] = useState<string | null>(null);
+  const [updateImageFile, setUpdateImageFile] = useState<File | null>(null);
+  const [updateImageLoading, setUpdateImageLoading] = useState(false);
+  const [updateImageError, setUpdateImageError] = useState<string | null>(null);
+  const [updateImageSuccess, setUpdateImageSuccess] = useState(false);
+
   const loadList = async () => {
     setListError(null);
     setListLoading(true);
@@ -130,6 +136,36 @@ export default function AdminRichMenuPage() {
     void navigator.clipboard.writeText(line);
   };
 
+  const updateImage = async () => {
+    if (!updateImageMenuId || !updateImageFile) return;
+    setUpdateImageError(null);
+    setUpdateImageSuccess(false);
+    setUpdateImageLoading(true);
+    try {
+      const form = new FormData();
+      form.append("file", updateImageFile);
+      const res = await fetch(
+        `/api/richmenu/${encodeURIComponent(updateImageMenuId)}/content`,
+        { method: "POST", body: form }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setUpdateImageError(data.error || data.message || `Error ${res.status}`);
+        return;
+      }
+      setUpdateImageSuccess(true);
+      setUpdateImageMenuId(null);
+      setUpdateImageFile(null);
+    } catch (e) {
+      setUpdateImageError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setUpdateImageLoading(false);
+    }
+  };
+
+  const menus = listData?.richmenus ?? [];
+  const canUpdateImage = menus.length > 0 && updateImageMenuId && updateImageFile;
+
   return (
     <div className="min-h-dvh bg-[#0F172A] text-white safe-area-top safe-area-bottom">
       <div className="max-w-2xl mx-auto px-4 py-6">
@@ -175,6 +211,18 @@ export default function AdminRichMenuPage() {
                       <div className="font-semibold text-[#10B981]">{m.richMenuId}</div>
                       {m.name != null && <div>name: {m.name}</div>}
                       {m.chatBarText != null && <div>chatBarText: {m.chatBarText}</div>}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUpdateImageMenuId(m.richMenuId);
+                          setUpdateImageError(null);
+                          setUpdateImageSuccess(false);
+                          document.getElementById("update-image-card")?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                        className="mt-1 text-xs text-[#10B981] hover:underline"
+                      >
+                        Update image
+                      </button>
                     </div>
                   ))
                 )}
@@ -183,7 +231,74 @@ export default function AdminRichMenuPage() {
           </CardContent>
         </Card>
 
-        {/* Section 2 – Register */}
+        {/* Section 2 – Update image */}
+        <Card id="update-image-card" variant="outline" className="mb-6">
+          <CardHeader>
+            <CardTitle>Update image for existing rich menu</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!listData ? (
+              <p className="text-white/70 text-sm">Load rich menus first.</p>
+            ) : menus.length === 0 ? (
+              <p className="text-white/70 text-sm">No rich menus to update. Register one below first.</p>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-white/90 mb-1">
+                    Select rich menu
+                  </label>
+                  <select
+                    value={updateImageMenuId ?? ""}
+                    onChange={(e) => {
+                      setUpdateImageMenuId(e.target.value || null);
+                      setUpdateImageError(null);
+                      setUpdateImageSuccess(false);
+                    }}
+                    className="w-full rounded-lg border border-white/20 bg-[#0F172A]/50 px-3 py-2 text-sm text-white focus:border-[#10B981] focus:outline-none"
+                  >
+                    <option value="">Choose a menu</option>
+                    {menus.map((m) => (
+                      <option key={m.richMenuId} value={m.richMenuId}>
+                        {m.name ?? m.richMenuId}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/90 mb-1">
+                    Image (JPEG or PNG, match menu size, max 1 MB)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    className="block w-full text-sm text-white/80 file:mr-4 file:rounded-lg file:border-0 file:bg-[#10B981] file:px-4 file:py-2 file:text-white"
+                    onChange={(e) => {
+                      setUpdateImageFile(e.target.files?.[0] ?? null);
+                      setUpdateImageError(null);
+                      setUpdateImageSuccess(false);
+                    }}
+                  />
+                </div>
+                <Button
+                  variant="primary"
+                  onClick={updateImage}
+                  disabled={!canUpdateImage || updateImageLoading}
+                  isLoading={updateImageLoading}
+                >
+                  Update image
+                </Button>
+                {updateImageError && (
+                  <p className="text-red-400 text-sm" role="alert">{updateImageError}</p>
+                )}
+                {updateImageSuccess && (
+                  <p className="text-[#10B981] text-sm">Image updated successfully.</p>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Section 3 – Register */}
         <Card variant="outline">
           <CardHeader>
             <CardTitle>Register Owner Rich Menu</CardTitle>
