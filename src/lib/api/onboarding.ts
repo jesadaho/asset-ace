@@ -30,6 +30,12 @@ async function getAccessToken(): Promise<string | null> {
   }
 }
 
+export interface OnboardingSubmitError {
+  message: string;
+  detail?: string;
+  status: number;
+}
+
 export async function submitOnboarding(data: OnboardingData): Promise<void> {
   const payload = {
     role: data.role,
@@ -50,8 +56,12 @@ export async function submitOnboarding(data: OnboardingData): Promise<void> {
     });
     if (!res.ok) {
       const err = (await res.json().catch(() => ({}))) as { message?: string; detail?: string };
-      const msg = err.detail ?? err.message ?? "Failed to submit";
-      throw new Error(msg);
+      const submitErr: OnboardingSubmitError = {
+        message: err.message ?? "Failed to submit",
+        detail: err.detail,
+        status: res.status,
+      };
+      throw submitErr;
     }
   } else {
     // Mock: persist to localStorage when no LIFF token (web dev)

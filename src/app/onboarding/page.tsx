@@ -9,6 +9,7 @@ import {
   submitOnboarding,
   getRoleDashboardPath,
   type OnboardingData,
+  type OnboardingSubmitError,
 } from "@/lib/api/onboarding";
 import { User, Building2, Home } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -36,6 +37,7 @@ export default function OnboardingPage() {
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitErrorDebug, setSubmitErrorDebug] = useState<OnboardingSubmitError | null>(null);
 
   const validateStep2 = (): boolean => {
     const next: { name?: string; phone?: string } = {};
@@ -49,6 +51,7 @@ export default function OnboardingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
+    setSubmitErrorDebug(null);
     if (!validateStep2()) return;
 
     setIsSubmitting(true);
@@ -60,7 +63,12 @@ export default function OnboardingPage() {
       });
       router.push(getRoleDashboardPath(role));
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong");
+      if (err && typeof err === "object" && "message" in err && "status" in err) {
+        setSubmitErrorDebug(err as OnboardingSubmitError);
+        setSubmitError((err as OnboardingSubmitError).detail ?? (err as OnboardingSubmitError).message);
+      } else {
+        setSubmitError(err instanceof Error ? err.message : "Something went wrong");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -200,7 +208,17 @@ export default function OnboardingPage() {
             </div>
 
             {submitError && (
-              <p className="text-sm text-red-400">{submitError}</p>
+              <div className="space-y-2">
+                <p className="text-sm text-red-400">{submitError}</p>
+                {submitErrorDebug && (
+                  <div className="rounded border border-red-500/50 bg-red-950/40 p-3 text-left">
+                    <p className="text-xs font-medium text-red-300 mb-1">Debug — root cause</p>
+                    <pre className="text-xs font-mono text-red-200 whitespace-pre-wrap break-all">
+                      {`Status: ${submitErrorDebug.status}\nMessage: ${submitErrorDebug.message}${submitErrorDebug.detail ? `\nDetail: ${submitErrorDebug.detail}` : ""}`}
+                    </pre>
+                  </div>
+                )}
+              </div>
             )}
 
             <Button
