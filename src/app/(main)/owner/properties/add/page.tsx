@@ -160,7 +160,8 @@ export default function AddPropertyPage() {
         const putResults: { index: number; name: string; status: number; ok: boolean }[] = [];
         for (let i = 0; i < imageFiles.length; i++) {
           const file = imageFiles[i];
-          const contentType = uploads[i].contentType ?? file.type ?? "image/jpeg";
+          // Use exactly the Content-Type from presign (signed by S3). No Authorization or other headers - presigned URL has auth in query; extra headers cause CORS preflight.
+          const contentType = uploads[i].contentType ?? "image/jpeg";
           try {
             const putRes = await fetch(uploads[i].url, {
               method: "PUT",
@@ -183,6 +184,10 @@ export default function AddPropertyPage() {
             }
           } catch (putErr) {
             console.error("[Add Property] S3 PUT upload failed (full error):", putErr);
+            if (putErr && typeof putErr === "object") {
+              console.error("[Add Property] error.cause:", (putErr as Error).cause);
+              console.error("[Add Property] error keys:", Object.getOwnPropertyNames(putErr));
+            }
             const putMsg = putErr instanceof Error ? putErr.message : String(putErr);
             const putName = putErr instanceof Error ? putErr.constructor?.name ?? "Error" : "Unknown";
             setImageDebug((d) =>
