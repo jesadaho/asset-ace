@@ -7,8 +7,11 @@ import {
   ArrowLeft,
   ImagePlus,
   MessageCircle,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+
+const MAX_PHOTOS = 10;
 
 const PROPERTY_TYPES = [
   { value: "Condo", label: "Condo" },
@@ -34,24 +37,35 @@ export default function AddPropertyPage() {
   const [status, setStatus] = useState<Status>("Available");
   const [tenantName, setTenantName] = useState("");
   const [agentName, setAgentName] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nameError, setNameError] = useState(false);
   const [priceError, setPriceError] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const handleImageClick = () => fileInputRef.current?.click();
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setImageFile(file);
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (files.length === 0) return;
+    setImageFiles((prev) => {
+      const next = [...prev, ...files].slice(0, MAX_PHOTOS);
+      return next;
+    });
+  };
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleLineSelect = () => {
     alert("Connecting to LIFF Friend Picker...");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setNameError(false);
     setPriceError(false);
+    setUploadError(null);
 
     const hasName = name.trim().length > 0;
     const hasPrice = monthlyRent.trim().length > 0 && !Number.isNaN(Number(monthlyRent.replace(/,/g, "")));
@@ -59,8 +73,48 @@ export default function AddPropertyPage() {
     if (!hasPrice) setPriceError(true);
     if (!hasName || !hasPrice) return;
 
-    alert("Property saved.");
-    router.push("/owner/properties");
+    setSaving(true);
+    try {
+      if (imageFiles.length > 0) {
+        const presignRes = await fetch("/api/upload/presign", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            files: imageFiles.map((f) => ({ name: f.name, type: f.type })),
+          }),
+        });
+        const presignData = await presignRes.json().catch(() => ({}));
+        if (!presignRes.ok) {
+          setUploadError(presignData.error || `Upload setup failed (${presignRes.status})`);
+          setSaving(false);
+          return;
+        }
+        const uploads = presignData.uploads as Array<{ key: string; url: string }>;
+        if (!Array.isArray(uploads) || uploads.length !== imageFiles.length) {
+          setUploadError("Invalid presign response");
+          setSaving(false);
+          return;
+        }
+        for (let i = 0; i < imageFiles.length; i++) {
+          const putRes = await fetch(uploads[i].url, {
+            method: "PUT",
+            body: imageFiles[i],
+            headers: { "Content-Type": imageFiles[i].type || "image/jpeg" },
+          });
+          if (!putRes.ok) {
+            setUploadError(`Failed to upload ${imageFiles[i].name}`);
+            setSaving(false);
+            return;
+          }
+        }
+      }
+      alert("Property saved.");
+      router.push("/owner/properties");
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -85,26 +139,57 @@ export default function AddPropertyPage() {
         <div className="py-6 space-y-8">
           <section>
             <label className="block text-sm font-medium text-[#0F172A] mb-2">
-              Property Photo
+              Property Photos
             </label>
             <button
               type="button"
               onClick={handleImageClick}
-              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-10 text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 focus:border-[#003366] focus:outline-none focus:ring-2 focus:ring-[#003366]/20"
+              disabled={imageFiles.length >= MAX_PHOTOS}
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-10 text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 focus:border-[#003366] focus:outline-none focus:ring-2 focus:ring-[#003366]/20 disabled:opacity-50 disabled:pointer-events-none"
             >
               <ImagePlus className="h-10 w-10" aria-hidden />
               <span className="text-sm font-medium">
-                {imageFile ? imageFile.name : "Upload Property Photo"}
+                {imageFiles.length >= MAX_PHOTOS
+                  ? `Maximum ${MAX_PHOTOS} photos`
+                  : imageFiles.length > 0
+                    ? "Add more photos"
+                    : "Upload Property Photos"}
               </span>
             </button>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png"
+              multiple
               onChange={handleImageChange}
               className="sr-only"
-              aria-label="Choose property photo"
+              aria-label="Choose property photos"
             />
+            {imageFiles.length > 0 && (
+              <ul className="mt-3 space-y-2">
+                {imageFiles.map((file, index) => (
+                  <li
+                    key={`${file.name}-${index}`}
+                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                  >
+                    <span className="truncate text-[#0F172A]">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="shrink-0 p-1 text-slate-400 hover:text-red-500 tap-target"
+                      aria-label={`Remove ${file.name}`}
+                    >
+                      <X className="h-4 w-4" aria-hidden />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {uploadError && (
+              <p className="mt-2 text-sm text-red-500" role="alert">
+                {uploadError}
+              </p>
+            )}
           </section>
 
           <section className="space-y-4">
@@ -278,6 +363,8 @@ export default function AddPropertyPage() {
           variant="primary"
           size="lg"
           className="w-full"
+          disabled={saving}
+          isLoading={saving}
         >
           Save Property
         </Button>
