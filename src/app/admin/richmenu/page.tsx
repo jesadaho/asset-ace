@@ -26,6 +26,10 @@ export default function AdminRichMenuPage() {
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [menuSize, setMenuSize] = useState<"2500x1686" | "1200x810">("2500x1686");
+  const [useCustomJson, setUseCustomJson] = useState(false);
+  const [customJson, setCustomJson] = useState("");
+  const [customJsonError, setCustomJsonError] = useState<string | null>(null);
 
   const loadList = async () => {
     setListError(null);
@@ -50,9 +54,37 @@ export default function AdminRichMenuPage() {
   const registerOwner = async () => {
     setRegisterError(null);
     setCreatedId(null);
+    setCustomJsonError(null);
     setRegisterLoading(true);
     try {
-      const createRes = await fetch("/api/richmenu", { method: "POST" });
+      let requestBody: { size?: string; customPayload?: unknown };
+      if (useCustomJson && customJson.trim()) {
+        try {
+          const parsed = JSON.parse(customJson.trim()) as unknown;
+          if (!parsed || typeof parsed !== "object" || !("size" in parsed) || !("areas" in parsed)) {
+            setCustomJsonError("JSON must include size and areas (LINE Rich Menu format).");
+            setRegisterLoading(false);
+            return;
+          }
+          requestBody = { customPayload: parsed };
+        } catch {
+          setCustomJsonError("Invalid JSON. Paste a valid LINE Rich Menu JSON.");
+          setRegisterLoading(false);
+          return;
+        }
+      } else if (useCustomJson) {
+        setCustomJsonError("Paste your Rich Menu JSON above.");
+        setRegisterLoading(false);
+        return;
+      } else {
+        requestBody = { size: menuSize };
+      }
+
+      const createRes = await fetch("/api/richmenu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
       const createData = await createRes.json().catch(() => ({}));
       if (!createRes.ok) {
         setRegisterError(createData.error || createData.message || `Error ${createRes.status}`);
@@ -111,7 +143,7 @@ export default function AdminRichMenuPage() {
 
         <h1 className="text-2xl font-bold mb-2">Rich Menu Management</h1>
         <p className="text-white/70 text-sm mb-8">
-          List existing rich menus and register the Owner Rich Menu (6-button, 2500×1686).
+          List existing rich menus and register the Owner Rich Menu (6-button, 2500×1686 or 1200×810).
         </p>
 
         {/* Section 1 – List */}
@@ -158,13 +190,87 @@ export default function AdminRichMenuPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-white/80 text-sm">
-              Creates the 6-button Owner menu (2500×1686) and optionally uploads an image.
+              Creates the 6-button Owner menu and optionally uploads an image.
               Set the returned ID in .env as LINE_RICH_MENU_ID_OWNER.
             </p>
 
             <div>
+              <label className="block text-sm font-medium text-white/90 mb-2">
+                Mode
+              </label>
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="registerMode"
+                    checked={!useCustomJson}
+                    onChange={() => setUseCustomJson(false)}
+                    className="rounded border-white/30 text-[#10B981] focus:ring-[#10B981]"
+                  />
+                  <span className="text-sm">Preset (Owner menu)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="registerMode"
+                    checked={useCustomJson}
+                    onChange={() => setUseCustomJson(true)}
+                    className="rounded border-white/30 text-[#10B981] focus:ring-[#10B981]"
+                  />
+                  <span className="text-sm">Custom JSON</span>
+                </label>
+              </div>
+            </div>
+
+            {!useCustomJson ? (
+              <div>
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  Size
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="menuSize"
+                      checked={menuSize === "2500x1686"}
+                      onChange={() => setMenuSize("2500x1686")}
+                      className="rounded border-white/30 text-[#10B981] focus:ring-[#10B981]"
+                    />
+                    <span className="text-sm">2500×1686</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="menuSize"
+                      checked={menuSize === "1200x810"}
+                      onChange={() => setMenuSize("1200x810")}
+                      className="rounded border-white/30 text-[#10B981] focus:ring-[#10B981]"
+                    />
+                    <span className="text-sm">1200×810</span>
+                  </label>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-white/90 mb-1">
+                  Rich Menu JSON (LINE format: size, name, chatBarText, areas)
+                </label>
+                <textarea
+                  value={customJson}
+                  onChange={(e) => { setCustomJson(e.target.value); setCustomJsonError(null); }}
+                  placeholder='{"size":{"width":1200,"height":810},"selected":true,"name":"My Menu","chatBarText":"Menu","areas":[...]}'
+                  rows={10}
+                  className="w-full rounded-lg border border-white/20 bg-[#0F172A]/50 px-3 py-2 text-sm font-mono text-white placeholder:text-white/40 focus:border-[#10B981] focus:outline-none"
+                />
+                {customJsonError && (
+                  <p className="mt-1 text-red-400 text-sm" role="alert">{customJsonError}</p>
+                )}
+              </div>
+            )}
+
+            <div>
               <label className="block text-sm font-medium text-white/90 mb-1">
-                Optional image (JPEG or PNG, 2500×1686, max 1 MB)
+                Optional image (JPEG or PNG, match menu size, max 1 MB)
               </label>
               <input
                 type="file"

@@ -6,7 +6,7 @@ const MAX_BYTES = 1024 * 1024; // 1 MB per LINE
 /**
  * POST /api/richmenu/[richMenuId]/content
  * Uploads rich menu image to LINE. Accepts raw body or multipart file.
- * Image must be 2500x1686, max 1 MB; Content-Type image/jpeg or image/png.
+ * Image must match the rich menu size (e.g. 2500x1686 or 1200x810), max 1 MB; Content-Type image/jpeg or image/png.
  */
 export async function POST(
   request: NextRequest,
@@ -90,7 +90,7 @@ export async function POST(
       const data = await res.json().catch(() => ({}));
       return NextResponse.json(
         {
-          error: "LINE rejected the image (check size 2500x1686 and max 1 MB)",
+          error: "LINE rejected the image (check size matches menu: 2500x1686 or 1200x810, max 1 MB)",
           status: res.status,
           ...data,
         },

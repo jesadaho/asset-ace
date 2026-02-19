@@ -1,12 +1,37 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+const SIZE_2500 = { width: 2500, height: 1686 } as const;
+const SIZE_1200 = { width: 1200, height: 810 } as const;
+
+type SizeKey = "2500x1686" | "1200x810";
+
+/** LINE Rich Menu create body (size, selected, name, chatBarText, areas). */
+type RichMenuPayload = {
+  size: { width: number; height: number };
+  selected?: boolean;
+  name: string;
+  chatBarText: string;
+  areas: Array<{
+    bounds: { x: number; y: number; width: number; height: number };
+    action: { type: string; label?: string; uri?: string; [k: string]: unknown };
+  }>;
+};
+
+function isValidCustomPayload(obj: unknown): obj is RichMenuPayload {
+  if (!obj || typeof obj !== "object") return false;
+  const o = obj as Record<string, unknown>;
+  if (!o.size || typeof (o.size as { width?: number }).width !== "number" || typeof (o.size as { height?: number }).height !== "number") return false;
+  if (!Array.isArray(o.areas)) return false;
+  return true;
+}
 
 /**
  * POST /api/richmenu
- * Creates the Owner Rich Menu (6-button, 2500x1686) via LINE API.
- * Uses NEXT_PUBLIC_LIFF_ID and optional LINE_OFFICIAL_ACCOUNT_ID from env.
+ * Creates a Rich Menu via LINE API.
+ * Body: { size: "2500x1686" | "1200x810" } for preset, or { customPayload: <LINE rich menu JSON> } for custom.
  * Returns { richMenuId }.
  */
-export async function POST() {
+export async function POST(request: NextRequest) {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   if (!token?.trim()) {
     return NextResponse.json(
@@ -15,74 +40,65 @@ export async function POST() {
     );
   }
 
-  const liffId = process.env.NEXT_PUBLIC_LIFF_ID?.trim() ?? "";
-  if (!liffId) {
+  const contentType = request.headers.get("content-type") ?? "";
+  let body: RichMenuPayload;
+
+  if (contentType.includes("application/json")) {
+    try {
+      const json = (await request.json()) as { size?: string; customPayload?: unknown };
+      if (json.customPayload != null && isValidCustomPayload(json.customPayload)) {
+        body = json.customPayload as RichMenuPayload;
+        if (body.selected === undefined) body.selected = true;
+      } else {
+        const liffId = process.env.NEXT_PUBLIC_LIFF_ID?.trim() ?? "";
+        if (!liffId) {
+          return NextResponse.json(
+            { error: "NEXT_PUBLIC_LIFF_ID is not set" },
+            { status: 500 }
+          );
+        }
+        const sizeKey: SizeKey = json.size === "1200x810" || json.size === "2500x1686" ? json.size : "2500x1686";
+        const baseUrl = `https://liff.line.me/${liffId}`;
+        const officialId = process.env.LINE_OFFICIAL_ACCOUNT_ID?.trim() || "YOUR_OFFICIAL_ACCOUNT_ID";
+        const is1200 = sizeKey === "1200x810";
+        const size = is1200 ? SIZE_1200 : SIZE_2500;
+        const areas = is1200
+          ? [
+              { bounds: { x: 0, y: 0, width: 400, height: 405 }, label: "Dashboard", uri: `${baseUrl}/owner/dashboard` },
+              { bounds: { x: 400, y: 0, width: 400, height: 405 }, label: "Properties", uri: `${baseUrl}/owner/properties` },
+              { bounds: { x: 800, y: 0, width: 400, height: 405 }, label: "Financials", uri: `${baseUrl}/owner/finance` },
+              { bounds: { x: 0, y: 405, width: 400, height: 405 }, label: "Repairs", uri: `${baseUrl}/owner/repairs` },
+              { bounds: { x: 400, y: 405, width: 400, height: 405 }, label: "Chat", uri: `https://line.me/R/oaMessage/@${officialId}/` },
+              { bounds: { x: 800, y: 405, width: 400, height: 405 }, label: "Settings", uri: `${baseUrl}/owner/settings` },
+            ]
+          : [
+              { bounds: { x: 0, y: 0, width: 834, height: 843 }, label: "Dashboard", uri: `${baseUrl}/owner/dashboard` },
+              { bounds: { x: 834, y: 0, width: 833, height: 843 }, label: "Properties", uri: `${baseUrl}/owner/properties` },
+              { bounds: { x: 1667, y: 0, width: 833, height: 843 }, label: "Financials", uri: `${baseUrl}/owner/finance` },
+              { bounds: { x: 0, y: 843, width: 834, height: 843 }, label: "Repairs", uri: `${baseUrl}/owner/repairs` },
+              { bounds: { x: 834, y: 843, width: 833, height: 843 }, label: "Chat", uri: `https://line.me/R/oaMessage/@${officialId}/` },
+              { bounds: { x: 1667, y: 843, width: 833, height: 843 }, label: "Settings", uri: `${baseUrl}/owner/settings` },
+            ];
+        body = {
+          size,
+          selected: true,
+          name: is1200 ? "Asset Ace Owner Menu 1200" : "Asset Ace Owner Menu",
+          chatBarText: "Owner Menu",
+          areas: areas.map((a) => ({ bounds: a.bounds, action: { type: "uri" as const, label: a.label, uri: a.uri } })),
+        };
+      }
+    } catch (e) {
+      return NextResponse.json(
+        { error: "Invalid JSON body or customPayload", detail: e instanceof Error ? e.message : String(e) },
+        { status: 400 }
+      );
+    }
+  } else {
     return NextResponse.json(
-      { error: "NEXT_PUBLIC_LIFF_ID is not set" },
-      { status: 500 }
+      { error: "Content-Type must be application/json" },
+      { status: 400 }
     );
   }
-
-  const baseUrl = `https://liff.line.me/${liffId}`;
-  const officialId =
-    process.env.LINE_OFFICIAL_ACCOUNT_ID?.trim() || "YOUR_OFFICIAL_ACCOUNT_ID";
-
-  const body = {
-    size: { width: 2500, height: 1686 },
-    selected: true,
-    name: "Asset Ace Owner Menu",
-    chatBarText: "Owner Menu",
-    areas: [
-      {
-        bounds: { x: 0, y: 0, width: 834, height: 843 },
-        action: {
-          type: "uri",
-          label: "Dashboard",
-          uri: `${baseUrl}/owner/dashboard`,
-        },
-      },
-      {
-        bounds: { x: 834, y: 0, width: 833, height: 843 },
-        action: {
-          type: "uri",
-          label: "Properties",
-          uri: `${baseUrl}/owner/properties`,
-        },
-      },
-      {
-        bounds: { x: 1667, y: 0, width: 833, height: 843 },
-        action: {
-          type: "uri",
-          label: "Financials",
-          uri: `${baseUrl}/owner/finance`,
-        },
-      },
-      {
-        bounds: { x: 0, y: 843, width: 834, height: 843 },
-        action: {
-          type: "uri",
-          label: "Repairs",
-          uri: `${baseUrl}/owner/repairs`,
-        },
-      },
-      {
-        bounds: { x: 834, y: 843, width: 833, height: 843 },
-        action: {
-          type: "uri",
-          label: "Chat",
-          uri: `https://line.me/R/oaMessage/@${officialId}/`,
-        },
-      },
-      {
-        bounds: { x: 1667, y: 843, width: 833, height: 843 },
-        action: {
-          type: "uri",
-          label: "Settings",
-          uri: `${baseUrl}/owner/settings`,
-        },
-      },
-    ],
-  };
 
   try {
     const res = await fetch("https://api.line.me/v2/bot/richmenu", {
