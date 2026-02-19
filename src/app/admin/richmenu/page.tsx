@@ -37,6 +37,11 @@ export default function AdminRichMenuPage() {
   const [updateImageError, setUpdateImageError] = useState<string | null>(null);
   const [updateImageSuccess, setUpdateImageSuccess] = useState(false);
 
+  const [updateJsonText, setUpdateJsonText] = useState("");
+  const [updateJsonLoading, setUpdateJsonLoading] = useState(false);
+  const [updateJsonError, setUpdateJsonError] = useState<string | null>(null);
+  const [updateJsonNewId, setUpdateJsonNewId] = useState<string | null>(null);
+
   const loadList = async () => {
     setListError(null);
     setListLoading(true);
@@ -163,8 +168,61 @@ export default function AdminRichMenuPage() {
     }
   };
 
+  const replaceWithJson = async () => {
+    if (!updateImageMenuId || !updateJsonText.trim()) return;
+    setUpdateJsonError(null);
+    setUpdateJsonNewId(null);
+    setUpdateJsonLoading(true);
+    try {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(updateJsonText.trim());
+      } catch {
+        setUpdateJsonError("Invalid JSON.");
+        return;
+      }
+      if (!parsed || typeof parsed !== "object" || !("size" in parsed) || !("areas" in parsed)) {
+        setUpdateJsonError("JSON must include size and areas (LINE Rich Menu format).");
+        return;
+      }
+      const delRes = await fetch(
+        `/api/richmenu/${encodeURIComponent(updateImageMenuId)}`,
+        { method: "DELETE" }
+      );
+      if (!delRes.ok) {
+        const data = await delRes.json().catch(() => ({}));
+        setUpdateJsonError(data.error || data.message || `Delete failed ${delRes.status}`);
+        return;
+      }
+      const createRes = await fetch("/api/richmenu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customPayload: parsed }),
+      });
+      const createData = await createRes.json().catch(() => ({}));
+      if (!createRes.ok) {
+        setUpdateJsonError(createData.error || createData.message || `Create failed ${createRes.status}`);
+        return;
+      }
+      const newId = createData.richMenuId;
+      if (newId) {
+        setUpdateJsonNewId(newId);
+        setUpdateJsonText("");
+        setUpdateImageMenuId(null);
+        setListData(null);
+      } else {
+        setUpdateJsonError("No richMenuId returned.");
+      }
+    } catch (e) {
+      setUpdateJsonError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setUpdateJsonLoading(false);
+    }
+  };
+
   const menus = listData?.richmenus ?? [];
   const canUpdateImage = menus.length > 0 && updateImageMenuId && updateImageFile;
+  const canReplaceJson = menus.length > 0 && updateImageMenuId && updateJsonText.trim().length > 0;
 
   return (
     <div className="min-h-dvh bg-[#0F172A] text-white safe-area-top safe-area-bottom">
@@ -234,7 +292,7 @@ export default function AdminRichMenuPage() {
         {/* Section 2 – Update image */}
         <Card id="update-image-card" variant="outline" className="mb-6">
           <CardHeader>
-            <CardTitle>Update image for existing rich menu</CardTitle>
+            <CardTitle>Update existing rich menu</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {!listData ? (
@@ -253,6 +311,8 @@ export default function AdminRichMenuPage() {
                       setUpdateImageMenuId(e.target.value || null);
                       setUpdateImageError(null);
                       setUpdateImageSuccess(false);
+                      setUpdateJsonError(null);
+                      setUpdateJsonNewId(null);
                     }}
                     className="w-full rounded-lg border border-white/20 bg-[#0F172A]/50 px-3 py-2 text-sm text-white focus:border-[#10B981] focus:outline-none"
                   >
@@ -293,6 +353,42 @@ export default function AdminRichMenuPage() {
                 {updateImageSuccess && (
                   <p className="text-[#10B981] text-sm">Image updated successfully.</p>
                 )}
+
+                <div className="border-t border-white/10 pt-4 mt-4">
+                  <p className="text-sm font-medium text-white/90 mb-2">Replace definition with custom JSON</p>
+                  <p className="text-white/70 text-xs mb-2">
+                    Deletes the selected menu and creates a new one from the JSON. You will get a new richMenuId.
+                  </p>
+                  <textarea
+                    value={updateJsonText}
+                    onChange={(e) => {
+                      setUpdateJsonText(e.target.value);
+                      setUpdateJsonError(null);
+                      setUpdateJsonNewId(null);
+                    }}
+                    placeholder='{"size":{"width":1200,"height":810},"selected":true,"name":"My Menu","chatBarText":"Menu","areas":[...]}'
+                    rows={6}
+                    className="w-full rounded-lg border border-white/20 bg-[#0F172A]/50 px-3 py-2 text-sm font-mono text-white placeholder:text-white/40 focus:border-[#10B981] focus:outline-none mb-2"
+                  />
+                  <Button
+                    variant="secondary"
+                    onClick={replaceWithJson}
+                    disabled={!canReplaceJson || updateJsonLoading}
+                    isLoading={updateJsonLoading}
+                  >
+                    Replace menu (delete + create)
+                  </Button>
+                  {updateJsonError && (
+                    <p className="mt-2 text-red-400 text-sm" role="alert">{updateJsonError}</p>
+                  )}
+                  {updateJsonNewId && (
+                    <div className="mt-2 rounded bg-[#0F172A]/50 p-3">
+                      <p className="text-[#10B981] text-sm font-medium">New rich menu created</p>
+                      <code className="block mt-1 text-xs break-all text-white/90">{updateJsonNewId}</code>
+                      <p className="text-white/70 text-xs mt-1">Update .env with this ID if needed.</p>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </CardContent>
