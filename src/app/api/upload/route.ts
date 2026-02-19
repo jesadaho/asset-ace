@@ -48,9 +48,16 @@ export async function POST(request: NextRequest) {
       bucketName: bucket ?? null,
     });
   } catch (err) {
+    const bucket = process.env.AWS_S3_BUCKET?.trim();
+    const region = process.env.AWS_REGION;
     console.error("[upload]", err);
+    const rawMessage = err instanceof Error ? err.message : "Upload failed";
+    const isRegionError = /must be addressed using the specified endpoint|The specified bucket does not exist|Wrong region/i.test(rawMessage);
+    const error = isRegionError
+      ? `S3 region mismatch: set AWS_REGION to the region where your bucket was created (e.g. ap-southeast-1, us-east-1). Current: ${region ?? "not set"}.`
+      : rawMessage;
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Upload failed" },
+      { error, bucketName: bucket ?? null },
       { status: 500 }
     );
   }
