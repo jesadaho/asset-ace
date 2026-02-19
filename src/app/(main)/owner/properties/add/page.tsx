@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ImagePlus,
-  MessageCircle,
   X,
   Search,
   Plus,
@@ -72,8 +71,7 @@ export default function AddPropertyPage() {
   const [agentName, setAgentName] = useState("");
   const [agentLineId, setAgentLineId] = useState("");
   const [contractStartDate, setContractStartDate] = useState("");
-  const [lineSelectMessage, setLineSelectMessage] = useState<string | null>(null);
-  const [lineSelectLoading, setLineSelectLoading] = useState(false);
+  const [lineGroup, setLineGroup] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nameError, setNameError] = useState(false);
   const [priceError, setPriceError] = useState(false);
@@ -112,46 +110,6 @@ export default function AddPropertyPage() {
   };
   const removeImage = (index: number) => {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleLineSelect = async (field: "tenant" | "agent") => {
-    setLineSelectLoading(true);
-    setLineSelectMessage(null);
-    try {
-      const liff = (await import("@line/liff")).default;
-      const isAvailable =
-        typeof liff.isApiAvailable === "function" &&
-        liff.isApiAvailable("shareTargetPicker");
-      if (!isAvailable || typeof liff.shareTargetPicker !== "function") {
-        setLineSelectMessage(
-          "Send invite is only available when you open this page inside the LINE app. You can still enter their name and LINE ID below."
-        );
-        return;
-      }
-      const inviteUrl = `https://liff.line.me/${process.env.NEXT_PUBLIC_LIFF_ID ?? ""}`;
-      const label = field === "tenant" ? "tenant" : "agent";
-      const inviteText = inviteUrl
-        ? `You're invited as ${label} for a property. Open this link: ${inviteUrl}`
-        : `You're invited as ${label} for a property.`;
-      const result = await liff.shareTargetPicker(
-        [{ type: "text", text: inviteText }],
-        { isMultiple: false }
-      );
-      if (result?.status === "success") {
-        setLineSelectMessage(
-          "Invite link sent. LINE does not share the friend's name or ID with the app—enter them below if you have them."
-        );
-      }
-      // Cancel: Promise resolves with no value; no intrusive message
-    } catch (err) {
-      console.error("[handleLineSelect]", err);
-      const msg = err instanceof Error ? err.message : String(err);
-      setLineSelectMessage(
-        `Could not open friend picker: ${msg}. Open this page in the LINE app and ensure Share target picker is enabled for your LIFF app. You can still enter their name and LINE ID below.`
-      );
-    } finally {
-      setLineSelectLoading(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -251,6 +209,7 @@ export default function AddPropertyPage() {
         agentName: agentName.trim() || undefined,
         agentLineId: agentLineId.trim() || undefined,
         contractStartDate: contractStartDate.trim() || undefined,
+        lineGroup: lineGroup.trim() || undefined,
       };
 
       const createRes = await fetch("/api/owner/properties", {
@@ -672,48 +631,22 @@ export default function AddPropertyPage() {
               <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
                 Resident Details
               </h2>
-              <p className="text-xs text-slate-500">
-                Tap &quot;Send Invite Link&quot; to choose a LINE friend and send them an invite. LINE does not share the friend&apos;s name or ID with the app—enter them below if you have them.
-              </p>
-              {lineSelectMessage && (
-                <p className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3">
-                  {lineSelectMessage}
-                  <button
-                    type="button"
-                    onClick={() => setLineSelectMessage(null)}
-                    className="ml-2 text-[#003366] font-medium"
-                  >
-                    Dismiss
-                  </button>
-                </p>
-              )}
               <div>
                 <label htmlFor="tenant" className="block text-sm font-medium text-[#0F172A] mb-1">
                   Tenant Name
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    id="tenant"
-                    type="text"
-                    value={tenantName}
-                    onChange={(e) => setTenantName(e.target.value)}
-                    placeholder="Enter tenant name"
-                    className={`${inputBase} flex-1 border border-slate-200 rounded-lg px-3`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleLineSelect("tenant")}
-                    disabled={lineSelectLoading}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#06C755] px-4 text-sm font-medium text-white hover:bg-[#05b34a] tap-target min-h-[44px] shrink-0 disabled:opacity-60 disabled:pointer-events-none"
-                  >
-                    <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
-                    <span className="hidden sm:inline">
-                      {lineSelectLoading ? "Opening…" : "Send Invite Link to Tenant"}
-                    </span>
-                  </button>
-                </div>
-                <label htmlFor="tenant-line-id" className="block text-sm text-slate-500 mt-1 mb-0.5">
-                  LINE ID (optional)
+                <input
+                  id="tenant"
+                  type="text"
+                  value={tenantName}
+                  onChange={(e) => setTenantName(e.target.value)}
+                  placeholder="Enter tenant name..."
+                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                />
+              </div>
+              <div>
+                <label htmlFor="tenant-line-id" className="block text-sm text-slate-500 mb-1">
+                  LINE ID (Optional)
                 </label>
                 <input
                   id="tenant-line-id"
@@ -728,29 +661,18 @@ export default function AddPropertyPage() {
                 <label htmlFor="agent" className="block text-sm font-medium text-[#0F172A] mb-1">
                   Agent Name
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    id="agent"
-                    type="text"
-                    value={agentName}
-                    onChange={(e) => setAgentName(e.target.value)}
-                    placeholder="Enter agent name"
-                    className={`${inputBase} flex-1 border border-slate-200 rounded-lg px-3`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleLineSelect("agent")}
-                    disabled={lineSelectLoading}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#06C755] px-4 text-sm font-medium text-white hover:bg-[#05b34a] tap-target min-h-[44px] shrink-0 disabled:opacity-60 disabled:pointer-events-none"
-                  >
-                    <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
-                    <span className="hidden sm:inline">
-                      {lineSelectLoading ? "Opening…" : "Send Invite Link to Agent"}
-                    </span>
-                  </button>
-                </div>
-                <label htmlFor="agent-line-id" className="block text-sm text-slate-500 mt-1 mb-0.5">
-                  LINE ID (optional)
+                <input
+                  id="agent"
+                  type="text"
+                  value={agentName}
+                  onChange={(e) => setAgentName(e.target.value)}
+                  placeholder="Enter agent name..."
+                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                />
+              </div>
+              <div>
+                <label htmlFor="agent-line-id" className="block text-sm text-slate-500 mb-1">
+                  LINE ID (Optional)
                 </label>
                 <input
                   id="agent-line-id"
@@ -758,6 +680,19 @@ export default function AddPropertyPage() {
                   value={agentLineId}
                   onChange={(e) => setAgentLineId(e.target.value)}
                   placeholder="Paste agent LINE user ID"
+                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                />
+              </div>
+              <div>
+                <label htmlFor="line-group" className="block text-sm text-slate-500 mb-1">
+                  LINE Group (Optional)
+                </label>
+                <input
+                  id="line-group"
+                  type="text"
+                  value={lineGroup}
+                  onChange={(e) => setLineGroup(e.target.value)}
+                  placeholder="Name or invite link of LINE group for this property"
                   className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 />
               </div>

@@ -39,6 +39,7 @@ type PropertyDetail = {
   tenantLineId?: string;
   agentName?: string;
   agentLineId?: string;
+  lineGroup?: string;
   contractStartDate?: string;
   createdAt?: string;
 };
@@ -273,7 +274,7 @@ export default function PropertyDetailPage() {
               </section>
             )}
 
-            {(property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.contractStartDate) && (
+            {(property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.contractStartDate) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
                   Resident / Agent
@@ -294,6 +295,9 @@ export default function PropertyDetailPage() {
                         <span className="text-slate-500"> (LINE: {property.agentLineId})</span>
                       )}
                     </p>
+                  )}
+                  {property.lineGroup && (
+                    <p>LINE Group: {property.lineGroup}</p>
                   )}
                   {property.contractStartDate && (
                     <p>Contract start: {property.contractStartDate}</p>

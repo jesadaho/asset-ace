@@ -142,6 +142,8 @@ export async function POST(request: NextRequest) {
         typeof body.agentName === "string" ? body.agentName : undefined,
       agentLineId:
         typeof body.agentLineId === "string" ? body.agentLineId : undefined,
+      lineGroup:
+        typeof body.lineGroup === "string" ? body.lineGroup : undefined,
       contractStartDate:
         typeof body.contractStartDate === "string" && body.contractStartDate.trim()
           ? (() => {

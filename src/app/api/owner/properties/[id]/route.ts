@@ -30,6 +30,7 @@ function toResponse(doc: PropertyDoc) {
     tenantLineId: doc.tenantLineId,
     agentName: doc.agentName,
     agentLineId: doc.agentLineId,
+    lineGroup: doc.lineGroup,
     contractStartDate: doc.contractStartDate
       ? (doc.contractStartDate as Date).toISOString().slice(0, 10)
       : undefined,
@@ -148,6 +149,7 @@ export async function PATCH(
     if (typeof body.tenantLineId === "string") property.tenantLineId = body.tenantLineId || undefined;
     if (typeof body.agentName === "string") property.agentName = body.agentName;
     if (typeof body.agentLineId === "string") property.agentLineId = body.agentLineId || undefined;
+    if (typeof body.lineGroup === "string") property.lineGroup = body.lineGroup || undefined;
     if (typeof body.contractStartDate === "string" && body.contractStartDate.trim()) {
       const d = new Date(body.contractStartDate);
       property.contractStartDate = Number.isNaN(d.getTime()) ? undefined : d;
