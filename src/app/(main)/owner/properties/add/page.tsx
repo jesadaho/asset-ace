@@ -8,15 +8,38 @@ import {
   ImagePlus,
   MessageCircle,
   X,
+  Search,
+  Plus,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 const MAX_PHOTOS = 10;
 
+const LISTING_TYPES = [
+  { value: "rent", label: "For rent" },
+  { value: "sale", label: "For sale" },
+];
+
 const PROPERTY_TYPES = [
   { value: "Condo", label: "Condo" },
   { value: "House", label: "House" },
   { value: "Apartment", label: "Apartment" },
+];
+
+const AMENITY_OPTIONS = [
+  { id: "balcony", label: "Balcony" },
+  { id: "basement", label: "Basement" },
+  { id: "bike-parking", label: "Bike Parking" },
+  { id: "cable-tv", label: "Cable TV" },
+  { id: "pool", label: "Pool" },
+  { id: "gym", label: "Gym" },
+  { id: "parking", label: "Parking" },
+  { id: "garden", label: "Garden" },
+  { id: "security", label: "Security" },
+  { id: "elevator", label: "Elevator" },
+  { id: "wifi", label: "WiFi" },
+  { id: "air-conditioning", label: "Air Conditioning" },
 ];
 
 const STATUS_OPTIONS = ["Available", "Occupied", "Maintenance"] as const;
@@ -31,9 +54,17 @@ export default function AddPropertyPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
+  const [listingType, setListingType] = useState<"sale" | "rent">("rent");
   const [propertyType, setPropertyType] = useState("Condo");
   const [monthlyRent, setMonthlyRent] = useState("");
   const [address, setAddress] = useState("");
+  const [bedrooms, setBedrooms] = useState("");
+  const [bathrooms, setBathrooms] = useState("");
+  const [addressPrivate, setAddressPrivate] = useState(false);
+  const [description, setDescription] = useState("");
+  const [squareMeters, setSquareMeters] = useState("");
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [amenitySearch, setAmenitySearch] = useState("");
   const [status, setStatus] = useState<Status>("Available");
   const [tenantName, setTenantName] = useState("");
   const [agentName, setAgentName] = useState("");
@@ -42,6 +73,15 @@ export default function AddPropertyPage() {
   const [priceError, setPriceError] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const toggleAmenity = (id: string) => {
+    setAmenities((prev) =>
+      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
+    );
+  };
+  const filteredAmenityOptions = AMENITY_OPTIONS.filter((opt) =>
+    opt.label.toLowerCase().includes(amenitySearch.toLowerCase().trim())
+  );
 
   const handleImageClick = () => fileInputRef.current?.click();
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,6 +232,24 @@ export default function AddPropertyPage() {
             )}
           </section>
 
+          <section>
+            <label htmlFor="listing-type" className="block text-sm font-medium text-[#0F172A] mb-1">
+              Homes for sale or rent
+            </label>
+            <select
+              id="listing-type"
+              value={listingType}
+              onChange={(e) => setListingType(e.target.value as "sale" | "rent")}
+              className={`${inputBase} border-b border-slate-200 cursor-pointer`}
+            >
+              {LISTING_TYPES.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </section>
+
           <section className="space-y-4">
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
               Basic Info
@@ -275,6 +333,144 @@ export default function AddPropertyPage() {
                 rows={3}
                 className={`${inputBase} resize-none border border-slate-200 rounded-lg px-3 focus:border-[#003366]`}
               />
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+              Details
+            </h2>
+            <div>
+              <label htmlFor="bedrooms" className="block text-sm font-medium text-[#0F172A] mb-1">
+                Bedrooms
+              </label>
+              <input
+                id="bedrooms"
+                type="text"
+                inputMode="numeric"
+                value={bedrooms}
+                onChange={(e) => setBedrooms(e.target.value.replace(/\D/g, ""))}
+                placeholder="e.g. 2"
+                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+              />
+            </div>
+            <div>
+              <label htmlFor="bathrooms" className="block text-sm font-medium text-[#0F172A] mb-1">
+                Bathrooms
+              </label>
+              <input
+                id="bathrooms"
+                type="text"
+                inputMode="numeric"
+                value={bathrooms}
+                onChange={(e) => setBathrooms(e.target.value.replace(/\D/g, ""))}
+                placeholder="e.g. 1"
+                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+              />
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor="address-private" className="text-sm font-medium text-[#0F172A]">
+                Keep property address private
+              </label>
+              <button
+                id="address-private"
+                type="button"
+                role="switch"
+                aria-checked={addressPrivate}
+                onClick={() => setAddressPrivate((prev) => !prev)}
+                className={`relative inline-flex h-7 w-12 shrink-0 rounded-full border border-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#003366]/20 tap-target ${
+                  addressPrivate ? "bg-[#003366] border-[#003366]" : "bg-slate-100"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition-transform ${
+                    addressPrivate ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+            <p className="mt-1.5 text-sm text-slate-500">
+              We won&apos;t show the exact address. The exact address helps us verify and list your property.
+            </p>
+          </section>
+
+          <section>
+            <label htmlFor="description" className="block text-sm font-medium text-[#0F172A] mb-1">
+              Property description
+            </label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe your property..."
+              rows={4}
+              className={`${inputBase} resize-none border border-slate-200 rounded-lg px-3 focus:border-[#003366]`}
+            />
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide flex items-center gap-2">
+              Advanced Details
+              <span className="text-xs font-normal normal-case text-slate-500">Optional</span>
+            </h2>
+            <div>
+              <label htmlFor="square-meters" className="block text-sm font-medium text-[#0F172A] mb-1">
+                Square meters
+              </label>
+              <input
+                id="square-meters"
+                type="text"
+                inputMode="decimal"
+                value={squareMeters}
+                onChange={(e) => setSquareMeters(e.target.value.replace(/[^\d.]/g, ""))}
+                placeholder="e.g. 85"
+                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+              />
+              <p className="mt-1 text-xs text-slate-500">Optional</p>
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+              Amenities
+            </h2>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" aria-hidden />
+              <input
+                type="search"
+                value={amenitySearch}
+                onChange={(e) => setAmenitySearch(e.target.value)}
+                placeholder="Search amenities..."
+                className={`${inputBase} pl-9 border border-slate-200 rounded-lg focus:border-[#003366]`}
+                aria-label="Search amenities"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {filteredAmenityOptions.map((opt) => {
+                const selected = amenities.includes(opt.id);
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => toggleAmenity(opt.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-colors tap-target min-h-[44px] ${
+                      selected
+                        ? "bg-[#003366] text-white border border-[#003366]"
+                        : "bg-white text-[#0F172A] border border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    {selected ? (
+                      <Check className="h-4 w-4 shrink-0" aria-hidden />
+                    ) : (
+                      <Plus className="h-4 w-4 shrink-0" aria-hidden />
+                    )}
+                    <span>{opt.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </section>
 
