@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongodb";
 import { User } from "@/lib/db/models/user";
 import { verifyLiffToken, getBearerToken } from "@/lib/auth/liff";
+import { linkRichMenuToUser } from "@/lib/line/richmenu";
 
 const ROLES = ["owner", "agent", "tenant"] as const;
 
@@ -78,6 +79,17 @@ export async function POST(request: NextRequest) {
       },
       { upsert: true, new: true }
     );
+
+    if (role === "owner") {
+      const richMenuId =
+        process.env.LINE_RICH_MENU_ID_OWNER ??
+        process.env.NEXT_PUBLIC_RICH_MENU_OWNER ??
+        "richmenu-18810406";
+      if (process.env.LINE_CHANNEL_ACCESS_TOKEN) {
+        await linkRichMenuToUser(lineUserId, richMenuId);
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);

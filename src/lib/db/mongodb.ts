@@ -18,7 +18,8 @@ export async function connectDB(): Promise<typeof mongoose> {
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(uri, { bufferCommands: false });
+    const dbName = process.env.MONGODB_DB_NAME ?? "asset-ace";
+    cached.promise = mongoose.connect(uri, { bufferCommands: false, dbName });
   }
 
   cached.conn = await cached.promise;
