@@ -138,6 +138,7 @@ export default function AddPropertyPage() {
         const uploads = presignData.uploads as Array<{ key: string; url: string; contentType: string }> | undefined;
         const bucketNameFromApi = presignData.bucketName as string | null | undefined;
         console.log("🎯 Uploading to Bucket:", bucketNameFromApi ?? "(not returned by API)");
+        if (typeof window !== "undefined") console.log("🎯 Request origin (must be in S3 CORS AllowedOrigins):", window.location.origin);
         const hasUploads = Array.isArray(uploads) && uploads.length === imageFiles.length;
         setImageDebug({
           presign: {

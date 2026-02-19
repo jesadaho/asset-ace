@@ -79,19 +79,26 @@ npm start
 
 Add Property uses presigned PUT URLs so the browser uploads directly to S3. If you see **"Load failed"** on save, the browser is usually blocking the request due to **CORS**. Configure your S3 bucket CORS to allow:
 
-- **Origin**: your app origin(s), e.g. `https://asset-ace.vercel.app` and `http://localhost:3000`
+- **Origin**: your app origin(s). When opened from LINE (LIFF), the origin may be `https://liff.line.me` instead of your app URL, so include both.
 - **Method**: `PUT`
-- **Header**: `Content-Type` (in AllowedHeaders)
+- **Header**: `Content-Type` (or `*` in AllowedHeaders)
+
+In the browser console when uploading, check the log `Request origin (must be in S3 CORS AllowedOrigins)` and ensure that exact origin is in your S3 CORS **AllowedOrigins**.
 
 Example CORS rule (AWS Console → S3 → bucket → Permissions → CORS):
 
 ```json
 [
   {
-    "AllowedHeaders": ["Content-Type"],
-    "AllowedMethods": ["PUT"],
-    "AllowedOrigins": ["https://asset-ace.vercel.app", "http://localhost:3000"],
-    "ExposeHeaders": []
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedOrigins": [
+      "https://asset-ace.vercel.app",
+      "http://localhost:3000",
+      "https://liff.line.me"
+    ],
+    "ExposeHeaders": ["ETag", "x-amz-request-id", "x-amz-id-2"],
+    "MaxAgeSeconds": 3600
   }
 ]
 ```
