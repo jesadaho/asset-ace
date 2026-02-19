@@ -9,6 +9,9 @@ export async function linkRichMenuToUser(
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   if (!token?.trim()) {
     console.error("[Rich Menu] LINE_CHANNEL_ACCESS_TOKEN is not set");
+    // #region agent log
+    fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'richmenu.ts',message:'Rich Menu skip - no token',data:{userId,richMenuId},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return false;
   }
 
@@ -22,11 +25,15 @@ export async function linkRichMenuToUser(
       },
     });
 
+    const resBody = await res.text();
+    // #region agent log
+    fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'richmenu.ts',message:'Rich Menu API result',data:{status:res.status,ok:res.ok,body:resBody.slice(0,500),userId,richMenuId},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
     if (!res.ok) {
-      const body = await res.text();
       console.error(
         `[Rich Menu] Failed to link rich menu to user: ${res.status}`,
-        body
+        resBody
       );
       return false;
     }
@@ -34,6 +41,9 @@ export async function linkRichMenuToUser(
     return true;
   } catch (err) {
     console.error("[Rich Menu] Error linking rich menu to user:", err);
+    // #region agent log
+    fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'richmenu.ts',message:'Rich Menu API throw',data:{error:err instanceof Error?err.message:String(err),userId,richMenuId},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return false;
   }
 }

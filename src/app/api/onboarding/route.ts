@@ -85,8 +85,15 @@ export async function POST(request: NextRequest) {
         process.env.LINE_RICH_MENU_ID_OWNER ??
         process.env.NEXT_PUBLIC_RICH_MENU_OWNER ??
         "richmenu-18810406";
-      if (process.env.LINE_CHANNEL_ACCESS_TOKEN) {
-        await linkRichMenuToUser(lineUserId, richMenuId);
+      const hasToken = Boolean(process.env.LINE_CHANNEL_ACCESS_TOKEN);
+      // #region agent log
+      fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'onboarding/route.ts',message:'Rich Menu link attempt',data:{role,richMenuId,hasToken},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      if (hasToken) {
+        const linked = await linkRichMenuToUser(lineUserId, richMenuId);
+        // #region agent log
+        fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'onboarding/route.ts',message:'Rich Menu link result',data:{linked,richMenuId},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
       }
     }
 
