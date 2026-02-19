@@ -71,6 +71,7 @@ export default function AddPropertyPage() {
   const [tenantLineId, setTenantLineId] = useState("");
   const [agentName, setAgentName] = useState("");
   const [agentLineId, setAgentLineId] = useState("");
+  const [contractStartDate, setContractStartDate] = useState("");
   const [lineSelectMessage, setLineSelectMessage] = useState<string | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nameError, setNameError] = useState(false);
@@ -242,6 +243,7 @@ export default function AddPropertyPage() {
         tenantLineId: tenantLineId.trim() || undefined,
         agentName: agentName.trim() || undefined,
         agentLineId: agentLineId.trim() || undefined,
+        contractStartDate: contractStartDate.trim() || undefined,
       };
 
       const createRes = await fetch("/api/owner/properties", {
@@ -740,6 +742,18 @@ export default function AddPropertyPage() {
                   value={agentLineId}
                   onChange={(e) => setAgentLineId(e.target.value)}
                   placeholder="Paste agent LINE user ID"
+                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                />
+              </div>
+              <div>
+                <label htmlFor="contract-start-date" className="block text-sm font-medium text-[#0F172A] mb-1">
+                  Contract start date (optional)
+                </label>
+                <input
+                  id="contract-start-date"
+                  type="date"
+                  value={contractStartDate}
+                  onChange={(e) => setContractStartDate(e.target.value)}
                   className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 />
               </div>

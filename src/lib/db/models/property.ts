@@ -25,6 +25,7 @@ export interface IProperty {
   tenantLineId?: string;
   agentName?: string;
   agentLineId?: string;
+  contractStartDate?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -49,6 +50,7 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     tenantLineId: String,
     agentName: String,
     agentLineId: String,
+    contractStartDate: Date,
   },
   { timestamps: true }
 );

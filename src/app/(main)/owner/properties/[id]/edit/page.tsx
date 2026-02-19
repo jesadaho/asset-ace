@@ -70,6 +70,7 @@ type PropertyData = {
   tenantLineId?: string;
   agentName?: string;
   agentLineId?: string;
+  contractStartDate?: string;
 };
 
 export default function EditPropertyPage() {
@@ -97,6 +98,7 @@ export default function EditPropertyPage() {
   const [tenantLineId, setTenantLineId] = useState("");
   const [agentName, setAgentName] = useState("");
   const [agentLineId, setAgentLineId] = useState("");
+  const [contractStartDate, setContractStartDate] = useState("");
   const [lineSelectMessage, setLineSelectMessage] = useState<string | null>(null);
   const [existingImageKeys, setExistingImageKeys] = useState<string[]>([]);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
@@ -166,6 +168,7 @@ export default function EditPropertyPage() {
         setTenantLineId(p.tenantLineId ?? "");
         setAgentName(p.agentName ?? "");
         setAgentLineId(p.agentLineId ?? "");
+        setContractStartDate(p.contractStartDate ?? "");
         setExistingImageKeys(Array.isArray(p.imageKeys) ? p.imageKeys : []);
         setExistingImageUrl(p.imageUrl ?? null);
         setLoadError(null);
@@ -316,6 +319,7 @@ export default function EditPropertyPage() {
         tenantLineId: tenantLineId.trim() || undefined,
         agentName: agentName.trim() || undefined,
         agentLineId: agentLineId.trim() || undefined,
+        contractStartDate: contractStartDate.trim() || undefined,
       };
 
       const patchRes = await fetch(`/api/owner/properties/${id}`, {
@@ -912,6 +916,21 @@ export default function EditPropertyPage() {
                   value={agentLineId}
                   onChange={(e) => setAgentLineId(e.target.value)}
                   placeholder="Paste agent LINE user ID"
+                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="edit-contract-start-date"
+                  className="block text-sm font-medium text-[#0F172A] mb-1"
+                >
+                  Contract start date (optional)
+                </label>
+                <input
+                  id="edit-contract-start-date"
+                  type="date"
+                  value={contractStartDate}
+                  onChange={(e) => setContractStartDate(e.target.value)}
                   className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 />
               </div>
