@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const MAX_FILES = 10;
@@ -70,6 +70,15 @@ export async function uploadToS3(
   });
   await client.send(command);
   return { key };
+}
+
+export async function getPresignedGetUrl(key: string): Promise<string | null> {
+  const bucket = process.env.AWS_S3_BUCKET?.trim();
+  if (!bucket) return null;
+  const client = getS3Client();
+  if (!client) return null;
+  const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+  return getSignedUrl(client, command, { expiresIn: 3600 });
 }
 
 export { MAX_FILES };

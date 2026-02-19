@@ -1,3 +1,5 @@
+import type { NextRequest } from "next/server";
+
 /**
  * Verify LIFF access token and return LINE user ID.
  * Uses LINE Profile API - valid token returns user profile including userId.
@@ -24,4 +26,11 @@ export async function verifyLiffToken(
 export function getBearerToken(authHeader: string | null): string | null {
   if (!authHeader?.startsWith("Bearer ")) return null;
   return authHeader.slice(7).trim() || null;
+}
+
+export async function getLineUserIdFromRequest(
+  request: NextRequest
+): Promise<string | null> {
+  const token = getBearerToken(request.headers.get("authorization"));
+  return verifyLiffToken(token);
 }

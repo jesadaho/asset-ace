@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { Search, ChevronRight, Plus, ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
-type PropertyType = "Condo" | "House";
+type PropertyType = "Condo" | "House" | "Apartment";
 type PropertyStatus = "Available" | "Occupied" | "Maintenance";
 
 type Property = {
@@ -17,49 +17,6 @@ type Property = {
   address: string;
   image?: string;
 };
-
-const properties: Property[] = [
-  {
-    id: "1",
-    name: "Skyline Condo 12A",
-    type: "Condo",
-    status: "Occupied",
-    price: 18000,
-    address: "Sukhumvit Soi 24, Bangkok",
-  },
-  {
-    id: "2",
-    name: "Riverside House",
-    type: "House",
-    status: "Available",
-    price: 25000,
-    address: "Thonburi, Bangkok",
-  },
-  {
-    id: "3",
-    name: "Lumpini Park View",
-    type: "Condo",
-    status: "Occupied",
-    price: 22000,
-    address: "Rama IV, Bangkok",
-  },
-  {
-    id: "4",
-    name: "Silom Studio",
-    type: "Condo",
-    status: "Available",
-    price: 15000,
-    address: "Silom, Bangkok",
-  },
-  {
-    id: "5",
-    name: "Ekkamai Family House",
-    type: "House",
-    status: "Maintenance",
-    price: 32000,
-    address: "Ekkamai, Bangkok",
-  },
-];
 
 const statusBadgeVariant: Record<
   PropertyStatus,
@@ -73,8 +30,56 @@ const statusBadgeVariant: Record<
 type StatusFilter = "All" | PropertyStatus;
 
 export default function OwnerPropertiesPage() {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchProperties() {
+      try {
+        const liff = (await import("@line/liff")).default;
+        const token = liff.getAccessToken();
+        if (!token) {
+          if (!cancelled) setError("Please log in with LINE.");
+          return;
+        }
+        const res = await fetch("/api/owner/properties", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (cancelled) return;
+        if (!res.ok) {
+          if (res.status === 401) {
+            setError("Please log in with LINE.");
+            return;
+          }
+          const data = await res.json().catch(() => ({}));
+          setError(data.message ?? `Failed to load properties (${res.status})`);
+          return;
+        }
+        const data = await res.json();
+        const list = (data.properties ?? []).map((p: { id: string; name: string; type: string; status: string; price: number; address: string; imageUrl?: string }) => ({
+          id: p.id,
+          name: p.name,
+          type: p.type as PropertyType,
+          status: p.status as PropertyStatus,
+          price: p.price,
+          address: p.address,
+          image: p.imageUrl,
+        }));
+        setProperties(list);
+        setError(null);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load properties");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchProperties();
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredProperties = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -87,7 +92,7 @@ export default function OwnerPropertiesPage() {
         statusFilter === "All" || p.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [searchQuery, statusFilter]);
+  }, [properties, searchQuery, statusFilter]);
 
   const counts = useMemo(() => {
     const total = properties.length;
@@ -97,13 +102,23 @@ export default function OwnerPropertiesPage() {
       (p) => p.status === "Maintenance"
     ).length;
     return { total, occupied, available, maintenance };
-  }, []);
+  }, [properties]);
 
   return (
     <div className="min-h-full bg-slate-50 p-4">
       <h1 className="text-2xl font-bold text-[#0F172A] mb-4">
         My Properties
       </h1>
+
+      {error && (
+        <p className="text-red-500 text-sm mb-4" role="alert">
+          {error}
+        </p>
+      )}
+
+      {loading && (
+        <p className="text-slate-500 text-sm mb-4">Loading properties...</p>
+      )}
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <Badge variant="default">Total: {counts.total}</Badge>
@@ -149,20 +164,21 @@ export default function OwnerPropertiesPage() {
       </div>
 
       <ul className="space-y-4 pb-24">
-        {filteredProperties.map((property) => (
-          <li key={property.id}>
-            <Link
-              href={`/owner/properties/${property.id}`}
-              className="block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow"
-            >
-              <div className="relative aspect-[4/3] bg-slate-200">
-                {property.image ? (
-                  <img
-                    src={property.image}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                ) : (
+        {!loading &&
+          filteredProperties.map((property) => (
+            <li key={property.id}>
+              <Link
+                href={`/owner/properties/${property.id}`}
+                className="block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow"
+              >
+                <div className="relative aspect-[4/3] bg-slate-200">
+                  {property.image ? (
+                    <img
+                      src={property.image}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-slate-400">
                     <ImageIcon className="h-12 w-12" aria-hidden />
                   </div>
@@ -195,9 +211,11 @@ export default function OwnerPropertiesPage() {
         ))}
       </ul>
 
-      {filteredProperties.length === 0 && (
+      {!loading && filteredProperties.length === 0 && (
         <p className="text-slate-500 text-sm text-center py-8 pb-24">
-          No properties match your search.
+          {properties.length === 0
+            ? "You have no properties yet. Add one to get started."
+            : "No properties match your search."}
         </p>
       )}
 

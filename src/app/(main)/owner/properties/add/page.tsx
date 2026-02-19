@@ -125,6 +125,7 @@ export default function AddPropertyPage() {
 
     setSaving(true);
     setImageDebug(null);
+    let imageKeys: string[] = [];
     try {
       if (imageFiles.length > 0) {
         const formData = new FormData();
@@ -137,6 +138,7 @@ export default function AddPropertyPage() {
         const uploadData = await uploadRes.json().catch(() => ({}));
         const bucketNameFromApi = uploadData.bucketName as string | null | undefined;
         const uploadedKeys = (uploadData.uploads as Array<{ key: string }> | undefined) ?? [];
+        imageKeys = uploadedKeys.map((u) => u.key);
         const hasUploads = Array.isArray(uploadData.uploads) && uploadedKeys.length === imageFiles.length;
         setImageDebug({
           presign: {
@@ -166,6 +168,50 @@ export default function AddPropertyPage() {
           return;
         }
       }
+
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setUploadError("Please log in with LINE to save the property.");
+        setSaving(false);
+        return;
+      }
+
+      const price = Number(monthlyRent.replace(/,/g, "")) || 0;
+      const payload = {
+        name: name.trim(),
+        type: propertyType,
+        status,
+        price,
+        address: address.trim(),
+        imageKeys,
+        listingType: listingType || undefined,
+        bedrooms: bedrooms || undefined,
+        bathrooms: bathrooms || undefined,
+        addressPrivate: addressPrivate || undefined,
+        description: description.trim() || undefined,
+        squareMeters: squareMeters || undefined,
+        amenities: amenities.length ? amenities : undefined,
+        tenantName: tenantName.trim() || undefined,
+        agentName: agentName.trim() || undefined,
+      };
+
+      const createRes = await fetch("/api/owner/properties", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const createData = await createRes.json().catch(() => ({}));
+      if (!createRes.ok) {
+        setUploadError(createData.message ?? `Failed to save property (${createRes.status})`);
+        setSaving(false);
+        return;
+      }
+
       alert("Property saved.");
       router.push("/owner/properties");
     } catch (err) {
