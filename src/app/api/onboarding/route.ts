@@ -83,9 +83,8 @@ export async function POST(request: NextRequest) {
     let richMenuDebug: { attempted: boolean; linked: boolean; status?: number; message?: string; richMenuId?: string } | undefined;
     if (role === "owner") {
       const richMenuId =
-        process.env.LINE_RICH_MENU_ID_OWNER ??
         process.env.NEXT_PUBLIC_RICH_MENU_OWNER ??
-        "richmenu-d46f17ab4f79310c50f3f286ee82e010";
+        "richmenu-14344c6c0015deec68b2f0cd48e0dc80";
       const hasToken = Boolean(process.env.LINE_CHANNEL_ACCESS_TOKEN);
       // #region agent log
       fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'richMenu',location:'onboarding/route.ts',message:'Rich Menu link attempt',data:{role,richMenuId,hasToken},timestamp:Date.now()})}).catch(()=>{});
