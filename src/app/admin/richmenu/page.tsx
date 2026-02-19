@@ -32,16 +32,10 @@ export default function AdminRichMenuPage() {
   const [customJson, setCustomJson] = useState("");
   const [customJsonError, setCustomJsonError] = useState<string | null>(null);
 
-  const [updateImageMenuId, setUpdateImageMenuId] = useState<string | null>(null);
-  const [updateImageFile, setUpdateImageFile] = useState<File | null>(null);
-  const [updateImageLoading, setUpdateImageLoading] = useState(false);
-  const [updateImageError, setUpdateImageError] = useState<string | null>(null);
-  const [updateImageSuccess, setUpdateImageSuccess] = useState(false);
-
-  const [updateJsonText, setUpdateJsonText] = useState("");
-  const [updateJsonLoading, setUpdateJsonLoading] = useState(false);
-  const [updateJsonError, setUpdateJsonError] = useState<string | null>(null);
-  const [updateJsonNewId, setUpdateJsonNewId] = useState<string | null>(null);
+  const [removeMenuId, setRemoveMenuId] = useState<string | null>(null);
+  const [removeLoading, setRemoveLoading] = useState(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [removeSuccess, setRemoveSuccess] = useState(false);
 
   const loadList = async () => {
     setListError(null);
@@ -130,10 +124,8 @@ export default function AdminRichMenuPage() {
         setCreatedWithoutImage(false);
       } else {
         setCreatedWithoutImage(true);
-        setUpdateImageMenuId(richMenuId);
-        setUpdateImageError(null);
-        setUpdateImageSuccess(false);
-        document.getElementById("update-image-card")?.scrollIntoView({ behavior: "smooth" });
+        setRemoveMenuId(richMenuId);
+        document.getElementById("remove-menu-card")?.scrollIntoView({ behavior: "smooth" });
       }
 
       setCreatedId(richMenuId);
@@ -150,88 +142,33 @@ export default function AdminRichMenuPage() {
     void navigator.clipboard.writeText(line);
   };
 
-  const updateImage = async () => {
-    if (!updateImageMenuId || !updateImageFile) return;
-    setUpdateImageError(null);
-    setUpdateImageSuccess(false);
-    setUpdateImageLoading(true);
+  const removeMenu = async () => {
+    if (!removeMenuId) return;
+    setRemoveError(null);
+    setRemoveSuccess(false);
+    setRemoveLoading(true);
     try {
-      const form = new FormData();
-      form.append("file", updateImageFile);
       const res = await fetch(
-        `/api/richmenu/${encodeURIComponent(updateImageMenuId)}/content`,
-        { method: "POST", body: form }
+        `/api/richmenu/${encodeURIComponent(removeMenuId)}`,
+        { method: "DELETE" }
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setUpdateImageError(data.error || data.message || `Error ${res.status}`);
+        setRemoveError(data.error || data.message || `Error ${res.status}`);
         return;
       }
-      setUpdateImageSuccess(true);
-      setUpdateImageMenuId(null);
-      setUpdateImageFile(null);
+      setRemoveSuccess(true);
+      setRemoveMenuId(null);
+      await loadList();
     } catch (e) {
-      setUpdateImageError(e instanceof Error ? e.message : String(e));
+      setRemoveError(e instanceof Error ? e.message : String(e));
     } finally {
-      setUpdateImageLoading(false);
-    }
-  };
-
-  const replaceWithJson = async () => {
-    if (!updateImageMenuId || !updateJsonText.trim()) return;
-    setUpdateJsonError(null);
-    setUpdateJsonNewId(null);
-    setUpdateJsonLoading(true);
-    try {
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(updateJsonText.trim());
-      } catch {
-        setUpdateJsonError("Invalid JSON.");
-        return;
-      }
-      if (!parsed || typeof parsed !== "object" || !("size" in parsed) || !("areas" in parsed)) {
-        setUpdateJsonError("JSON must include size and areas (LINE Rich Menu format).");
-        return;
-      }
-      const delRes = await fetch(
-        `/api/richmenu/${encodeURIComponent(updateImageMenuId)}`,
-        { method: "DELETE" }
-      );
-      if (!delRes.ok) {
-        const data = await delRes.json().catch(() => ({}));
-        setUpdateJsonError(data.error || data.message || `Delete failed ${delRes.status}`);
-        return;
-      }
-      const createRes = await fetch("/api/richmenu", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customPayload: parsed }),
-      });
-      const createData = await createRes.json().catch(() => ({}));
-      if (!createRes.ok) {
-        setUpdateJsonError(createData.error || createData.message || `Create failed ${createRes.status}`);
-        return;
-      }
-      const newId = createData.richMenuId;
-      if (newId) {
-        setUpdateJsonNewId(newId);
-        setUpdateJsonText("");
-        setUpdateImageMenuId(null);
-        setListData(null);
-      } else {
-        setUpdateJsonError("No richMenuId returned.");
-      }
-    } catch (e) {
-      setUpdateJsonError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setUpdateJsonLoading(false);
+      setRemoveLoading(false);
     }
   };
 
   const menus = listData?.richmenus ?? [];
-  const canUpdateImage = menus.length > 0 && updateImageMenuId && updateImageFile;
-  const canReplaceJson = menus.length > 0 && updateImageMenuId && updateJsonText.trim().length > 0;
+  const canRemove = menus.length > 0 && removeMenuId;
 
   return (
     <div className="min-h-dvh bg-[#0F172A] text-white safe-area-top safe-area-bottom">
@@ -281,14 +218,14 @@ export default function AdminRichMenuPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setUpdateImageMenuId(m.richMenuId);
-                          setUpdateImageError(null);
-                          setUpdateImageSuccess(false);
-                          document.getElementById("update-image-card")?.scrollIntoView({ behavior: "smooth" });
+                          setRemoveMenuId(m.richMenuId);
+                          setRemoveError(null);
+                          setRemoveSuccess(false);
+                          document.getElementById("remove-menu-card")?.scrollIntoView({ behavior: "smooth" });
                         }}
                         className="mt-1 text-xs text-[#10B981] hover:underline"
                       >
-                        Update image
+                        Remove
                       </button>
                     </div>
                   ))
@@ -298,30 +235,28 @@ export default function AdminRichMenuPage() {
           </CardContent>
         </Card>
 
-        {/* Section 2 – Update image */}
-        <Card id="update-image-card" variant="outline" className="mb-6">
+        {/* Section 2 – Remove */}
+        <Card id="remove-menu-card" variant="outline" className="mb-6">
           <CardHeader>
-            <CardTitle>Update existing rich menu</CardTitle>
+            <CardTitle>Remove rich menu</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {!listData ? (
               <p className="text-white/70 text-sm">Load rich menus first.</p>
             ) : menus.length === 0 ? (
-              <p className="text-white/70 text-sm">No rich menus to update. Register one below first.</p>
+              <p className="text-white/70 text-sm">No rich menus. Register one below first.</p>
             ) : (
               <>
                 <div>
                   <label className="block text-sm font-medium text-white/90 mb-1">
-                    Select rich menu
+                    Select rich menu to remove
                   </label>
                   <select
-                    value={updateImageMenuId ?? ""}
+                    value={removeMenuId ?? ""}
                     onChange={(e) => {
-                      setUpdateImageMenuId(e.target.value || null);
-                      setUpdateImageError(null);
-                      setUpdateImageSuccess(false);
-                      setUpdateJsonError(null);
-                      setUpdateJsonNewId(null);
+                      setRemoveMenuId(e.target.value || null);
+                      setRemoveError(null);
+                      setRemoveSuccess(false);
                     }}
                     className="w-full rounded-lg border border-white/20 bg-[#0F172A]/50 px-3 py-2 text-sm text-white focus:border-[#10B981] focus:outline-none"
                   >
@@ -333,71 +268,20 @@ export default function AdminRichMenuPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-1">
-                    Image (JPEG or PNG, match menu size, max 1 MB)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png"
-                    className="block w-full text-sm text-white/80 file:mr-4 file:rounded-lg file:border-0 file:bg-[#10B981] file:px-4 file:py-2 file:text-white"
-                    onChange={(e) => {
-                      setUpdateImageFile(e.target.files?.[0] ?? null);
-                      setUpdateImageError(null);
-                      setUpdateImageSuccess(false);
-                    }}
-                  />
-                </div>
                 <Button
                   variant="primary"
-                  onClick={updateImage}
-                  disabled={!canUpdateImage || updateImageLoading}
-                  isLoading={updateImageLoading}
+                  onClick={removeMenu}
+                  disabled={!canRemove || removeLoading}
+                  isLoading={removeLoading}
                 >
-                  Update image
+                  Remove
                 </Button>
-                {updateImageError && (
-                  <p className="text-red-400 text-sm" role="alert">{updateImageError}</p>
+                {removeError && (
+                  <p className="text-red-400 text-sm" role="alert">{removeError}</p>
                 )}
-                {updateImageSuccess && (
-                  <p className="text-[#10B981] text-sm">Image updated successfully.</p>
+                {removeSuccess && (
+                  <p className="text-[#10B981] text-sm">Rich menu removed.</p>
                 )}
-
-                <div className="border-t border-white/10 pt-4 mt-4">
-                  <p className="text-sm font-medium text-white/90 mb-2">Replace definition with custom JSON</p>
-                  <p className="text-white/70 text-xs mb-2">
-                    Deletes the selected menu and creates a new one from the JSON. You will get a new richMenuId.
-                  </p>
-                  <textarea
-                    value={updateJsonText}
-                    onChange={(e) => {
-                      setUpdateJsonText(e.target.value);
-                      setUpdateJsonError(null);
-                      setUpdateJsonNewId(null);
-                    }}
-                    placeholder='{"size":{"width":1200,"height":810},"selected":true,"name":"My Menu","chatBarText":"Menu","areas":[...]}'
-                    rows={6}
-                    className="w-full rounded-lg border border-white/20 bg-[#0F172A]/50 px-3 py-2 text-sm font-mono text-white placeholder:text-white/40 focus:border-[#10B981] focus:outline-none mb-2"
-                  />
-                  <Button
-                    variant="secondary"
-                    onClick={replaceWithJson}
-                    disabled={!canReplaceJson || updateJsonLoading}
-                    isLoading={updateJsonLoading}
-                  >
-                    Replace menu (delete + create)
-                  </Button>
-                  {updateJsonError && (
-                    <p className="mt-2 text-red-400 text-sm" role="alert">{updateJsonError}</p>
-                  )}
-                  {updateJsonNewId && (
-                    <div className="mt-2 rounded bg-[#0F172A]/50 p-3">
-                      <p className="text-[#10B981] text-sm font-medium">New rich menu created</p>
-                      <code className="block mt-1 text-xs break-all text-white/90">{updateJsonNewId}</code>
-                      <p className="text-white/70 text-xs mt-1">Update .env with this ID if needed.</p>
-                    </div>
-                  )}
-                </div>
               </>
             )}
           </CardContent>
@@ -521,7 +405,7 @@ export default function AdminRichMenuPage() {
                   <div className="rounded border border-amber-500/50 bg-amber-900/20 p-3 mb-2">
                     <p className="text-amber-200 text-sm font-medium">Image required</p>
                     <p className="text-amber-200/90 text-xs mt-1">
-                      LINE will not link this menu to users until an image is uploaded. Use &quot;Update image&quot; above, select this menu, and upload a JPEG/PNG that matches the menu size (e.g. 2500×1686 or 1200×810, max 1 MB).
+                      LINE will not link this menu to users until it has an image. Remove it in &quot;Remove rich menu&quot; above, then register again and attach an image.
                     </p>
                   </div>
                 )}
