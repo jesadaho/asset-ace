@@ -107,7 +107,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
 
   if (!canRedirect || (!checked && isLoggedIn === true)) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-[#0F172A]">
+      <div className="min-h-dvh flex items-center justify-center bg-white">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#10B981] border-t-transparent" />
       </div>
     );
