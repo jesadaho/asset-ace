@@ -127,96 +127,43 @@ export default function AddPropertyPage() {
     setImageDebug(null);
     try {
       if (imageFiles.length > 0) {
-        const presignRes = await fetch("/api/upload/presign", {
+        const formData = new FormData();
+        imageFiles.forEach((file) => formData.append("files", file));
+        console.log("🎯 Uploading via proxy to Bucket (server will log bucket name)");
+        const uploadRes = await fetch("/api/upload", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            files: imageFiles.map((f) => ({ name: f.name, type: f.type })),
-          }),
+          body: formData,
         });
-        const presignData = await presignRes.json().catch(() => ({}));
-        const uploads = presignData.uploads as Array<{ key: string; url: string; contentType: string }> | undefined;
-        const bucketNameFromApi = presignData.bucketName as string | null | undefined;
-        console.log("🎯 Uploading to Bucket:", bucketNameFromApi ?? "(not returned by API)");
-        if (typeof window !== "undefined") console.log("🎯 Request origin (must be in S3 CORS AllowedOrigins):", window.location.origin);
-        const hasUploads = Array.isArray(uploads) && uploads.length === imageFiles.length;
+        const uploadData = await uploadRes.json().catch(() => ({}));
+        const bucketNameFromApi = uploadData.bucketName as string | null | undefined;
+        const uploadedKeys = (uploadData.uploads as Array<{ key: string }> | undefined) ?? [];
+        const hasUploads = Array.isArray(uploadData.uploads) && uploadedKeys.length === imageFiles.length;
         setImageDebug({
           presign: {
-            status: presignRes.status,
-            ok: presignRes.ok,
-            error: presignData.error,
+            status: uploadRes.status,
+            ok: uploadRes.ok,
+            error: uploadData.error,
             hasUploads,
           },
-          puts: [],
+          puts: imageFiles.map((file, i) => ({
+            index: i,
+            name: file.name,
+            status: uploadRes.ok ? 200 : uploadRes.status,
+            ok: uploadRes.ok,
+          })),
+          ...(uploadRes.ok ? {} : { error: uploadData.error ?? `Upload failed (${uploadRes.status})`, failedAt: "upload", errorName: "HTTP " + uploadRes.status }),
         });
-        if (!presignRes.ok) {
-          setUploadError(presignData.error || `Upload setup failed (${presignRes.status})`);
+        if (!uploadRes.ok) {
+          const displayMsg = `Upload failed: ${bucketNameFromApi ?? "?"} - ${uploadData.error ?? uploadRes.status}`;
+          setUploadError(displayMsg);
           setSaving(false);
           return;
         }
         if (!hasUploads) {
-          setUploadError("Invalid presign response");
-          setImageDebug((d) => d ? { ...d, error: "Invalid presign response" } : null);
+          setUploadError("Invalid upload response");
+          setImageDebug((d) => (d ? { ...d, error: "Invalid upload response" } : null));
           setSaving(false);
           return;
-        }
-        const putResults: { index: number; name: string; status: number; ok: boolean }[] = [];
-        for (let i = 0; i < imageFiles.length; i++) {
-          const file = imageFiles[i];
-          // Use exactly the Content-Type from presign (signed by S3). No Authorization or other headers - presigned URL has auth in query; extra headers cause CORS preflight.
-          const contentType = uploads[i].contentType ?? "image/jpeg";
-          try {
-            const putRes = await fetch(uploads[i].url, {
-              method: "PUT",
-              body: file,
-              headers: { "Content-Type": contentType },
-              credentials: "omit",
-            });
-            putResults.push({
-              index: i,
-              name: file.name,
-              status: putRes.status,
-              ok: putRes.ok,
-            });
-            setImageDebug((d) =>
-              d ? { ...d, puts: [...putResults] } : null
-            );
-            if (!putRes.ok) {
-              const statusCode = putRes.status;
-              const errName = "HTTP " + statusCode;
-              console.error("[Add Property] S3 PUT failed - Status Code:", statusCode, "Response:", putRes);
-              const displayMsg = `Upload failed: ${bucketNameFromApi ?? "?"} - ${errName}`;
-              setUploadError(displayMsg);
-              setImageDebug((d) =>
-                d ? { ...d, puts: [...putResults], error: displayMsg, failedAt: `put_${i}`, errorName: errName } : null
-              );
-              setSaving(false);
-              return;
-            }
-          } catch (putErr) {
-            console.error("[Add Property] S3 PUT upload failed (full error):", putErr);
-            if (putErr && typeof putErr === "object") {
-              console.error("[Add Property] error.cause:", (putErr as Error).cause);
-              console.error("[Add Property] error keys:", Object.getOwnPropertyNames(putErr));
-            }
-            const putMsg = putErr instanceof Error ? putErr.message : String(putErr);
-            const putName = putErr instanceof Error ? putErr.constructor?.name ?? "Error" : "Unknown";
-            const displayMsg = `Upload failed: ${bucketNameFromApi ?? "?"} - ${putName}`;
-            setImageDebug((d) =>
-              d
-                ? {
-                    ...d,
-                    puts: [...putResults],
-                    error: putMsg,
-                    failedAt: `put_${i}`,
-                    errorName: putName,
-                  }
-                : null
-            );
-            setUploadError(displayMsg);
-            setSaving(false);
-            return;
-          }
         }
       }
       alert("Property saved.");

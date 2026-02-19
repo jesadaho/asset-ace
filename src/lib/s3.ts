@@ -50,4 +50,26 @@ export async function getPresignedPutUrls(
   return results;
 }
 
+export type UploadResult = { key: string };
+
+export async function uploadToS3(
+  body: Buffer | Uint8Array,
+  filename: string,
+  contentType: string
+): Promise<UploadResult | null> {
+  const bucket = process.env.AWS_S3_BUCKET?.trim();
+  if (!bucket) return null;
+  const client = getS3Client();
+  if (!client) return null;
+  const key = generateUploadKey(filename);
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    Body: body,
+    ContentType: contentType || "image/jpeg",
+  });
+  await client.send(command);
+  return { key };
+}
+
 export { MAX_FILES };
