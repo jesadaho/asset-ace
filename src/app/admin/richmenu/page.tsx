@@ -37,6 +37,16 @@ export default function AdminRichMenuPage() {
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [removeSuccess, setRemoveSuccess] = useState(false);
 
+  const [switchUserId, setSwitchUserId] = useState("");
+  const [switchTarget, setSwitchTarget] = useState<"onboarding" | "owner">("owner");
+  const [switchLoading, setSwitchLoading] = useState(false);
+  const [switchError, setSwitchError] = useState<string | null>(null);
+  const [switchResult, setSwitchResult] = useState<{
+    linked: boolean;
+    status?: number;
+    message?: string;
+  } | null>(null);
+
   const loadList = async () => {
     setListError(null);
     setListLoading(true);
@@ -167,6 +177,38 @@ export default function AdminRichMenuPage() {
     }
   };
 
+  const doSwitchRichMenu = async () => {
+    setSwitchError(null);
+    setSwitchResult(null);
+    const uid = switchUserId.trim();
+    if (!uid) {
+      setSwitchError("Enter a LINE user ID.");
+      return;
+    }
+    setSwitchLoading(true);
+    try {
+      const res = await fetch("/api/debug/switch-richmenu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: uid, target: switchTarget }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSwitchError(data.error || data.message || `Error ${res.status}`);
+        return;
+      }
+      setSwitchResult({
+        linked: !!data.linked,
+        status: data.status,
+        message: data.message,
+      });
+    } catch (e) {
+      setSwitchError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSwitchLoading(false);
+    }
+  };
+
   const menus = listData?.richmenus ?? [];
   const canRemove = menus.length > 0 && removeMenuId;
 
@@ -283,6 +325,77 @@ export default function AdminRichMenuPage() {
                   <p className="text-[#10B981] text-sm">Rich menu removed.</p>
                 )}
               </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Switch rich menu */}
+        <Card variant="outline" className="mb-6">
+          <CardHeader>
+            <CardTitle>Switch rich menu</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-white/70 text-sm">
+              Link a user to the onboarding or owner rich menu (debug).
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-1">
+                LINE user ID
+              </label>
+              <input
+                type="text"
+                value={switchUserId}
+                onChange={(e) => setSwitchUserId(e.target.value)}
+                placeholder="U..."
+                className="w-full rounded-lg border border-white/20 bg-[#0F172A]/50 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-[#10B981] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-1">
+                Target
+              </label>
+              <select
+                value={switchTarget}
+                onChange={(e) =>
+                  setSwitchTarget(e.target.value as "onboarding" | "owner")
+                }
+                className="w-full rounded-lg border border-white/20 bg-[#0F172A]/50 px-3 py-2 text-sm text-white focus:border-[#10B981] focus:outline-none"
+              >
+                <option value="onboarding">Onboarding</option>
+                <option value="owner">Owner</option>
+              </select>
+            </div>
+            <Button
+              variant="primary"
+              onClick={doSwitchRichMenu}
+              disabled={switchLoading}
+              isLoading={switchLoading}
+            >
+              Switch
+            </Button>
+            {switchError && (
+              <p className="text-red-400 text-sm" role="alert">
+                {switchError}
+              </p>
+            )}
+            {switchResult && (
+              <div
+                className={`rounded-lg p-3 text-sm ${
+                  switchResult.linked
+                    ? "bg-[#10B981]/20 text-[#10B981]"
+                    : "bg-red-500/20 text-red-400"
+                }`}
+              >
+                {switchResult.linked ? "Linked." : "Failed."}
+                {switchResult.status != null && (
+                  <span className="ml-2">Status: {switchResult.status}</span>
+                )}
+                {switchResult.message && (
+                  <div className="mt-1 font-mono text-xs break-all">
+                    {switchResult.message}
+                  </div>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
