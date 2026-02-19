@@ -198,6 +198,11 @@ export default function EditPropertyPage() {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const removeExistingImage = (index: number) => {
+    setExistingImageKeys((prev) => prev.filter((_, i) => i !== index));
+    if (index === 0) setExistingImageUrl(null);
+  };
+
   const handleLineSelect = () => {
     alert("Connecting to LIFF Friend Picker...");
   };
@@ -352,23 +357,39 @@ export default function EditPropertyPage() {
               Property Photos
             </label>
             {existingImageKeys.length > 0 && (
-              <div className="mb-3 space-y-2">
-                {existingImageUrl && (
-                  <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-slate-200">
-                    <img
-                      src={existingImageUrl}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                {existingImageKeys.length > 1 && (
-                  <p className="text-sm text-slate-500">
-                    {existingImageKeys.length} existing photo
-                    {existingImageKeys.length !== 1 ? "s" : ""}
-                  </p>
-                )}
-              </div>
+              <ul className="mb-3 space-y-2">
+                {existingImageKeys.map((_key, index) => (
+                  <li
+                    key={`existing-${index}`}
+                    className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white overflow-hidden"
+                  >
+                    {index === 0 && existingImageUrl ? (
+                      <div className="relative w-20 h-20 shrink-0 bg-slate-200">
+                        <img
+                          src={existingImageUrl}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 shrink-0 bg-slate-100 flex items-center justify-center text-slate-400 text-xs">
+                        Photo {index + 1}
+                      </div>
+                    )}
+                    <span className="flex-1 text-sm text-slate-600 truncate">
+                      Existing photo {index + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(index)}
+                      className="shrink-0 p-2 text-slate-400 hover:text-red-500 tap-target"
+                      aria-label={`Remove photo ${index + 1}`}
+                    >
+                      <X className="h-4 w-4" aria-hidden />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
             <button
               type="button"
