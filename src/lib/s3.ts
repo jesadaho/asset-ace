@@ -35,17 +35,17 @@ export async function getPresignedPutUrls(
   const client = getS3Client();
   if (!client) return [];
 
-  const results: { key: string; url: string }[] = [];
+  const results: { key: string; url: string; contentType: string }[] = [];
   for (const file of files) {
     const key = generateUploadKey(file.name);
-    const contentType = file.type || "image/jpeg";
+    const contentType = file.type && file.type.trim() ? file.type.trim() : "image/jpeg";
     const command = new PutObjectCommand({
       Bucket: bucket,
       Key: key,
       ContentType: contentType,
     });
     const url = await getSignedUrl(client, command, { expiresIn: 300 });
-    results.push({ key, url });
+    results.push({ key, url, contentType });
   }
   return results;
 }

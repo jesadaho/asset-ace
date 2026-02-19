@@ -77,6 +77,10 @@ export default function AddPropertyPage() {
     presign: { status: number; ok: boolean; error?: string; hasUploads?: boolean };
     puts: { index: number; name: string; status: number; ok: boolean }[];
     error?: string;
+    /** When error occurred: "presign" | "put_0" | "put_1" | ... */
+    failedAt?: string;
+    /** Error constructor name (e.g. TypeError) – "Load failed" often means CORS on S3 */
+    errorName?: string;
   };
   const [imageDebug, setImageDebug] = useState<ImageDebug | null>(null);
 
@@ -131,7 +135,7 @@ export default function AddPropertyPage() {
           }),
         });
         const presignData = await presignRes.json().catch(() => ({}));
-        const uploads = presignData.uploads as Array<{ key: string; url: string }> | undefined;
+        const uploads = presignData.uploads as Array<{ key: string; url: string; contentType: string }> | undefined;
         const hasUploads = Array.isArray(uploads) && uploads.length === imageFiles.length;
         setImageDebug({
           presign: {
@@ -155,22 +159,44 @@ export default function AddPropertyPage() {
         }
         const putResults: { index: number; name: string; status: number; ok: boolean }[] = [];
         for (let i = 0; i < imageFiles.length; i++) {
-          const putRes = await fetch(uploads[i].url, {
-            method: "PUT",
-            body: imageFiles[i],
-            headers: { "Content-Type": imageFiles[i].type || "image/jpeg" },
-          });
-          putResults.push({
-            index: i,
-            name: imageFiles[i].name,
-            status: putRes.status,
-            ok: putRes.ok,
-          });
-          setImageDebug((d) =>
-            d ? { ...d, puts: [...putResults] } : null
-          );
-          if (!putRes.ok) {
-            setUploadError(`Failed to upload ${imageFiles[i].name}`);
+          const file = imageFiles[i];
+          const contentType = uploads[i].contentType ?? file.type ?? "image/jpeg";
+          try {
+            const putRes = await fetch(uploads[i].url, {
+              method: "PUT",
+              body: file,
+              headers: { "Content-Type": contentType },
+            });
+            putResults.push({
+              index: i,
+              name: file.name,
+              status: putRes.status,
+              ok: putRes.ok,
+            });
+            setImageDebug((d) =>
+              d ? { ...d, puts: [...putResults] } : null
+            );
+            if (!putRes.ok) {
+              setUploadError(`Failed to upload ${file.name} (${putRes.status})`);
+              setSaving(false);
+              return;
+            }
+          } catch (putErr) {
+            console.error("[Add Property] S3 PUT upload failed (full error):", putErr);
+            const putMsg = putErr instanceof Error ? putErr.message : String(putErr);
+            const putName = putErr instanceof Error ? putErr.constructor?.name ?? "Error" : "Unknown";
+            setImageDebug((d) =>
+              d
+                ? {
+                    ...d,
+                    puts: [...putResults],
+                    error: putMsg,
+                    failedAt: `put_${i}`,
+                    errorName: putName,
+                  }
+                : null
+            );
+            setUploadError(putMsg);
             setSaving(false);
             return;
           }
@@ -179,9 +205,15 @@ export default function AddPropertyPage() {
       alert("Property saved.");
       router.push("/owner/properties");
     } catch (err) {
+      console.error("[Add Property] Upload error (full error):", err);
       const msg = err instanceof Error ? err.message : "Something went wrong";
+      const errName = err instanceof Error ? err.constructor?.name ?? "Error" : "Unknown";
       setUploadError(msg);
-      setImageDebug((d) => (d ? { ...d, error: msg } : { presign: { status: 0, ok: false }, puts: [], error: msg }));
+      setImageDebug((d) =>
+        d
+          ? { ...d, error: msg, failedAt: "request", errorName: errName }
+          : { presign: { status: 0, ok: false }, puts: [], error: msg, failedAt: "request", errorName: errName }
+      );
     } finally {
       setSaving(false);
     }
@@ -271,11 +303,18 @@ export default function AddPropertyPage() {
                       presign: imageDebug.presign,
                       puts: imageDebug.puts,
                       error: imageDebug.error,
+                      failedAt: imageDebug.failedAt,
+                      errorName: imageDebug.errorName,
                     },
                     null,
                     2
                   )}
                 </pre>
+                {imageDebug.errorName && imageDebug.error === "Load failed" && (
+                  <p className="px-3 pb-3 text-xs text-amber-700 border-t border-slate-200 pt-2">
+                    “Load failed” usually means the browser blocked the request (e.g. S3 CORS). Add CORS on your bucket: allow your app origin and PUT method.
+                  </p>
+                )}
               </details>
             )}
           </section>

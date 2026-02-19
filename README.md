@@ -71,8 +71,30 @@ npm start
 
 1. **Register a LIFF app** in the LINE Developers Console
 2. **Set the endpoint URL** to your deployed HTTPS URL (e.g. `https://yourdomain.com`)
-3. **Deploy** – LIFF requires HTTPS in production
-4. **LIFF browser vs external** – In the LINE app, users get LIFF features (profile, share). In an external browser, basic web app behavior applies.
+3. **Hide the top bar (Asset Ace + URL)** – In the LIFF app settings, set **Size** to **Full**. That makes the app full-screen without the LINE browser header. (Tall = bar visible, Compact = smaller bar, Full = no bar.)
+4. **Deploy** – LIFF requires HTTPS in production
+5. **LIFF browser vs external** – In the LINE app, users get LIFF features (profile, share). In an external browser, basic web app behavior applies.
+
+## Property photo upload (S3)
+
+Add Property uses presigned PUT URLs so the browser uploads directly to S3. If you see **"Load failed"** on save, the browser is usually blocking the request due to **CORS**. Configure your S3 bucket CORS to allow:
+
+- **Origin**: your app origin(s), e.g. `https://asset-ace.vercel.app` and `http://localhost:3000`
+- **Method**: `PUT`
+- **Header**: `Content-Type` (in AllowedHeaders)
+
+Example CORS rule (AWS Console → S3 → bucket → Permissions → CORS):
+
+```json
+[
+  {
+    "AllowedHeaders": ["Content-Type"],
+    "AllowedMethods": ["PUT"],
+    "AllowedOrigins": ["https://asset-ace.vercel.app", "http://localhost:3000"],
+    "ExposeHeaders": []
+  }
+]
+```
 
 ## Project Structure
 
