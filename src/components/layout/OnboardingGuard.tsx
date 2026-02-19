@@ -46,19 +46,26 @@ function getIntendedPathFromQuery(): string | null {
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isReady, isLoggedIn, liffId } = useLiff();
+  const { isReady, isLoggedIn, profile, liffId } = useLiff();
   const [checked, setChecked] = useState(false);
 
-  // Redirect based on liff.state/path/redirect immediately, regardless of login
+  const canRedirect = isReady && liffId && (isLoggedIn === false || profile !== null);
+
+  // Redirect based on liff.state/path/redirect only after LIFF state is resolved
   useEffect(() => {
+    if (!canRedirect) return;
     const queryPath = getIntendedPathFromQuery();
     if (queryPath && pathname !== queryPath) {
       router.replace(queryPath);
     }
-  }, [pathname, router]);
+  }, [canRedirect, pathname, router]);
 
   useEffect(() => {
-    if (!isReady || !liffId || isLoggedIn !== true) {
+    if (!canRedirect) {
+      setChecked(true);
+      return;
+    }
+    if (isLoggedIn !== true) {
       setChecked(true);
       return;
     }
@@ -98,7 +105,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     };
   }, [isReady, liffId, isLoggedIn, pathname, router]);
 
-  if (!checked && liffId && isLoggedIn) {
+  if (!canRedirect || (!checked && isLoggedIn === true)) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-[#0F172A]">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#10B981] border-t-transparent" />
