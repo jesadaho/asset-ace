@@ -2,21 +2,23 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { ArrowLeft, ImageIcon, Pencil, MessageCircle, Copy, Users } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next/intl";
+import { ArrowLeft, ImageIcon, Pencil, MessageCircle, Copy, Users, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
 
 type PropertyType = "Condo" | "House" | "Apartment";
-type PropertyStatus = "Available" | "Occupied" | "Maintenance";
+type PropertyStatus = "Available" | "Occupied" | "Maintenance" | "Draft";
 
 const statusBadgeVariant: Record<
   PropertyStatus,
-  "success" | "error" | "warning"
+  "success" | "error" | "warning" | "default"
 > = {
   Available: "success",
   Occupied: "error",
   Maintenance: "warning",
+  Draft: "default",
 };
 
 type PropertyDetail = {
@@ -47,6 +49,7 @@ type PropertyDetail = {
 
 export default function PropertyDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = typeof params.id === "string" ? params.id : "";
   const t = useTranslations("propertyDetail");
   const tAuth = useTranslations("auth");
@@ -56,6 +59,14 @@ export default function PropertyDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [cloneModalOpen, setCloneModalOpen] = useState(false);
+  const [cloneMode, setCloneMode] = useState<"single" | "multiple">("single");
+  const [cloneNewName, setCloneNewName] = useState("");
+  const [cloneBulkCount, setCloneBulkCount] = useState(2);
+  const [cloneBulkUnitNumbers, setCloneBulkUnitNumbers] = useState("");
+  const [cloneLoading, setCloneLoading] = useState(false);
+  const [cloneError, setCloneError] = useState<string | null>(null);
+  const [cloneBulkSuccess, setCloneBulkSuccess] = useState<number | null>(null);
 
   const copyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -121,6 +132,91 @@ export default function PropertyDetailPage() {
     };
   }, [id, t, tAuth]);
 
+  const handleCloneConfirm = useCallback(async () => {
+    if (!id) return;
+    setCloneError(null);
+    setCloneLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setCloneError(tAuth("pleaseLogin"));
+        setCloneLoading(false);
+        return;
+      }
+      if (cloneMode === "multiple") {
+        const count = Math.min(50, Math.max(2, cloneBulkCount));
+        const lines = cloneBulkUnitNumbers
+          .split(/\n/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const unitNumbers = lines.length === count ? lines : undefined;
+        const res = await fetch("/api/owner/properties/clone", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            sourceId: id,
+            count,
+            unitNumbers,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setCloneError(data.message ?? t("cloneError"));
+          setCloneLoading(false);
+          return;
+        }
+        const properties = data.properties;
+        if (Array.isArray(properties) && properties.length > 0) {
+          setCloneBulkSuccess(properties.length);
+          setCloneBulkCount(2);
+          setCloneBulkUnitNumbers("");
+          setTimeout(() => {
+            setCloneModalOpen(false);
+            setCloneBulkSuccess(null);
+            router.push("/owner/properties");
+          }, 1500);
+        } else {
+          setCloneError(t("cloneError"));
+        }
+        setCloneLoading(false);
+        return;
+      }
+      const res = await fetch("/api/owner/properties/clone", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          sourceId: id,
+          newName: cloneNewName.trim() || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCloneError(data.message ?? t("cloneError"));
+        setCloneLoading(false);
+        return;
+      }
+      const newId = data.property?.id;
+      if (newId) {
+        setCloneModalOpen(false);
+        setCloneNewName("");
+        router.push(`/owner/properties/${newId}/edit`);
+      } else {
+        setCloneError(t("cloneError"));
+      }
+    } catch (err) {
+      setCloneError(err instanceof Error ? err.message : t("cloneError"));
+    } finally {
+      setCloneLoading(false);
+    }
+  }, [id, cloneMode, cloneNewName, cloneBulkCount, cloneBulkUnitNumbers, t, tAuth, router]);
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white safe-area-top pt-4">
@@ -136,18 +232,166 @@ export default function PropertyDetailPage() {
             {property?.name ?? t("title")}
           </h1>
           {property && (
-            <Link
-              href={`/owner/properties/${id}/edit`}
-              className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[#10B981] font-medium hover:bg-[#10B981]/10 tap-target min-h-[44px]"
-              aria-label={t("editAria")}
-            >
-              <Pencil className="h-4 w-4" aria-hidden />
-              <span className="text-sm">{t("edit")}</span>
-            </Link>
+            <>
+              <button
+                type="button"
+                onClick={() => setCloneModalOpen(true)}
+                className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-slate-600 font-medium hover:bg-slate-100 tap-target min-h-[44px]"
+                aria-label={t("cloneAria")}
+              >
+                <Layers className="h-4 w-4" aria-hidden />
+                <span className="text-sm sr-only sm:not-sr-only">{t("clone")}</span>
+              </button>
+              <Link
+                href={`/owner/properties/${id}/edit`}
+                className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[#10B981] font-medium hover:bg-[#10B981]/10 tap-target min-h-[44px]"
+                aria-label={t("editAria")}
+              >
+                <Pencil className="h-4 w-4" aria-hidden />
+                <span className="text-sm">{t("edit")}</span>
+              </Link>
+            </>
           )}
           {!property && !loading && <span className="w-14" aria-hidden />}
         </div>
       </header>
+
+      {cloneModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="clone-modal-title"
+          aria-describedby="clone-modal-desc"
+        >
+          <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4 max-h-[90vh] overflow-y-auto">
+            <h2 id="clone-modal-title" className="text-lg font-semibold text-[#0F172A]">
+              {t("cloneConfirmTitle")}
+            </h2>
+            <p id="clone-modal-desc" className="text-sm text-slate-600">
+              {t("cloneConfirmMessage")}
+            </p>
+            <div className="flex gap-2 border-b border-slate-200 pb-2">
+              <button
+                type="button"
+                onClick={() => setCloneMode("single")}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium tap-target ${
+                  cloneMode === "single"
+                    ? "bg-[#10B981] text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {t("clone")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCloneMode("multiple")}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium tap-target ${
+                  cloneMode === "multiple"
+                    ? "bg-[#10B981] text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {t("cloneMultiple")}
+              </button>
+            </div>
+            {cloneMode === "single" ? (
+              <div>
+                <label htmlFor="clone-new-name" className="sr-only">
+                  {t("newUnitNamePlaceholder")}
+                </label>
+                <Input
+                  id="clone-new-name"
+                  type="text"
+                  placeholder={t("newUnitNamePlaceholder")}
+                  value={cloneNewName}
+                  onChange={(e) => setCloneNewName(e.target.value)}
+                  className="w-full"
+                  disabled={cloneLoading}
+                />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="clone-bulk-count" className="block text-sm font-medium text-slate-700 mb-1">
+                    {t("cloneMultipleCount")}
+                  </label>
+                  <Input
+                    id="clone-bulk-count"
+                    type="number"
+                    min={2}
+                    max={50}
+                    value={cloneBulkCount}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value, 10);
+                      if (!Number.isNaN(n)) setCloneBulkCount(Math.min(50, Math.max(2, n)));
+                    }}
+                    disabled={cloneLoading}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="clone-bulk-units" className="block text-sm font-medium text-slate-700 mb-1">
+                    {t("cloneMultipleUnitNumbers")}
+                  </label>
+                  <textarea
+                    id="clone-bulk-units"
+                    rows={4}
+                    placeholder={t("cloneMultipleUnitNumbers")}
+                    value={cloneBulkUnitNumbers}
+                    onChange={(e) => setCloneBulkUnitNumbers(e.target.value)}
+                    disabled={cloneLoading}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-base text-[#0F172A] placeholder:text-[#0F172A]/50 focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2 min-h-[88px] tap-target"
+                  />
+                </div>
+              </div>
+            )}
+            {cloneBulkSuccess !== null && (
+              <p className="text-sm text-[#10B981]" role="status">
+                {t("cloneMultipleSuccess", { count: cloneBulkSuccess })}
+              </p>
+            )}
+            {cloneError && (
+              <p className="text-sm text-red-600" role="alert">
+                {cloneError}
+              </p>
+            )}
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!cloneLoading) {
+                    setCloneModalOpen(false);
+                    setCloneNewName("");
+                    setCloneMode("single");
+                    setCloneBulkCount(2);
+                    setCloneBulkUnitNumbers("");
+                    setCloneError(null);
+                    setCloneBulkSuccess(null);
+                  }
+                }}
+                className="px-4 py-2 rounded-lg text-slate-600 font-medium hover:bg-slate-100 tap-target min-h-[44px] disabled:opacity-50"
+                disabled={cloneLoading}
+              >
+                {t("cloneCancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handleCloneConfirm}
+                className="px-4 py-2 rounded-lg bg-[#10B981] text-white font-medium hover:bg-[#10B981]/90 tap-target min-h-[44px] disabled:opacity-50"
+                disabled={cloneLoading}
+                aria-busy={cloneLoading}
+              >
+                {cloneLoading
+                  ? t("loading")
+                  : cloneMode === "multiple"
+                    ? t("cloneMultipleSubmit")
+                    : t("cloneConfirm")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-lg mx-auto px-4 py-6 pb-24">
         {loading && (

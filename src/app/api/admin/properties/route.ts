@@ -4,7 +4,7 @@ import { Property } from "@/lib/db/models/property";
 import { User } from "@/lib/db/models/user";
 import { getAdminLineUserId } from "@/lib/auth/admin";
 
-const STATUSES = ["Available", "Occupied", "Maintenance"] as const;
+const STATUSES = ["Available", "Occupied", "Maintenance", "Draft"] as const;
 
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

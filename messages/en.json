@@ -58,6 +58,7 @@
     "occupied": "Occupied",
     "available": "Available",
     "maintenance": "Maintenance",
+    "draft": "Draft",
     "searchPlaceholder": "Search by name or address...",
     "all": "All",
     "perMonth": "/ mo",
@@ -65,7 +66,8 @@
     "status": {
       "Available": "Available",
       "Occupied": "Occupied",
-      "Maintenance": "Maintenance"
+      "Maintenance": "Maintenance",
+      "Draft": "Draft"
     }
   },
   "propertyDetail": {
@@ -93,6 +95,20 @@
     "contactResident": "Contact Resident",
     "contactAgent": "Contact Agent",
     "joinGroupChat": "Join Group Chat",
-    "copyId": "Copy ID"
+    "copyId": "Copy ID",
+    "clone": "Clone",
+    "cloneAria": "Clone property",
+    "cloneConfirmTitle": "Clone property",
+    "cloneConfirmMessage": "Do you want to copy this room's data?",
+    "newUnitNamePlaceholder": "New unit name or number (optional)",
+    "cloneConfirm": "Clone",
+    "cloneCancel": "Cancel",
+    "cloneSuccess": "Property cloned. You can add photos and publish.",
+    "cloneError": "Failed to clone property.",
+    "cloneMultiple": "Clone multiple units",
+    "cloneMultipleCount": "Number of copies",
+    "cloneMultipleUnitNumbers": "Unit numbers (one per line, optional)",
+    "cloneMultipleSubmit": "Create copies",
+    "cloneMultipleSuccess": "Created {count} properties."
   }
 }

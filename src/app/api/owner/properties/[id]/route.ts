@@ -6,7 +6,7 @@ import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { getPresignedGetUrl } from "@/lib/s3";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
-const STATUSES = ["Available", "Occupied", "Maintenance"] as const;
+const STATUSES = ["Available", "Occupied", "Maintenance", "Draft"] as const;
 
 type PropertyDoc = IProperty & { _id: mongoose.Types.ObjectId };
 

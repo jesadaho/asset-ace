@@ -58,6 +58,7 @@
     "occupied": "มีการเช่า",
     "available": "ว่าง",
     "maintenance": "ซ่อมบำรุง",
+    "draft": "ฉบับร่าง",
     "searchPlaceholder": "ค้นหาชื่อหรือที่อยู่...",
     "all": "ทั้งหมด",
     "perMonth": "/ เดือน",
@@ -65,7 +66,8 @@
     "status": {
       "Available": "ว่าง",
       "Occupied": "มีการเช่า",
-      "Maintenance": "ซ่อมบำรุง"
+      "Maintenance": "ซ่อมบำรุง",
+      "Draft": "ฉบับร่าง"
     }
   },
   "propertyDetail": {
@@ -93,6 +95,20 @@
     "contactResident": "ติดต่อผู้เช่า",
     "contactAgent": "ติดต่อตัวแทน",
     "joinGroupChat": "เข้าสู่กลุ่มแชท",
-    "copyId": "คัดลอก ID"
+    "copyId": "คัดลอก ID",
+    "clone": "คัดลอกข้อมูลสินทรัพย์",
+    "cloneAria": "คัดลอกข้อมูลทรัพย์สิน",
+    "cloneConfirmTitle": "คัดลอกข้อมูลทรัพย์สิน",
+    "cloneConfirmMessage": "ต้องการคัดลอกข้อมูลห้องนี้ใช่หรือไม่?",
+    "newUnitNamePlaceholder": "ชื่อหรือเลขห้องใหม่ (ไม่บังคับ)",
+    "cloneConfirm": "คัดลอก",
+    "cloneCancel": "ยกเลิก",
+    "cloneSuccess": "คัดลอกสำเร็จ คุณสามารถเพิ่มรูปและเผยแพร่ได้",
+    "cloneError": "คัดลอกไม่สำเร็จ",
+    "cloneMultiple": "คัดลอกหลายห้อง",
+    "cloneMultipleCount": "จำนวนที่ต้องการคัดลอก",
+    "cloneMultipleUnitNumbers": "เลขห้อง (หนึ่งบรรทัดต่อห้อง ไม่บังคับ)",
+    "cloneMultipleSubmit": "สร้างสำเนา",
+    "cloneMultipleSuccess": "สร้าง {count} รายการแล้ว"
   }
 }

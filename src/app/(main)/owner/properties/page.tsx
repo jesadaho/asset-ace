@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { useLiff } from "@/providers/LiffProvider";
 
 type PropertyType = "Condo" | "House" | "Apartment";
-type PropertyStatus = "Available" | "Occupied" | "Maintenance";
+type PropertyStatus = "Available" | "Occupied" | "Maintenance" | "Draft";
 
 type Property = {
   id: string;
@@ -24,11 +24,12 @@ type Property = {
 
 const statusBadgeVariant: Record<
   PropertyStatus,
-  "success" | "error" | "warning"
+  "success" | "error" | "warning" | "default"
 > = {
   Available: "success",
   Occupied: "error",
   Maintenance: "warning",
+  Draft: "default",
 };
 
 type StatusFilter = "All" | PropertyStatus;
@@ -306,7 +307,7 @@ export default function OwnerPropertiesPage() {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        {(["All", "Occupied", "Available", "Maintenance"] as const).map(
+        {(["All", "Occupied", "Available", "Maintenance", "Draft"] as const).map(
           (option) => (
             <button
               key={option}
@@ -318,7 +319,7 @@ export default function OwnerPropertiesPage() {
                   : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
               }`}
             >
-              {option === "All" ? tProps("all") : tProps(option.toLowerCase() as "occupied" | "available" | "maintenance")}
+              {option === "All" ? tProps("all") : tProps(option.toLowerCase() as "occupied" | "available" | "maintenance" | "draft")}
             </button>
           )
         )}
