@@ -69,7 +69,7 @@ export default function AdminDashboardPage() {
   const [searchDebounced, setSearchDebounced] = useState("");
 
   /** Show only overview, only owners table, or only properties table based on card click */
-  const [visibleSection, setVisibleSection] = useState<"overview" | "owners" | "properties">("overview");
+  const [visibleSection, setVisibleSection] = useState<"overview" | "owners" | "properties">("properties");
 
   // Debounce search input
   useEffect(() => {
