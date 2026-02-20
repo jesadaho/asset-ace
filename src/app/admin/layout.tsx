@@ -21,7 +21,7 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const { isReady, isLoggedIn, login } = useLiff();
+  const { isReady, isLoggedIn, login, profile } = useLiff();
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -96,15 +96,29 @@ export default function AdminLayout({
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm text-center max-w-md">
+        <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm max-w-md w-full">
           <Settings className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-          <h1 className="text-xl font-semibold text-slate-800 mb-2">
+          <h1 className="text-xl font-semibold text-slate-800 mb-2 text-center">
             Admin only
           </h1>
-          <p className="text-slate-600">
+          <p className="text-slate-600 text-center mb-6">
             This area is restricted to Super Admins. Ensure your LINE user ID is
             listed in <code className="text-sm bg-slate-100 px-1 rounded">ADMIN_LINE_USER_IDS</code>.
           </p>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-left">
+            <p className="text-xs font-semibold text-amber-800 uppercase tracking-wider mb-2">
+              Debug
+            </p>
+            <p className="text-sm text-slate-700 mb-1">
+              Your LINE user ID (copy this into <code className="text-xs bg-white px-1 rounded">ADMIN_LINE_USER_IDS</code>):
+            </p>
+            <code className="block break-all rounded bg-white border border-slate-200 px-2 py-2 text-sm text-slate-800 font-mono">
+              {profile?.userId ?? "—"}
+            </code>
+            <p className="text-xs text-slate-500 mt-2">
+              Env is read on the server. If you just added the ID, restart the dev server or redeploy.
+            </p>
+          </div>
         </div>
       </div>
     );
