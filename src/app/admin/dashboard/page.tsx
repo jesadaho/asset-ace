@@ -197,7 +197,14 @@ export default function AdminDashboardPage() {
 
       {/* Stats cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card variant="light" className="border-slate-200">
+        <Card
+          variant="light"
+          className="border-slate-200 cursor-pointer hover:border-emerald-300 transition-colors"
+          onClick={() => document.getElementById("properties-section")?.scrollIntoView({ behavior: "smooth" })}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && document.getElementById("properties-section")?.scrollIntoView({ behavior: "smooth" })}
+        >
           <CardHeader className="pb-1">
             <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
               <Building2 className="h-4 w-4 text-emerald-600" />
@@ -214,7 +221,14 @@ export default function AdminDashboardPage() {
             )}
           </CardContent>
         </Card>
-        <Card variant="light" className="border-slate-200">
+        <Card
+          variant="light"
+          className="border-slate-200 cursor-pointer hover:border-blue-300 transition-colors"
+          onClick={() => document.getElementById("owners-section")?.scrollIntoView({ behavior: "smooth" })}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && document.getElementById("owners-section")?.scrollIntoView({ behavior: "smooth" })}
+        >
           <CardHeader className="pb-1">
             <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
               <Users className="h-4 w-4 text-blue-600" />
@@ -268,7 +282,7 @@ export default function AdminDashboardPage() {
       </section>
 
       {/* All Owners */}
-      <Card variant="light" className="border-slate-200 overflow-hidden mb-8">
+      <Card id="owners-section" variant="light" className="border-slate-200 overflow-hidden mb-8 scroll-mt-4">
         <CardHeader className="border-b border-slate-200 bg-slate-50/50">
           <CardTitle className="text-lg text-slate-800">All Owners</CardTitle>
         </CardHeader>
@@ -323,7 +337,7 @@ export default function AdminDashboardPage() {
       </Card>
 
       {/* Master property table */}
-      <Card variant="light" className="border-slate-200 overflow-hidden">
+      <Card id="properties-section" variant="light" className="border-slate-200 overflow-hidden scroll-mt-4">
         <CardHeader className="border-b border-slate-200 bg-slate-50/50">
           <CardTitle className="text-lg text-slate-800">All Properties</CardTitle>
           <div className="flex flex-col sm:flex-row gap-3 mt-4">

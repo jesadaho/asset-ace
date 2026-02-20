@@ -78,28 +78,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      try {
-        const liff = (await import("@line/liff")).default;
-        const token = liff.getAccessToken();
-        if (token) {
-          const meRes = await fetch("/api/admin/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (cancelled) return;
-          if (meRes.ok) {
-            const meData = (await meRes.json()) as { isAdmin?: boolean };
-            if (meData.isAdmin) {
-              router.replace("/admin/dashboard");
-              setChecked(true);
-              return;
-            }
-          }
-        }
-      } catch {
-        // ignore; continue to onboarding check
-      }
-      if (cancelled) return;
-
+      // No auto-redirect to /admin/dashboard; admin only when user opens /admin/* directly.
       const status = await checkOnboardingStatus();
       if (cancelled) return;
 
