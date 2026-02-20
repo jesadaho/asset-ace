@@ -47,7 +47,7 @@ export default function OwnerPropertiesPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
   const [summaryFilter, setSummaryFilter] = useState<SummaryFilter>("all");
   const [isAmountVisible, setIsAmountVisible] = useState(true);
-  const [isDashboardVisible, setIsDashboardVisible] = useState(true);
+  const [isDashboardVisible, setIsDashboardVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
