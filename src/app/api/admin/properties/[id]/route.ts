@@ -4,15 +4,15 @@ import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
 import { User } from "@/lib/db/models/user";
 import { getPresignedGetUrl } from "@/lib/s3";
-import { getLineUserIdFromRequest } from "@/lib/auth/liff";
+import { getAdminLineUserId } from "@/lib/auth/admin";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = await getLineUserIdFromRequest(request);
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  const adminId = await getAdminLineUserId(request);
+  if (!adminId) {
+    return NextResponse.json({ message: "Admin only" }, { status: 403 });
   }
 
   const { id } = await params;

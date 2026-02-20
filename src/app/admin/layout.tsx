@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Menu, Building2, LogIn } from "lucide-react";
+import { LayoutDashboard, Menu, Building2, LogIn, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLiff } from "@/providers/LiffProvider";
 import { Button } from "@/components/ui/Button";
@@ -20,7 +20,38 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const { isReady, isLoggedIn, login } = useLiff();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setIsAdmin(null);
+      return;
+    }
+    let cancelled = false;
+    async function checkAdmin() {
+      try {
+        const liff = (await import("@line/liff")).default;
+        const token = liff.getAccessToken();
+        if (!token) {
+          if (!cancelled) setIsAdmin(false);
+          return;
+        }
+        const res = await fetch("/api/admin/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (cancelled) return;
+        const data = (await res.json()) as { isAdmin?: boolean };
+        setIsAdmin(!!data.isAdmin);
+      } catch {
+        if (!cancelled) setIsAdmin(false);
+      }
+    }
+    checkAdmin();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn]);
 
   if (!isReady) {
     return (
@@ -49,6 +80,31 @@ export default function AdminLayout({
           >
             Login with LINE
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAdmin === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm text-center max-w-md">
+          <Settings className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+          <h1 className="text-xl font-semibold text-slate-800 mb-2">
+            Admin only
+          </h1>
+          <p className="text-slate-600">
+            This area is restricted to Super Admins. Ensure your LINE user ID is
+            listed in <code className="text-sm bg-slate-100 px-1 rounded">ADMIN_LINE_USER_IDS</code>.
+          </p>
         </div>
       </div>
     );
