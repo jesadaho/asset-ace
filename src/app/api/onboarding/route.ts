@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { User } from "@/lib/db/models/user";
+import { Property } from "@/lib/db/models/property";
 import { verifyLiffToken, getBearerToken } from "@/lib/auth/liff";
 import { linkRichMenuToUser } from "@/lib/line/richmenu";
 
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: { role?: string; name?: string; phone?: string };
+  let body: { role?: string; name?: string; phone?: string; propId?: string };
   try {
     body = await request.json();
   } catch {
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { role, name, phone } = body;
+  const { role, name, phone, propId } = body;
   if (!role || !name?.trim() || !phone?.trim()) {
     return NextResponse.json(
       { message: "role, name, and phone are required" },
@@ -79,6 +81,17 @@ export async function POST(request: NextRequest) {
       },
       { upsert: true, new: true }
     );
+
+    if (role === "agent" && propId?.trim() && mongoose.Types.ObjectId.isValid(propId)) {
+      try {
+        await Property.findOneAndUpdate(
+          { _id: propId },
+          { $set: { agentLineId: lineUserId, agentName: name.trim() } }
+        );
+      } catch (propErr) {
+        console.error("Onboarding: failed to link agent to property", propId, propErr);
+      }
+    }
 
     let richMenuDebug: { attempted: boolean; linked: boolean; status?: number; message?: string; richMenuId?: string } | undefined;
     if (role === "owner") {

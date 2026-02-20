@@ -4,6 +4,7 @@ export interface OnboardingData {
   role: "owner" | "agent" | "tenant";
   name: string;
   phone: string;
+  propId?: string;
 }
 
 export interface OnboardingStatus {
@@ -50,11 +51,12 @@ export interface OnboardingSuccessResponse {
 }
 
 export async function submitOnboarding(data: OnboardingData): Promise<OnboardingSuccessResponse | void> {
-  const payload = {
+  const payload: Record<string, string> = {
     role: data.role,
     name: data.name,
     phone: data.phone,
   };
+  if (data.propId) payload.propId = data.propId;
 
   const token = await getAccessToken();
 

@@ -30,7 +30,12 @@
     "phoneInvalid": "กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง",
     "submitErrorGeneric": "เกิดข้อผิดพลาด กรุณาลองใหม่",
     "completeSetup": "ดำเนินการเสร็จสิ้น",
-    "profile": "โปรไฟล์"
+    "profile": "โปรไฟล์",
+    "welcomeAgent": "ยินดีต้อนรับคุณเอเจนท์",
+    "profileSetupForAgent": "กรอกข้อมูลเพื่อจัดการทรัพย์สิน",
+    "tenantDisabled": "ไม่พร้อมใช้งาน",
+    "propertySummary": "ทรัพย์สินที่คุณจะจัดการ",
+    "propertyNotFound": "ไม่พบข้อมูลทรัพย์สิน"
   },
   "dashboard": {
     "welcome": "ยินดีต้อนรับ",

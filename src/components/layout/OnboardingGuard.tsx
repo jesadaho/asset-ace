@@ -73,6 +73,11 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     async function run() {
+      if (pathname.startsWith("/admin")) {
+        setChecked(true);
+        return;
+      }
+
       const status = await checkOnboardingStatus();
       if (cancelled) return;
 

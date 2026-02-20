@@ -30,7 +30,12 @@
     "phoneInvalid": "Enter a valid phone number",
     "submitErrorGeneric": "Something went wrong",
     "completeSetup": "Complete setup",
-    "profile": "Profile"
+    "profile": "Profile",
+    "welcomeAgent": "Welcome, Agent",
+    "profileSetupForAgent": "Complete your profile to manage the property",
+    "tenantDisabled": "Not available",
+    "propertySummary": "Property you will manage",
+    "propertyNotFound": "Property not found"
   },
   "dashboard": {
     "welcome": "Welcome",

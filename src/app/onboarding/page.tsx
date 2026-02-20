@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLiff } from "@/providers/LiffProvider";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +13,8 @@ import {
 } from "@/lib/api/onboarding";
 import { User, Building2, Home } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
+
+type PropertySummary = { name: string; address: string; type?: string };
 
 const ROLE_OPTIONS: { value: OnboardingData["role"]; labelKey: "roleOwner" | "roleAgent" | "roleTenant"; icon: typeof Building2 }[] = [
   { value: "owner", labelKey: "roleOwner", icon: Building2 },
@@ -29,16 +31,44 @@ function isValidPhone(phone: string): boolean {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations("onboarding");
   const tAuth = useTranslations("auth");
   const { isReady, isLoggedIn, profile, error, login } = useLiff();
-  const [step, setStep] = useState<1 | 2>(1);
-  const [role, setRole] = useState<OnboardingData["role"] | "">("");
+  const isAgentFlow = searchParams.get("role") === "agent";
+  const propId = searchParams.get("propId") ?? null;
+
+  const [step, setStep] = useState<1 | 2>(isAgentFlow ? 2 : 1);
+  const [role, setRole] = useState<OnboardingData["role"] | "">(isAgentFlow ? "agent" : "");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [propertySummary, setPropertySummary] = useState<PropertySummary | null>(null);
+  const [propertySummaryError, setPropertySummaryError] = useState(false);
+
+  useEffect(() => {
+    if (!isAgentFlow || !propId) return;
+    let cancelled = false;
+    fetch(`/api/properties/${encodeURIComponent(propId)}/invite`)
+      .then((res) => {
+        if (cancelled) return;
+        if (!res.ok) {
+          setPropertySummaryError(true);
+          return;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled || !data) return;
+        setPropertySummary({ name: data.name, address: data.address, type: data.type });
+      })
+      .catch(() => {
+        if (!cancelled) setPropertySummaryError(true);
+      });
+    return () => { cancelled = true; };
+  }, [isAgentFlow, propId]);
 
   const validateStep2 = (): boolean => {
     const next: { name?: string; phone?: string } = {};
@@ -54,14 +84,18 @@ export default function OnboardingPage() {
     setSubmitError(null);
     if (!validateStep2()) return;
 
+    const submitRole = (isAgentFlow ? "agent" : role) as OnboardingData["role"];
+    if (!submitRole) return;
+
     setIsSubmitting(true);
     try {
       await submitOnboarding({
-        role: role as OnboardingData["role"],
+        role: submitRole,
         name: name.trim(),
         phone: phone.trim(),
+        propId: isAgentFlow && propId ? propId : undefined,
       });
-      router.push(getRoleDashboardPath(role));
+      router.push(getRoleDashboardPath(submitRole));
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : t("submitErrorGeneric"));
     } finally {
@@ -90,12 +124,36 @@ export default function OnboardingPage() {
             )}
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-[#0F172A] mb-2">
-            {t("welcomeTitle")}
+            {isAgentFlow ? t("welcomeAgent") : t("welcomeTitle")}
           </h1>
           <p className="text-slate-600 text-base">
-            {step === 1 ? t("chooseRole") : t("completeProfile")}
+            {isAgentFlow
+              ? t("profileSetupForAgent")
+              : step === 1
+                ? t("chooseRole")
+                : t("completeProfile")}
           </p>
         </header>
+
+        {isAgentFlow && propId && (
+          <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
+            <h2 className="text-sm font-semibold text-[#0F172A] mb-2">
+              {t("propertySummary")}
+            </h2>
+            {propertySummaryError && (
+              <p className="text-slate-500 text-sm">{t("propertyNotFound")}</p>
+            )}
+            {propertySummary && !propertySummaryError && (
+              <div className="text-sm text-slate-600 space-y-1">
+                <p className="font-medium text-[#0F172A]">{propertySummary.name}</p>
+                {propertySummary.type && (
+                  <p>{propertySummary.type}</p>
+                )}
+                <p>{propertySummary.address}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {isReady && isLoggedIn === false && (
           <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
@@ -114,28 +172,34 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {step === 1 ? (
+        {!isAgentFlow && step === 1 ? (
           <div className="space-y-4">
             <p className="text-sm font-medium text-slate-700 mb-2">{t("iAm")}</p>
             {ROLE_OPTIONS.map((opt) => {
               const Icon = opt.icon;
               const selected = role === opt.value;
+              const isTenant = opt.value === "tenant";
               return (
                 <button
                   key={opt.value}
                   type="button"
+                  disabled={isTenant}
+                  aria-disabled={isTenant}
                   onClick={() => {
-                  setRole(opt.value);
-                  setStep(2);
-                }}
-                  className="w-full text-left"
+                    if (isTenant) return;
+                    setRole(opt.value);
+                    setStep(2);
+                  }}
+                  className={`w-full text-left ${isTenant ? "cursor-not-allowed opacity-60 pointer-events-none" : ""}`}
                 >
                   <Card
                     variant="light"
-                    className={`transition-colors cursor-pointer tap-target min-h-[60px] ${
-                      selected
-                        ? "border-[#10B981] bg-emerald-50"
-                        : "border-slate-200 bg-white hover:border-[#10B981]/50"
+                    className={`transition-colors min-h-[60px] ${
+                      isTenant
+                        ? "border-slate-200 bg-slate-50"
+                        : selected
+                          ? "border-[#10B981] bg-emerald-50 cursor-pointer tap-target"
+                          : "border-slate-200 bg-white hover:border-[#10B981]/50 cursor-pointer tap-target"
                     }`}
                   >
                     <CardContent className="flex items-center gap-4 py-4">
@@ -147,7 +211,10 @@ export default function OnboardingPage() {
                         <Icon className="h-6 w-6" aria-hidden />
                       </div>
                       <span className="text-lg font-medium text-[#0F172A]">{t(opt.labelKey)}</span>
-                      {selected && (
+                      {isTenant && (
+                        <span className="ml-auto text-slate-400 text-sm">({t("tenantDisabled")})</span>
+                      )}
+                      {selected && !isTenant && (
                         <span className="ml-auto text-[#10B981] text-sm font-medium">
                           {t("selected")}
                         </span>
@@ -160,13 +227,15 @@ export default function OnboardingPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="text-sm text-slate-600 hover:text-[#0F172A] mb-2"
-            >
-              {t("changeRole")}
-            </button>
+            {!isAgentFlow && (
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="text-sm text-slate-600 hover:text-[#0F172A] mb-2"
+              >
+                {t("changeRole")}
+              </button>
+            )}
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-[#0F172A] mb-2">
