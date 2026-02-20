@@ -77,7 +77,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-[#0F172A] text-white safe-area-top">
+    <div className="min-h-dvh bg-slate-50 text-[#0F172A] safe-area-top">
       <div className="max-w-lg mx-auto px-4 py-12">
         <header className="text-center mb-8">
           <div className="flex flex-col items-center gap-3 mb-4">
@@ -88,25 +88,25 @@ export default function OnboardingPage() {
                 className="h-16 w-16 rounded-full object-cover ring-2 ring-[#10B981]/30"
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#10B981]/20 text-[#10B981]">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#10B981]/10 text-[#10B981]">
                 <User className="h-8 w-8" aria-hidden />
               </div>
             )}
             {profile?.displayName && (
-              <p className="text-white font-medium">{profile.displayName}</p>
+              <p className="text-[#0F172A] font-medium">{profile.displayName}</p>
             )}
           </div>
-          <h1 className="text-2xl font-bold tracking-tight mb-2">
+          <h1 className="text-2xl font-bold tracking-tight text-[#0F172A] mb-2">
             Welcome to Asset Ace
           </h1>
-          <p className="text-white/70 text-base">
+          <p className="text-slate-600 text-base">
             {step === 1 ? "Choose your role to continue" : "Complete your profile"}
           </p>
         </header>
 
         {isReady && isLoggedIn === false && (
-          <div className="mb-6 rounded-lg border border-amber-500/50 bg-amber-900/30 p-4 text-center">
-            <p className="text-amber-200 text-sm mb-3">
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+            <p className="text-amber-800 text-sm mb-3">
               Please log in with LINE to continue.
             </p>
             <Button type="button" onClick={login} size="lg" className="w-full">
@@ -116,17 +116,17 @@ export default function OnboardingPage() {
         )}
 
         {error && (
-          <div className="mb-6 rounded-lg border border-red-500/50 bg-red-900/20 p-4 text-center">
-            <p className="text-red-200 text-sm">{error}</p>
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-center">
+            <p className="text-red-700 text-sm">{error}</p>
           </div>
         )}
 
         {justSubmitted && richMenuDebug?.richMenu && (
           <div className="space-y-4 mb-6">
             <p className="text-[#10B981] font-medium">Setup complete</p>
-            <div className="rounded border border-white/20 bg-white/5 p-3 text-left">
-              <p className="text-xs font-medium text-white/80 mb-2">Rich Menu (debug)</p>
-              <pre className="text-xs font-mono text-white/90 whitespace-pre-wrap break-all">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 text-left">
+              <p className="text-xs font-medium text-slate-600 mb-2">Rich Menu (debug)</p>
+              <pre className="text-xs font-mono text-[#0F172A] whitespace-pre-wrap break-all">
                 {JSON.stringify(richMenuDebug.richMenu, null, 2)}
               </pre>
             </div>
@@ -146,7 +146,7 @@ export default function OnboardingPage() {
 
         {!justSubmitted && step === 1 ? (
           <div className="space-y-4">
-            <p className="text-sm font-medium text-white/90 mb-2">I am a</p>
+            <p className="text-sm font-medium text-slate-700 mb-2">I am a</p>
             {ROLE_OPTIONS.map((opt) => {
               const Icon = opt.icon;
               const selected = role === opt.value;
@@ -161,20 +161,22 @@ export default function OnboardingPage() {
                   className="w-full text-left"
                 >
                   <Card
-                    variant="outline"
+                    variant="light"
                     className={`transition-colors cursor-pointer tap-target min-h-[60px] ${
-                      selected ? "border-[#10B981] bg-[#10B981]/10" : "hover:border-[#10B981]/50"
+                      selected
+                        ? "border-[#10B981] bg-emerald-50"
+                        : "border-slate-200 bg-white hover:border-[#10B981]/50"
                     }`}
                   >
                     <CardContent className="flex items-center gap-4 py-4">
                       <div
                         className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-                          selected ? "bg-[#10B981]/30 text-[#10B981]" : "bg-white/10 text-white/80"
+                          selected ? "bg-[#10B981]/20 text-[#10B981]" : "bg-slate-100 text-slate-600"
                         }`}
                       >
                         <Icon className="h-6 w-6" aria-hidden />
                       </div>
-                      <span className="text-lg font-medium text-white">{opt.label}</span>
+                      <span className="text-lg font-medium text-[#0F172A]">{opt.label}</span>
                       {selected && (
                         <span className="ml-auto text-[#10B981] text-sm font-medium">
                           Selected
@@ -191,13 +193,13 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="text-sm text-white/70 hover:text-white mb-2"
+              className="text-sm text-slate-600 hover:text-[#0F172A] mb-2"
             >
               Change role
             </button>
 
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-white/90 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-[#0F172A] mb-2">
                 Full name
               </label>
               <Input
@@ -210,12 +212,12 @@ export default function OnboardingPage() {
                 autoComplete="name"
               />
               {errors.name && (
-                <p className="mt-1.5 text-sm text-red-400">{errors.name}</p>
+                <p className="mt-1.5 text-sm text-red-500">{errors.name}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-white/90 mb-2">
+              <label htmlFor="phone" className="block text-sm font-medium text-[#0F172A] mb-2">
                 Phone number
               </label>
               <Input
@@ -228,12 +230,12 @@ export default function OnboardingPage() {
                 autoComplete="tel"
               />
               {errors.phone && (
-                <p className="mt-1.5 text-sm text-red-400">{errors.phone}</p>
+                <p className="mt-1.5 text-sm text-red-500">{errors.phone}</p>
               )}
             </div>
 
             {submitError && (
-              <p className="text-sm text-red-400" role="alert">{submitError}</p>
+              <p className="text-sm text-red-500" role="alert">{submitError}</p>
             )}
 
             <Button
