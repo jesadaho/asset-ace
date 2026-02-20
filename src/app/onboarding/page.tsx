@@ -10,6 +10,9 @@ import {
   getRoleDashboardPath,
   type OnboardingData,
   type OnboardingSuccessResponse,
+  submitOnboarding,
+  getRoleDashboardPath,
+  type OnboardingData,
 } from "@/lib/api/onboarding";
 import { User, Building2, Home } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -37,8 +40,6 @@ export default function OnboardingPage() {
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [richMenuDebug, setRichMenuDebug] = useState<OnboardingSuccessResponse["debug"] | null>(null);
-  const [justSubmitted, setJustSubmitted] = useState(false);
 
   const validateStep2 = (): boolean => {
     const next: { name?: string; phone?: string } = {};
@@ -52,23 +53,16 @@ export default function OnboardingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
-    setRichMenuDebug(null);
-    setJustSubmitted(false);
     if (!validateStep2()) return;
 
     setIsSubmitting(true);
     try {
-      const result = await submitOnboarding({
+      await submitOnboarding({
         role: role as OnboardingData["role"],
         name: name.trim(),
         phone: phone.trim(),
       });
-      if (result?.debug) {
-        setRichMenuDebug(result.debug);
-        setJustSubmitted(true);
-      } else {
-        router.push(getRoleDashboardPath(role));
-      }
+      router.push(getRoleDashboardPath(role));
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -121,30 +115,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {justSubmitted && richMenuDebug?.richMenu && (
-          <div className="space-y-4 mb-6">
-            <p className="text-[#10B981] font-medium">Setup complete</p>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 text-left">
-              <p className="text-xs font-medium text-slate-600 mb-2">Rich Menu (debug)</p>
-              <pre className="text-xs font-mono text-[#0F172A] whitespace-pre-wrap break-all">
-                {JSON.stringify(richMenuDebug.richMenu, null, 2)}
-              </pre>
-            </div>
-            <Button
-              type="button"
-              size="lg"
-              className="w-full"
-              onClick={() => {
-                setJustSubmitted(false);
-                router.push(getRoleDashboardPath(role));
-              }}
-            >
-              Go to dashboard
-            </Button>
-          </div>
-        )}
-
-        {!justSubmitted && step === 1 ? (
+        {step === 1 ? (
           <div className="space-y-4">
             <p className="text-sm font-medium text-slate-700 mb-2">I am a</p>
             {ROLE_OPTIONS.map((opt) => {
@@ -188,7 +159,7 @@ export default function OnboardingPage() {
               );
             })}
           </div>
-        ) : !justSubmitted ? (
+        ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <button
               type="button"
@@ -248,7 +219,7 @@ export default function OnboardingPage() {
               Complete setup
             </Button>
           </form>
-        ) : null}
+        )}
       </div>
     </div>
   );

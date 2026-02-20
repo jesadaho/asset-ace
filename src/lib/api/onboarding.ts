@@ -13,7 +13,7 @@ export interface OnboardingStatus {
 
 function getRolePath(role: string): string {
   const map: Record<string, string> = {
-    owner: "/owners",
+    owner: "/owner/dashboard",
     agent: "/agents",
     tenant: "/tenants",
   };
