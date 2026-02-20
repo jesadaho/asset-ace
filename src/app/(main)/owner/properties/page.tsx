@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Search, ChevronRight, Plus, ImageIcon, Eye, EyeOff, LayoutDashboard } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { useLiff } from "@/providers/LiffProvider";
@@ -34,6 +35,10 @@ type StatusFilter = "All" | PropertyStatus;
 type SummaryFilter = "all" | "available" | "pending";
 
 export default function OwnerPropertiesPage() {
+  const t = useTranslations("dashboard");
+  const tAuth = useTranslations("auth");
+  const tCommon = useTranslations("common");
+  const tProps = useTranslations("properties");
   const { profile } = useLiff();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +56,7 @@ export default function OwnerPropertiesPage() {
         const liff = (await import("@line/liff")).default;
         const token = liff.getAccessToken();
         if (!token) {
-          if (!cancelled) setError("Please log in with LINE.");
+          if (!cancelled) setError(tAuth("pleaseLogin"));
           return;
         }
         const res = await fetch("/api/owner/properties", {
@@ -60,11 +65,11 @@ export default function OwnerPropertiesPage() {
         if (cancelled) return;
         if (!res.ok) {
           if (res.status === 401) {
-            setError("Please log in with LINE.");
+            setError(tAuth("pleaseLogin"));
             return;
           }
           const data = await res.json().catch(() => ({}));
-          setError(data.message ?? `Failed to load properties (${res.status})`);
+          setError(data.message ?? t("failedToLoadProperties"));
           return;
         }
         const data = await res.json();
@@ -82,7 +87,7 @@ export default function OwnerPropertiesPage() {
         setProperties(list);
         setError(null);
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load properties");
+        if (!cancelled) setError(err instanceof Error ? err.message : t("failedToLoadProperties"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -143,9 +148,9 @@ export default function OwnerPropertiesPage() {
         <>
           <div className="mb-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-teal-600 p-5 text-white shadow-lg overflow-hidden transition-all duration-300">
             <p className="text-sm text-white/80 mb-1">
-              Welcome{profile?.displayName ? `, ${profile.displayName}` : ""}
+              {t("welcome")}{profile?.displayName ? `, ${profile.displayName}` : ""}
             </p>
-            <p className="text-xs text-white/70 mb-3">Total Monthly Income</p>
+            <p className="text-xs text-white/70 mb-3">{t("totalMonthlyIncome")}</p>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold tracking-tight">
                 {isAmountVisible
@@ -166,7 +171,7 @@ export default function OwnerPropertiesPage() {
               </button>
             </div>
             <p className="text-sm text-white/70 mt-2">
-              Potential Income: ฿{potentialIncome.toLocaleString()}
+              {t("potentialIncome")}: ฿{potentialIncome.toLocaleString()}
             </p>
           </div>
 
@@ -181,7 +186,7 @@ export default function OwnerPropertiesPage() {
               }`}
             >
               <span className="block text-xl font-bold text-[#0F172A]">{total}</span>
-              <span className="block text-xs text-slate-600 mt-0.5">Total</span>
+              <span className="block text-xs text-slate-600 mt-0.5">{t("total")}</span>
             </button>
             <button
               type="button"
@@ -193,7 +198,7 @@ export default function OwnerPropertiesPage() {
               }`}
             >
               <span className="block text-xl font-bold text-[#0D9668]">{available}</span>
-              <span className="block text-xs text-slate-600 mt-0.5">Available</span>
+              <span className="block text-xs text-slate-600 mt-0.5">{t("available")}</span>
             </button>
             <button
               type="button"
@@ -205,7 +210,7 @@ export default function OwnerPropertiesPage() {
               }`}
             >
               <span className="block text-xl font-bold text-amber-600">{pending}</span>
-              <span className="block text-xs text-slate-600 mt-0.5">Pending</span>
+              <span className="block text-xs text-slate-600 mt-0.5">{t("pending")}</span>
             </button>
           </div>
         </>
@@ -218,12 +223,12 @@ export default function OwnerPropertiesPage() {
           className="mb-4 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 tap-target w-full justify-center"
         >
           <LayoutDashboard className="h-4 w-4" aria-hidden />
-          Show summary
+          {t("showSummary")}
         </button>
       )}
 
       <h1 className="text-2xl font-bold text-[#0F172A] mb-4">
-        My Properties
+        {tProps("myProperties")}
       </h1>
 
       {error && (
@@ -233,15 +238,15 @@ export default function OwnerPropertiesPage() {
       )}
 
       {loading && (
-        <p className="text-slate-500 text-sm mb-4">Loading properties...</p>
+        <p className="text-slate-500 text-sm mb-4">{t("loadingProperties")}</p>
       )}
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        <Badge variant="default">Total: {counts.total}</Badge>
-        <Badge variant="error">Occupied: {counts.occupied}</Badge>
-        <Badge variant="success">Available: {counts.available}</Badge>
+        <Badge variant="default">{tProps("total")}: {counts.total}</Badge>
+        <Badge variant="error">{tProps("occupied")}: {counts.occupied}</Badge>
+        <Badge variant="success">{tProps("available")}: {counts.available}</Badge>
         {counts.maintenance > 0 && (
-          <Badge variant="warning">Maintenance: {counts.maintenance}</Badge>
+          <Badge variant="warning">{tProps("maintenance")}: {counts.maintenance}</Badge>
         )}
       </div>
 
@@ -252,7 +257,7 @@ export default function OwnerPropertiesPage() {
         />
         <input
           type="search"
-          placeholder="Search by name or address..."
+          placeholder={tProps("searchPlaceholder")}
           value={searchQuery}
           onFocus={handleSearchFocus}
           onChange={handleSearchChange}
@@ -274,7 +279,7 @@ export default function OwnerPropertiesPage() {
                   : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
               }`}
             >
-              {option}
+              {option === "All" ? tProps("all") : tProps(option.toLowerCase() as "occupied" | "available" | "maintenance")}
             </button>
           )
         )}
@@ -302,7 +307,7 @@ export default function OwnerPropertiesPage() {
                 )}
                 <span className="absolute top-2 right-2">
                   <Badge variant={statusBadgeVariant[property.status]}>
-                    {property.status}
+                    {tProps(`status.${property.status}`)}
                   </Badge>
                 </span>
               </div>
@@ -315,10 +320,10 @@ export default function OwnerPropertiesPage() {
                 </p>
                 <div className="flex items-center justify-between mt-3">
                   <span className="font-semibold text-[#0F172A]">
-                    ฿{property.price.toLocaleString()} / mo
+                    ฿{property.price.toLocaleString()} {tProps("perMonth")}
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm text-[#10B981] font-medium">
-                    View Details
+                    {tCommon("viewDetails")}
                     <ChevronRight className="h-4 w-4" aria-hidden />
                   </span>
                 </div>
@@ -331,15 +336,15 @@ export default function OwnerPropertiesPage() {
       {!loading && filteredProperties.length === 0 && (
         <p className="text-slate-500 text-sm text-center py-8 pb-24">
           {properties.length === 0
-            ? "You have no properties yet. Add one to get started."
-            : "No properties match your search."}
+            ? t("noPropertiesYet")
+            : tProps("noMatch")}
         </p>
       )}
 
       <Link
         href="/owner/properties/add"
         className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[#10B981] text-white shadow-lg hover:bg-[#0D9668] active:bg-[#0B7A56] transition-colors tap-target"
-        aria-label="Add property"
+        aria-label={tCommon("addProperty")}
       >
         <Plus className="h-7 w-7" aria-hidden />
       </Link>

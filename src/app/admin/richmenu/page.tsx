@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import {
@@ -38,7 +38,8 @@ export default function AdminRichMenuPage() {
   const [removeSuccess, setRemoveSuccess] = useState(false);
 
   const [switchUserId, setSwitchUserId] = useState("");
-  const [switchTarget, setSwitchTarget] = useState<"onboarding" | "owner">("owner");
+  /** When list is loaded, this is a richMenuId from the list; used for Target dropdown */
+  const [switchRichMenuId, setSwitchRichMenuId] = useState("");
   const [switchLoading, setSwitchLoading] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
   const [switchResult, setSwitchResult] = useState<{
@@ -58,6 +59,10 @@ export default function AdminRichMenuPage() {
         setListData(null);
         return;
       }
+      // #region agent log
+      const rms = (data as { richmenus?: { richMenuId?: string; name?: string }[] }).richmenus ?? [];
+      fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'H3',location:'admin/richmenu/page.tsx loadList',message:'After setListData',data:{richmenusLength:rms.length,firstTwo:rms.slice(0,2).map(m=>({id:m.richMenuId,name:m.name})),dataKeys:Object.keys(data as object)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       setListData(data);
     } catch (e) {
       setListError(e instanceof Error ? e.message : String(e));
@@ -185,12 +190,16 @@ export default function AdminRichMenuPage() {
       setSwitchError("Enter a LINE user ID.");
       return;
     }
+    if (!switchRichMenuId) {
+      setSwitchError("Load rich menus first and select a target menu.");
+      return;
+    }
     setSwitchLoading(true);
     try {
       const res = await fetch("/api/debug/switch-richmenu", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: uid, target: switchTarget }),
+        body: JSON.stringify({ userId: uid, richMenuId: switchRichMenuId }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -211,6 +220,15 @@ export default function AdminRichMenuPage() {
 
   const menus = listData?.richmenus ?? [];
   const canRemove = menus.length > 0 && removeMenuId;
+
+  // When rich menus list is loaded, pre-select first if none or current not in list
+  useEffect(() => {
+    if (menus.length === 0) return;
+    const currentInList = switchRichMenuId && menus.some((m) => m.richMenuId === switchRichMenuId);
+    if (!currentInList) {
+      setSwitchRichMenuId(menus[0].richMenuId);
+    }
+  }, [menus, switchRichMenuId]);
 
   return (
     <div className="min-h-dvh bg-[#0F172A] text-white safe-area-top safe-area-bottom">
@@ -336,7 +354,7 @@ export default function AdminRichMenuPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-white/70 text-sm">
-              Link a user to the onboarding or owner rich menu (debug).
+              Link a user to a rich menu. Load rich menus above to see the list (debug).
             </p>
             <div>
               <label className="block text-sm font-medium text-white/90 mb-1">
@@ -354,21 +372,35 @@ export default function AdminRichMenuPage() {
               <label className="block text-sm font-medium text-white/90 mb-1">
                 Target
               </label>
-              <select
-                value={switchTarget}
-                onChange={(e) =>
-                  setSwitchTarget(e.target.value as "onboarding" | "owner")
-                }
-                className="w-full rounded-lg border border-white/20 bg-[#0F172A]/50 px-3 py-2 text-sm text-white focus:border-[#10B981] focus:outline-none"
-              >
-                <option value="onboarding">Onboarding</option>
-                <option value="owner">Owner</option>
-              </select>
+              {/* #region agent log */}
+              {(() => {
+                fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'H1_H4',location:'admin/richmenu/page.tsx Switch Target',message:'Switch dropdown render',data:{menusLength:menus.length,listDataHasRichmenus:!!listData?.richmenus,listRichmenusLength:listData?.richmenus?.length ?? 0,optionsPreview:menus.slice(0,5).map(m=>({id:m.richMenuId,label:m.name||m.chatBarText||m.richMenuId}))},timestamp:Date.now()})}).catch(()=>{});
+                return null;
+              })()}
+              {/* #endregion */}
+              {menus.length === 0 ? (
+                <p className="text-white/60 text-sm py-2">
+                  Load rich menus first to select a target.
+                </p>
+              ) : (
+                <select
+                  value={switchRichMenuId}
+                  onChange={(e) => setSwitchRichMenuId(e.target.value)}
+                  className="w-full rounded-lg border border-white/20 bg-[#0F172A]/50 px-3 py-2 text-sm text-white focus:border-[#10B981] focus:outline-none"
+                >
+                  <option value="">Select a rich menu…</option>
+                  {menus.map((m) => (
+                    <option key={m.richMenuId} value={m.richMenuId}>
+                      {m.name || m.chatBarText || m.richMenuId}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
             <Button
               variant="primary"
               onClick={doSwitchRichMenu}
-              disabled={switchLoading}
+              disabled={switchLoading || menus.length === 0 || !switchRichMenuId}
               isLoading={switchLoading}
             >
               Switch

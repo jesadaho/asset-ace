@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getLocale } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
 import "./globals.css";
 import { LiffWrapper } from "@/components/layout/LiffWrapper";
 
@@ -25,17 +27,20 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <LiffWrapper>{children}</LiffWrapper>
+        <NextIntlClientProvider>
+          <LiffWrapper>{children}</LiffWrapper>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

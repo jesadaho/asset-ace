@@ -1,0 +1,43 @@
+{
+  "common": {
+    "appName": "Asset Ace",
+    "viewAll": "View All",
+    "addProperty": "Add property",
+    "loading": "Loading...",
+    "error": "Error",
+    "viewDetails": "View Details"
+  },
+  "auth": {
+    "pleaseLogin": "Please log in with LINE."
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "totalMonthlyIncome": "Total Monthly Income",
+    "potentialIncome": "Potential Income",
+    "total": "Total",
+    "available": "Available",
+    "pending": "Pending",
+    "recentProperties": "Recent properties",
+    "viewAll": "View All",
+    "noPropertiesYet": "You have no properties yet. Add one to get started.",
+    "failedToLoadProperties": "Failed to load properties",
+    "showSummary": "Show summary",
+    "loadingProperties": "Loading properties..."
+  },
+  "properties": {
+    "myProperties": "My Properties",
+    "total": "Total",
+    "occupied": "Occupied",
+    "available": "Available",
+    "maintenance": "Maintenance",
+    "searchPlaceholder": "Search by name or address...",
+    "all": "All",
+    "perMonth": "/ mo",
+    "noMatch": "No properties match your search.",
+    "status": {
+      "Available": "Available",
+      "Occupied": "Occupied",
+      "Maintenance": "Maintenance"
+    }
+  }
+}

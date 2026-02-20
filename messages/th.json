@@ -1,0 +1,43 @@
+{
+  "common": {
+    "appName": "Asset Ace",
+    "viewAll": "ดูทั้งหมด",
+    "addProperty": "เพิ่มทรัพย์สิน",
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "viewDetails": "ดูรายละเอียด"
+  },
+  "auth": {
+    "pleaseLogin": "กรุณาเข้าสู่ระบบด้วย LINE"
+  },
+  "dashboard": {
+    "welcome": "ยินดีต้อนรับ",
+    "totalMonthlyIncome": "รายได้รายเดือนรวม",
+    "potentialIncome": "รายได้สูงสุดที่เป็นไปได้",
+    "total": "ทั้งหมด",
+    "available": "ว่าง",
+    "pending": "รอดำเนินการ",
+    "recentProperties": "ทรัพย์สินล่าสุด",
+    "viewAll": "ดูทั้งหมด",
+    "noPropertiesYet": "คุณยังไม่มีทรัพย์สิน เพิ่มรายการเพื่อเริ่มต้น",
+    "failedToLoadProperties": "โหลดรายการทรัพย์สินไม่สำเร็จ",
+    "showSummary": "แสดงสรุป",
+    "loadingProperties": "กำลังโหลดรายการ..."
+  },
+  "properties": {
+    "myProperties": "ทรัพย์สินของฉัน",
+    "total": "ทั้งหมด",
+    "occupied": "มีการเช่า",
+    "available": "ว่าง",
+    "maintenance": "ซ่อมบำรุง",
+    "searchPlaceholder": "ค้นหาชื่อหรือที่อยู่...",
+    "all": "ทั้งหมด",
+    "perMonth": "/ เดือน",
+    "noMatch": "ไม่มีรายการที่ตรงกับคำค้น",
+    "status": {
+      "Available": "ว่าง",
+      "Occupied": "มีการเช่า",
+      "Maintenance": "ซ่อมบำรุง"
+    }
+  }
+}
