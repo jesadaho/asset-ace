@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useLiff } from "@/providers/LiffProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -9,18 +10,14 @@ import {
   submitOnboarding,
   getRoleDashboardPath,
   type OnboardingData,
-  type OnboardingSuccessResponse,
-  submitOnboarding,
-  getRoleDashboardPath,
-  type OnboardingData,
 } from "@/lib/api/onboarding";
 import { User, Building2, Home } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 
-const ROLE_OPTIONS: { value: OnboardingData["role"]; label: string; icon: typeof Building2 }[] = [
-  { value: "owner", label: "Asset Owner", icon: Building2 },
-  { value: "agent", label: "Agent", icon: User },
-  { value: "tenant", label: "Tenant", icon: Home },
+const ROLE_OPTIONS: { value: OnboardingData["role"]; labelKey: "roleOwner" | "roleAgent" | "roleTenant"; icon: typeof Building2 }[] = [
+  { value: "owner", labelKey: "roleOwner", icon: Building2 },
+  { value: "agent", labelKey: "roleAgent", icon: User },
+  { value: "tenant", labelKey: "roleTenant", icon: Home },
 ];
 
 const PHONE_REGEX = /^[\d\s\-+()]{8,20}$/;
@@ -32,6 +29,8 @@ function isValidPhone(phone: string): boolean {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const t = useTranslations("onboarding");
+  const tAuth = useTranslations("auth");
   const { isReady, isLoggedIn, profile, error, login } = useLiff();
   const [step, setStep] = useState<1 | 2>(1);
   const [role, setRole] = useState<OnboardingData["role"] | "">("");
@@ -43,9 +42,9 @@ export default function OnboardingPage() {
 
   const validateStep2 = (): boolean => {
     const next: { name?: string; phone?: string } = {};
-    if (!name.trim()) next.name = "Name is required";
-    if (!phone.trim()) next.phone = "Phone number is required";
-    else if (!isValidPhone(phone)) next.phone = "Enter a valid phone number";
+    if (!name.trim()) next.name = t("nameRequired");
+    if (!phone.trim()) next.phone = t("phoneRequired");
+    else if (!isValidPhone(phone)) next.phone = t("phoneInvalid");
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -64,7 +63,7 @@ export default function OnboardingPage() {
       });
       router.push(getRoleDashboardPath(role));
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong");
+      setSubmitError(err instanceof Error ? err.message : t("submitErrorGeneric"));
     } finally {
       setIsSubmitting(false);
     }
@@ -78,7 +77,7 @@ export default function OnboardingPage() {
             {profile?.pictureUrl ? (
               <img
                 src={profile.pictureUrl}
-                alt={profile.displayName || "Profile"}
+                alt={profile.displayName || t("profile")}
                 className="h-16 w-16 rounded-full object-cover ring-2 ring-[#10B981]/30"
               />
             ) : (
@@ -91,20 +90,20 @@ export default function OnboardingPage() {
             )}
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-[#0F172A] mb-2">
-            Welcome to Asset Ace
+            {t("welcomeTitle")}
           </h1>
           <p className="text-slate-600 text-base">
-            {step === 1 ? "Choose your role to continue" : "Complete your profile"}
+            {step === 1 ? t("chooseRole") : t("completeProfile")}
           </p>
         </header>
 
         {isReady && isLoggedIn === false && (
           <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
             <p className="text-amber-800 text-sm mb-3">
-              Please log in with LINE to continue.
+              {tAuth("pleaseLogin")}
             </p>
             <Button type="button" onClick={login} size="lg" className="w-full">
-              Log in with LINE
+              {t("logInWithLine")}
             </Button>
           </div>
         )}
@@ -117,7 +116,7 @@ export default function OnboardingPage() {
 
         {step === 1 ? (
           <div className="space-y-4">
-            <p className="text-sm font-medium text-slate-700 mb-2">I am a</p>
+            <p className="text-sm font-medium text-slate-700 mb-2">{t("iAm")}</p>
             {ROLE_OPTIONS.map((opt) => {
               const Icon = opt.icon;
               const selected = role === opt.value;
@@ -147,10 +146,10 @@ export default function OnboardingPage() {
                       >
                         <Icon className="h-6 w-6" aria-hidden />
                       </div>
-                      <span className="text-lg font-medium text-[#0F172A]">{opt.label}</span>
+                      <span className="text-lg font-medium text-[#0F172A]">{t(opt.labelKey)}</span>
                       {selected && (
                         <span className="ml-auto text-[#10B981] text-sm font-medium">
-                          Selected
+                          {t("selected")}
                         </span>
                       )}
                     </CardContent>
@@ -166,19 +165,19 @@ export default function OnboardingPage() {
               onClick={() => setStep(1)}
               className="text-sm text-slate-600 hover:text-[#0F172A] mb-2"
             >
-              Change role
+              {t("changeRole")}
             </button>
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-[#0F172A] mb-2">
-                Full name
+                {t("fullName")}
               </label>
               <Input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
+                placeholder={t("fullNamePlaceholder")}
                 error={Boolean(errors.name)}
                 autoComplete="name"
               />
@@ -189,14 +188,14 @@ export default function OnboardingPage() {
 
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-[#0F172A] mb-2">
-                Phone number
+                {t("phoneNumber")}
               </label>
               <Input
                 id="phone"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="e.g. +66 123 456 789"
+                placeholder={t("phonePlaceholder")}
                 error={Boolean(errors.phone)}
                 autoComplete="tel"
               />
@@ -216,7 +215,7 @@ export default function OnboardingPage() {
               isLoading={isSubmitting}
               disabled={!isReady}
             >
-              Complete setup
+              {t("completeSetup")}
             </Button>
           </form>
         )}

@@ -10,6 +10,28 @@
   "auth": {
     "pleaseLogin": "กรุณาเข้าสู่ระบบด้วย LINE"
   },
+  "onboarding": {
+    "welcomeTitle": "ยินดีต้อนรับสู่ Asset Ace",
+    "chooseRole": "เลือกบทบาทเพื่อดำเนินการต่อ",
+    "completeProfile": "กรอกข้อมูลโปรไฟล์",
+    "logInWithLine": "เข้าสู่ด้วย LINE",
+    "iAm": "ฉันคือ",
+    "roleOwner": "เจ้าของทรัพย์สิน",
+    "roleAgent": "ตัวแทน",
+    "roleTenant": "ผู้เช่า",
+    "selected": "เลือกแล้ว",
+    "changeRole": "เปลี่ยนบทบาท",
+    "fullName": "ชื่อ-นามสกุล",
+    "fullNamePlaceholder": "กรอกชื่อของคุณ",
+    "phoneNumber": "เบอร์โทรศัพท์",
+    "phonePlaceholder": "เช่น +66 123 456 789",
+    "nameRequired": "กรุณากรอกชื่อ",
+    "phoneRequired": "กรุณากรอกเบอร์โทรศัพท์",
+    "phoneInvalid": "กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง",
+    "submitErrorGeneric": "เกิดข้อผิดพลาด กรุณาลองใหม่",
+    "completeSetup": "ดำเนินการเสร็จสิ้น",
+    "profile": "โปรไฟล์"
+  },
   "dashboard": {
     "welcome": "ยินดีต้อนรับ",
     "totalMonthlyIncome": "รายได้รายเดือนรวม",

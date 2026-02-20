@@ -10,6 +10,28 @@
   "auth": {
     "pleaseLogin": "Please log in with LINE."
   },
+  "onboarding": {
+    "welcomeTitle": "Welcome to Asset Ace",
+    "chooseRole": "Choose your role to continue",
+    "completeProfile": "Complete your profile",
+    "logInWithLine": "Log in with LINE",
+    "iAm": "I am a",
+    "roleOwner": "Asset Owner",
+    "roleAgent": "Agent",
+    "roleTenant": "Tenant",
+    "selected": "Selected",
+    "changeRole": "Change role",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Enter your name",
+    "phoneNumber": "Phone number",
+    "phonePlaceholder": "e.g. +66 123 456 789",
+    "nameRequired": "Name is required",
+    "phoneRequired": "Phone number is required",
+    "phoneInvalid": "Enter a valid phone number",
+    "submitErrorGeneric": "Something went wrong",
+    "completeSetup": "Complete setup",
+    "profile": "Profile"
+  },
   "dashboard": {
     "welcome": "Welcome",
     "totalMonthlyIncome": "Total Monthly Income",
