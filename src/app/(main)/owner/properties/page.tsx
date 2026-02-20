@@ -239,7 +239,10 @@ export default function OwnerPropertiesPage() {
 
       {loading && (
         <div className="space-y-4 mb-4 pb-24" aria-busy="true" aria-live="polite">
-          <span className="sr-only">{t("loadingProperties")}</span>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-5 w-5 shrink-0 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin" aria-hidden />
+            <p className="text-slate-600 text-sm">{t("loadingProperties")}</p>
+          </div>
           {[1, 2, 3].map((i) => (
             <div
               key={i}
