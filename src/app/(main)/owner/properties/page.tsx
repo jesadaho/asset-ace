@@ -260,6 +260,7 @@ export default function OwnerPropertiesPage() {
       )}
 
       {!loading && (
+      <>
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <Badge variant="default">{tProps("total")}: {counts.total}</Badge>
         <Badge variant="error">{tProps("occupied")}: {counts.occupied}</Badge>
@@ -359,6 +360,7 @@ export default function OwnerPropertiesPage() {
             : tProps("noMatch")}
         </p>
       )}
+      </>
       )}
 
       <Link
