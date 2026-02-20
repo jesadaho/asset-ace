@@ -10,6 +10,7 @@ import {
   Search,
   Eye,
   Loader2,
+  ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -66,6 +67,9 @@ export default function AdminDashboardPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [agentFilter, setAgentFilter] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
+
+  /** Show only overview, only owners table, or only properties table based on card click */
+  const [visibleSection, setVisibleSection] = useState<"overview" | "owners" | "properties">("overview");
 
   // Debounce search input
   useEffect(() => {
@@ -199,11 +203,14 @@ export default function AdminDashboardPage() {
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card
           variant="light"
-          className="border-slate-200 cursor-pointer hover:border-emerald-300 transition-colors"
-          onClick={() => document.getElementById("properties-section")?.scrollIntoView({ behavior: "smooth" })}
+          className={cn(
+            "border-slate-200 cursor-pointer transition-colors",
+            visibleSection === "properties" ? "ring-2 ring-emerald-500 border-emerald-400" : "hover:border-emerald-300"
+          )}
+          onClick={() => setVisibleSection((s) => (s === "properties" ? "overview" : "properties"))}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && document.getElementById("properties-section")?.scrollIntoView({ behavior: "smooth" })}
+          onKeyDown={(e) => e.key === "Enter" && setVisibleSection((s) => (s === "properties" ? "overview" : "properties"))}
         >
           <CardHeader className="pb-1">
             <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
@@ -223,11 +230,14 @@ export default function AdminDashboardPage() {
         </Card>
         <Card
           variant="light"
-          className="border-slate-200 cursor-pointer hover:border-blue-300 transition-colors"
-          onClick={() => document.getElementById("owners-section")?.scrollIntoView({ behavior: "smooth" })}
+          className={cn(
+            "border-slate-200 cursor-pointer transition-colors",
+            visibleSection === "owners" ? "ring-2 ring-blue-500 border-blue-400" : "hover:border-blue-300"
+          )}
+          onClick={() => setVisibleSection((s) => (s === "owners" ? "overview" : "owners"))}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && document.getElementById("owners-section")?.scrollIntoView({ behavior: "smooth" })}
+          onKeyDown={(e) => e.key === "Enter" && setVisibleSection((s) => (s === "owners" ? "overview" : "owners"))}
         >
           <CardHeader className="pb-1">
             <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
@@ -281,11 +291,21 @@ export default function AdminDashboardPage() {
         </Card>
       </section>
 
-      {/* All Owners */}
-      <Card id="owners-section" variant="light" className="border-slate-200 overflow-hidden mb-8 scroll-mt-4">
-        <CardHeader className="border-b border-slate-200 bg-slate-50/50">
-          <CardTitle className="text-lg text-slate-800">All Owners</CardTitle>
-        </CardHeader>
+      {/* All Owners – show only when Owners card is selected */}
+      {visibleSection === "owners" && (
+        <div className="mb-8">
+          <button
+            type="button"
+            onClick={() => setVisibleSection("overview")}
+            className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-800 text-sm font-medium mb-3"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to overview
+          </button>
+          <Card id="owners-section" variant="light" className="border-slate-200 overflow-hidden scroll-mt-4">
+            <CardHeader className="border-b border-slate-200 bg-slate-50/50">
+              <CardTitle className="text-lg text-slate-800">All Owners</CardTitle>
+            </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -334,13 +354,25 @@ export default function AdminDashboardPage() {
             </table>
           </div>
         </CardContent>
-      </Card>
+          </Card>
+        </div>
+      )}
 
-      {/* Master property table */}
-      <Card id="properties-section" variant="light" className="border-slate-200 overflow-hidden scroll-mt-4">
-        <CardHeader className="border-b border-slate-200 bg-slate-50/50">
-          <CardTitle className="text-lg text-slate-800">All Properties</CardTitle>
-          <div className="flex flex-col sm:flex-row gap-3 mt-4">
+      {/* Master property table – show only when Properties card is selected */}
+      {visibleSection === "properties" && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setVisibleSection("overview")}
+            className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-800 text-sm font-medium mb-3"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to overview
+          </button>
+          <Card id="properties-section" variant="light" className="border-slate-200 overflow-hidden scroll-mt-4">
+            <CardHeader className="border-b border-slate-200 bg-slate-50/50">
+              <CardTitle className="text-lg text-slate-800">All Properties</CardTitle>
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
             <div className="flex-1 min-w-0">
               <Input
                 type="search"
@@ -373,71 +405,73 @@ export default function AdminDashboardPage() {
                 </option>
               ))}
             </select>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600 text-xs font-semibold uppercase tracking-wider">
-                  <th className="px-4 py-3">Property Name</th>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                      <th className="px-4 py-3">Property Name</th>
                   <th className="px-4 py-3">Owner Name</th>
                   <th className="px-4 py-3">Assigned Agent</th>
                   <th className="px-4 py-3">Location</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 w-28 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {propertiesLoading ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      Loading properties…
-                    </td>
-                  </tr>
-                ) : properties.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
-                      No properties match your filters.
-                    </td>
-                  </tr>
-                ) : (
-                  properties.map((row) => (
-                    <tr
-                      key={row.id}
-                      className="hover:bg-slate-50/80 transition-colors"
-                    >
-                      <td className="px-4 py-3 font-medium text-slate-800">
-                        {row.name}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">{row.ownerName}</td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {row.assignedAgent}
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 max-w-[200px] truncate">
-                        {row.location}
-                      </td>
-                      <td className="px-4 py-3">{statusBadge(row.status)}</td>
-                      <td className="px-4 py-3 text-right">
-                        <Link href={`/admin/properties/${row.id}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            leftIcon={<Eye className="h-4 w-4" />}
-                          >
-                            View Details
-                          </Button>
-                        </Link>
-                      </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {propertiesLoading ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
+                          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                          Loading properties…
+                        </td>
+                      </tr>
+                    ) : properties.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
+                          No properties match your filters.
+                        </td>
+                      </tr>
+                    ) : (
+                      properties.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="hover:bg-slate-50/80 transition-colors"
+                        >
+                          <td className="px-4 py-3 font-medium text-slate-800">
+                            {row.name}
+                          </td>
+                          <td className="px-4 py-3 text-slate-700">{row.ownerName}</td>
+                          <td className="px-4 py-3 text-slate-700">
+                            {row.assignedAgent}
+                          </td>
+                          <td className="px-4 py-3 text-slate-600 max-w-[200px] truncate">
+                            {row.location}
+                          </td>
+                          <td className="px-4 py-3">{statusBadge(row.status)}</td>
+                          <td className="px-4 py-3 text-right">
+                            <Link href={`/admin/properties/${row.id}`}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                leftIcon={<Eye className="h-4 w-4" />}
+                              >
+                                View Details
+                              </Button>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
