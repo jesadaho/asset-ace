@@ -44,6 +44,7 @@
     "noPropertiesYet": "คุณยังไม่มีทรัพย์สิน เพิ่มรายการเพื่อเริ่มต้น",
     "failedToLoadProperties": "โหลดรายการทรัพย์สินไม่สำเร็จ",
     "showSummary": "แสดงสรุป",
+    "hideSummary": "ซ่อนสรุป",
     "loadingProperties": "กำลังโหลดรายการ..."
   },
   "properties": {

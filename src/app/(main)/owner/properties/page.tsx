@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Search, ChevronRight, Plus, ImageIcon, Eye, EyeOff, LayoutDashboard } from "lucide-react";
+import { Search, ChevronRight, Plus, ImageIcon, Eye, EyeOff, LayoutDashboard, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { useLiff } from "@/providers/LiffProvider";
 
@@ -146,7 +146,15 @@ export default function OwnerPropertiesPage() {
     <div className="min-h-full bg-slate-50 p-4">
       {isDashboardVisible && (
         <>
-          <div className="mb-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-teal-600 p-5 text-white shadow-lg overflow-hidden transition-all duration-300">
+          <div className="mb-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-teal-600 p-5 text-white shadow-lg overflow-hidden transition-all duration-300 relative">
+            <button
+              type="button"
+              onClick={() => setIsDashboardVisible(false)}
+              className="absolute top-3 right-3 p-2 rounded-lg text-white/80 hover:bg-white/10 tap-target"
+              aria-label={t("hideSummary")}
+            >
+              <ChevronUp className="h-5 w-5" aria-hidden />
+            </button>
             <p className="text-sm text-white/80 mb-1">
               {t("welcome")}{profile?.displayName ? `, ${profile.displayName}` : ""}
             </p>
@@ -175,7 +183,7 @@ export default function OwnerPropertiesPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="grid grid-cols-3 gap-2 mb-2">
             <button
               type="button"
               onClick={() => setSummaryFilter("all")}
@@ -213,6 +221,14 @@ export default function OwnerPropertiesPage() {
               <span className="block text-xs text-slate-600 mt-0.5">{t("pending")}</span>
             </button>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsDashboardVisible(false)}
+            className="mb-4 flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 tap-target w-full"
+          >
+            <ChevronUp className="h-4 w-4" aria-hidden />
+            {t("hideSummary")}
+          </button>
         </>
       )}
 

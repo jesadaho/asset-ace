@@ -215,9 +215,32 @@ export default function OwnerDashboardPage() {
       )}
 
       {loading && (
-        <p className="text-slate-500 text-sm mb-4">{t("loadingProperties")}</p>
+        <div className="space-y-4 mb-4 pb-24" aria-busy="true" aria-live="polite">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-5 w-5 shrink-0 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin" aria-hidden />
+            <p className="text-slate-600 text-sm">{t("loadingProperties")}</p>
+          </div>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+            >
+              <div className="aspect-[4/3] bg-slate-200 animate-pulse" />
+              <div className="p-4 space-y-2">
+                <div className="h-5 w-3/4 rounded bg-slate-200 animate-pulse" />
+                <div className="h-4 w-full rounded bg-slate-200 animate-pulse" />
+                <div className="flex items-center justify-between mt-3">
+                  <div className="h-5 w-24 rounded bg-slate-200 animate-pulse" />
+                  <div className="h-4 w-20 rounded bg-slate-200 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
+      {!loading && (
+      <>
       <ul className="space-y-4 pb-24">
         {!loading &&
           recentProperties.map((property) => (
@@ -270,6 +293,8 @@ export default function OwnerDashboardPage() {
         <p className="text-slate-500 text-sm text-center py-8 pb-24">
           {t("noPropertiesYet")}
         </p>
+      )}
+      </>
       )}
 
       <Link

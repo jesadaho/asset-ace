@@ -44,6 +44,7 @@
     "noPropertiesYet": "You have no properties yet. Add one to get started.",
     "failedToLoadProperties": "Failed to load properties",
     "showSummary": "Show summary",
+    "hideSummary": "Hide summary",
     "loadingProperties": "Loading properties..."
   },
   "properties": {
