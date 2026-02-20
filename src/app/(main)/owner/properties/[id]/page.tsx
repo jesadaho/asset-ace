@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useTranslations } from "next/intl";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, ImageIcon, Pencil, MessageCircle, Copy, Users, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
