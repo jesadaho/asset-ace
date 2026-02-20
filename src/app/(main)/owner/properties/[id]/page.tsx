@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, ImageIcon, Pencil } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { ArrowLeft, ImageIcon, Pencil, MessageCircle, Copy, Users } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
 type PropertyType = "Condo" | "House" | "Apartment";
@@ -47,11 +48,18 @@ type PropertyDetail = {
 export default function PropertyDetailPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
+  const t = useTranslations("propertyDetail");
+  const tAuth = useTranslations("auth");
+  const tProps = useTranslations("properties");
   const [property, setProperty] = useState<PropertyDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  const copyToClipboard = useCallback((text: string) => {
+    navigator.clipboard.writeText(text).catch(() => {});
+  }, []);
 
   const handleCarouselScroll = useCallback(() => {
     const el = carouselRef.current;
@@ -63,7 +71,7 @@ export default function PropertyDetailPage() {
   useEffect(() => {
     if (!id) {
       setLoading(false);
-      setError("Invalid property");
+      setError(t("invalidProperty"));
       return;
     }
     let cancelled = false;
@@ -72,7 +80,7 @@ export default function PropertyDetailPage() {
         const liff = (await import("@line/liff")).default;
         const token = liff.getAccessToken();
         if (!token) {
-          if (!cancelled) setError("Please log in with LINE.");
+          if (!cancelled) setError(tAuth("pleaseLogin"));
           setLoading(false);
           return;
         }
@@ -81,18 +89,18 @@ export default function PropertyDetailPage() {
         });
         if (cancelled) return;
         if (res.status === 401) {
-          setError("Please log in with LINE.");
+          setError(tAuth("pleaseLogin"));
           setLoading(false);
           return;
         }
         if (res.status === 404) {
-          setError("Property not found.");
+          setError(t("notFound"));
           setLoading(false);
           return;
         }
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          setError(data.message ?? `Failed to load property (${res.status})`);
+          setError(data.message ?? t("failedToLoad"));
           setLoading(false);
           return;
         }
@@ -101,7 +109,7 @@ export default function PropertyDetailPage() {
         setError(null);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load property");
+          setError(err instanceof Error ? err.message : t("failedToLoad"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -111,7 +119,7 @@ export default function PropertyDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, t, tAuth]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -120,21 +128,21 @@ export default function PropertyDetailPage() {
           <Link
             href="/owner/properties"
             className="shrink-0 flex items-center justify-center p-2 -m-2 text-[#0F172A] hover:text-[#003366] tap-target min-h-[44px] min-w-[44px]"
-            aria-label="Back to properties"
+            aria-label={t("backToProperties")}
           >
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </Link>
           <h1 className="min-w-0 flex-1 text-lg font-semibold text-[#0F172A] text-center truncate">
-            {property?.name ?? "Property Details"}
+            {property?.name ?? t("title")}
           </h1>
           {property && (
             <Link
               href={`/owner/properties/${id}/edit`}
               className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[#10B981] font-medium hover:bg-[#10B981]/10 tap-target min-h-[44px]"
-              aria-label="Edit property"
+              aria-label={t("editAria")}
             >
               <Pencil className="h-4 w-4" aria-hidden />
-              <span className="text-sm">Edit</span>
+              <span className="text-sm">{t("edit")}</span>
             </Link>
           )}
           {!property && !loading && <span className="w-14" aria-hidden />}
@@ -143,7 +151,42 @@ export default function PropertyDetailPage() {
 
       <main className="max-w-lg mx-auto px-4 py-6 pb-24">
         {loading && (
-          <p className="text-slate-500 text-sm">Loading property...</p>
+          <div
+            className="space-y-6"
+            aria-busy="true"
+            aria-live="polite"
+          >
+            <span className="sr-only">{t("loading")}</span>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="aspect-[4/3] bg-slate-200 animate-pulse" />
+              <div className="p-4 space-y-3">
+                <div className="h-6 w-3/4 rounded bg-slate-200 animate-pulse" />
+                <div className="h-4 w-1/2 rounded bg-slate-200 animate-pulse" />
+                <div className="h-5 w-1/3 rounded bg-slate-200 animate-pulse" />
+                <div className="h-4 w-full rounded bg-slate-200 animate-pulse" />
+              </div>
+            </div>
+            <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+              <div className="h-4 w-24 rounded bg-slate-200 animate-pulse mb-3" />
+              <div className="space-y-2">
+                <div className="h-4 w-full rounded bg-slate-200 animate-pulse" />
+                <div className="flex flex-wrap gap-3">
+                  <div className="h-4 w-20 rounded bg-slate-200 animate-pulse" />
+                  <div className="h-4 w-20 rounded bg-slate-200 animate-pulse" />
+                  <div className="h-4 w-16 rounded bg-slate-200 animate-pulse" />
+                </div>
+              </div>
+            </section>
+            <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+              <div className="h-4 w-28 rounded bg-slate-200 animate-pulse mb-3" />
+              <div className="flex flex-wrap gap-2">
+                <div className="h-6 w-16 rounded-full bg-slate-200 animate-pulse" />
+                <div className="h-6 w-20 rounded-full bg-slate-200 animate-pulse" />
+                <div className="h-6 w-14 rounded-full bg-slate-200 animate-pulse" />
+                <div className="h-6 w-20 rounded-full bg-slate-200 animate-pulse" />
+              </div>
+            </section>
+          </div>
         )}
 
         {error && (
@@ -165,7 +208,7 @@ export default function PropertyDetailPage() {
               <div
                 className="relative aspect-[4/3] bg-slate-200"
                 role="region"
-                aria-label="Property photos"
+                aria-label={t("photosAria")}
               >
                 {urls.length > 0 ? (
                   <>
@@ -205,7 +248,7 @@ export default function PropertyDetailPage() {
                                 ? "w-4 bg-white"
                                 : "w-2 bg-white/60 hover:bg-white/80"
                             }`}
-                            aria-label={`Photo ${i + 1} of ${urls.length}`}
+                            aria-label={t("photoOf", { current: i + 1, total: urls.length })}
                             aria-current={i === photoIndex ? true : undefined}
                           />
                         ))}
@@ -219,7 +262,7 @@ export default function PropertyDetailPage() {
                 )}
                 <span className="absolute top-2 right-2">
                   <Badge variant={statusBadgeVariant[property.status]}>
-                    {property.status}
+                    {tProps(`status.${property.status}`)}
                   </Badge>
                 </span>
               </div>
@@ -229,7 +272,7 @@ export default function PropertyDetailPage() {
                 </h2>
                 <p className="text-slate-600 text-sm">{property.type}</p>
                 <p className="font-semibold text-[#0F172A]">
-                  ฿{property.price.toLocaleString()} / mo
+                  ฿{property.price.toLocaleString()} {tProps("perMonth")}
                 </p>
                 <p className="text-slate-600 text-sm">{property.address}</p>
               </div>
@@ -238,7 +281,7 @@ export default function PropertyDetailPage() {
             {(property.description ?? property.bedrooms ?? property.bathrooms ?? property.squareMeters) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
-                  Details
+                  {t("details")}
                 </h3>
                 <div className="space-y-2 text-sm text-slate-600">
                   {property.description && (
@@ -246,10 +289,10 @@ export default function PropertyDetailPage() {
                   )}
                   <div className="flex flex-wrap gap-3">
                     {property.bedrooms && (
-                      <span>Bedrooms: {property.bedrooms}</span>
+                      <span>{t("bedrooms")}: {property.bedrooms}</span>
                     )}
                     {property.bathrooms && (
-                      <span>Bathrooms: {property.bathrooms}</span>
+                      <span>{t("bathrooms")}: {property.bathrooms}</span>
                     )}
                     {property.squareMeters && (
                       <span>{property.squareMeters} m²</span>
@@ -262,7 +305,7 @@ export default function PropertyDetailPage() {
             {property.amenities && property.amenities.length > 0 && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
-                  Amenities
+                  {t("amenities")}
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {property.amenities.map((a) => (
@@ -277,12 +320,12 @@ export default function PropertyDetailPage() {
             {(property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.contractStartDate) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
-                  Resident / Agent
+                  {t("residentAgent")}
                 </h3>
                 <div className="space-y-1 text-sm text-slate-600">
                   {(property.tenantName || property.tenantLineId) && (
                     <p>
-                      Tenant: {property.tenantName ?? "—"}
+                      {t("tenant")}: {property.tenantName ?? t("noValue")}
                       {property.tenantLineId && (
                         <span className="text-slate-500"> (LINE: {property.tenantLineId})</span>
                       )}
@@ -290,17 +333,80 @@ export default function PropertyDetailPage() {
                   )}
                   {(property.agentName || property.agentLineId) && (
                     <p>
-                      Agent: {property.agentName ?? "—"}
+                      {t("agent")}: {property.agentName ?? t("noValue")}
                       {property.agentLineId && (
                         <span className="text-slate-500"> (LINE: {property.agentLineId})</span>
                       )}
                     </p>
                   )}
                   {property.lineGroup && (
-                    <p>LINE Group: {property.lineGroup}</p>
+                    <p>{t("lineGroup")}: {property.lineGroup}</p>
                   )}
                   {property.contractStartDate && (
-                    <p>Contract start: {property.contractStartDate}</p>
+                    <p>{t("contractStart")}: {property.contractStartDate}</p>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {(property.tenantLineId ?? property.agentLineId ?? property.lineGroup) && (
+              <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
+                  {t("contactCommunity")}
+                </h3>
+                <div className="space-y-3">
+                  {property.tenantLineId && (
+                    <div className="flex flex-col sm:flex-row gap-2 w-full">
+                      <a
+                        href={`https://line.me/ti/p/~${property.tenantLineId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 min-w-0 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white font-medium bg-gradient-to-r from-[#06C755] to-[#00B900] hover:opacity-90 active:opacity-95 tap-target min-h-[44px]"
+                      >
+                        <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
+                        <span>{t("contactResident")}</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(property.tenantLineId!)}
+                        className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-slate-200 bg-white text-[#0F172A] font-medium hover:bg-slate-50 tap-target min-h-[44px] shrink-0 sm:w-auto w-full"
+                      >
+                        <Copy className="h-4 w-4 shrink-0" aria-hidden />
+                        <span>{t("copyId")}</span>
+                      </button>
+                    </div>
+                  )}
+                  {property.agentLineId && (
+                    <div className="flex flex-col sm:flex-row gap-2 w-full">
+                      <a
+                        href={`https://line.me/ti/p/~${property.agentLineId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 min-w-0 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white font-medium bg-gradient-to-r from-[#06C755] to-[#00B900] hover:opacity-90 active:opacity-95 tap-target min-h-[44px]"
+                      >
+                        <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
+                        <span>{t("contactAgent")}</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(property.agentLineId!)}
+                        className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-slate-200 bg-white text-[#0F172A] font-medium hover:bg-slate-50 tap-target min-h-[44px] shrink-0 sm:w-auto w-full"
+                      >
+                        <Copy className="h-4 w-4 shrink-0" aria-hidden />
+                        <span>{t("copyId")}</span>
+                      </button>
+                    </div>
+                  )}
+                  {property.lineGroup && (
+                    <a
+                      href={property.lineGroup.startsWith("http") ? property.lineGroup : `https://line.me/ti/g/${property.lineGroup}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-[#0F172A] font-medium hover:bg-slate-100 hover:border-slate-300 tap-target min-h-[44px]"
+                    >
+                      <Users className="h-5 w-5 shrink-0" aria-hidden />
+                      <span>{t("joinGroupChat")}</span>
+                    </a>
                   )}
                 </div>
               </section>

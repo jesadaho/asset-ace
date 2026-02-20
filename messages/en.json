@@ -61,5 +61,32 @@
       "Occupied": "Occupied",
       "Maintenance": "Maintenance"
     }
+  },
+  "propertyDetail": {
+    "title": "Property Details",
+    "backToProperties": "Back to properties",
+    "edit": "Edit",
+    "editAria": "Edit property",
+    "loading": "Loading property...",
+    "invalidProperty": "Invalid property",
+    "notFound": "Property not found.",
+    "failedToLoad": "Failed to load property",
+    "photosAria": "Property photos",
+    "photoOf": "Photo {current} of {total}",
+    "details": "Details",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "amenities": "Amenities",
+    "residentAgent": "Resident / Agent",
+    "tenant": "Tenant",
+    "agent": "Agent",
+    "lineGroup": "LINE Group",
+    "contractStart": "Contract start",
+    "noValue": "—",
+    "contactCommunity": "Contact & Community",
+    "contactResident": "Contact Resident",
+    "contactAgent": "Contact Agent",
+    "joinGroupChat": "Join Group Chat",
+    "copyId": "Copy ID"
   }
 }
