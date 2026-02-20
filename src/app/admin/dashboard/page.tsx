@@ -32,6 +32,14 @@ type PropertyRow = {
   status: string;
 };
 
+type OwnerRow = {
+  lineUserId: string;
+  name: string;
+  phone: string;
+  createdAt?: string;
+  propertyCount?: number;
+};
+
 const STATUS_OPTIONS = [
   { value: "", label: "All statuses" },
   { value: "Available", label: "Available" },
@@ -47,8 +55,10 @@ const AGENT_OPTIONS = [
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [owners, setOwners] = useState<OwnerRow[]>([]);
   const [properties, setProperties] = useState<PropertyRow[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [ownersLoading, setOwnersLoading] = useState(true);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,6 +91,31 @@ export default function AdminDashboardPage() {
       setError(e instanceof Error ? e.message : "Failed to load stats.");
     } finally {
       setStatsLoading(false);
+    }
+  }, []);
+
+  const fetchOwners = useCallback(async () => {
+    setOwnersLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      const headers: HeadersInit = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch("/api/admin/owners", { headers });
+      if (!res.ok) {
+        setError("Failed to load owners.");
+        setOwners([]);
+        setOwnersLoading(false);
+        return;
+      }
+      const data = await res.json();
+      setOwners(data.owners ?? []);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load owners.");
+      setOwners([]);
+    } finally {
+      setOwnersLoading(false);
     }
   }, []);
 
@@ -118,6 +153,10 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  useEffect(() => {
+    fetchOwners();
+  }, [fetchOwners]);
 
   useEffect(() => {
     fetchProperties();
@@ -227,6 +266,61 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </section>
+
+      {/* All Owners */}
+      <Card variant="light" className="border-slate-200 overflow-hidden mb-8">
+        <CardHeader className="border-b border-slate-200 bg-slate-50/50">
+          <CardTitle className="text-lg text-slate-800">All Owners</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Phone</th>
+                  <th className="px-4 py-3">LINE ID</th>
+                  <th className="px-4 py-3 text-right">Properties</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {ownersLoading ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-12 text-center text-slate-500">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      Loading owners…
+                    </td>
+                  </tr>
+                ) : owners.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-12 text-center text-slate-500">
+                      No owners found.
+                    </td>
+                  </tr>
+                ) : (
+                  owners.map((row) => (
+                    <tr
+                      key={row.lineUserId}
+                      className="hover:bg-slate-50/80 transition-colors"
+                    >
+                      <td className="px-4 py-3 font-medium text-slate-800">
+                        {row.name}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">{row.phone}</td>
+                      <td className="px-4 py-3 text-slate-600 font-mono text-xs break-all">
+                        {row.lineUserId}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-700">
+                        {row.propertyCount ?? "—"}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Master property table */}
       <Card variant="light" className="border-slate-200 overflow-hidden">
