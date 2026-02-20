@@ -238,9 +238,28 @@ export default function OwnerPropertiesPage() {
       )}
 
       {loading && (
-        <p className="text-slate-500 text-sm mb-4">{t("loadingProperties")}</p>
+        <div className="space-y-4 mb-4 pb-24" aria-busy="true" aria-live="polite">
+          <span className="sr-only">{t("loadingProperties")}</span>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+            >
+              <div className="aspect-[4/3] bg-slate-200 animate-pulse" />
+              <div className="p-4 space-y-2">
+                <div className="h-5 w-3/4 rounded bg-slate-200 animate-pulse" />
+                <div className="h-4 w-full rounded bg-slate-200 animate-pulse" />
+                <div className="flex items-center justify-between mt-3">
+                  <div className="h-5 w-24 rounded bg-slate-200 animate-pulse" />
+                  <div className="h-4 w-20 rounded bg-slate-200 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
+      {!loading && (
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <Badge variant="default">{tProps("total")}: {counts.total}</Badge>
         <Badge variant="error">{tProps("occupied")}: {counts.occupied}</Badge>
@@ -339,6 +358,7 @@ export default function OwnerPropertiesPage() {
             ? t("noPropertiesYet")
             : tProps("noMatch")}
         </p>
+      )}
       )}
 
       <Link
