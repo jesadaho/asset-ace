@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { useLiff } from "@/providers/LiffProvider";
 
 type PropertyType = "Condo" | "House" | "Apartment";
-type PropertyStatus = "Available" | "Occupied" | "Maintenance" | "Draft";
+type PropertyStatus = "Available" | "Occupied" | "Draft";
 
 type Property = {
   id: string;
@@ -24,11 +24,10 @@ type Property = {
 
 const statusBadgeVariant: Record<
   PropertyStatus,
-  "success" | "error" | "warning" | "default"
+  "success" | "error" | "default"
 > = {
   Available: "success",
   Occupied: "error",
-  Maintenance: "warning",
   Draft: "default",
 };
 
@@ -127,10 +126,7 @@ export default function OwnerPropertiesPage() {
 
   const counts = useMemo(() => {
     const occupied = properties.filter((p) => p.status === "Occupied").length;
-    const maintenance = properties.filter(
-      (p) => p.status === "Maintenance"
-    ).length;
-    return { total, occupied: occupied, available, maintenance };
+    return { total, occupied, available };
   }, [properties, total, available]);
 
   const handleSearchFocus = () => setIsDashboardVisible(false);
@@ -285,9 +281,6 @@ export default function OwnerPropertiesPage() {
         <Badge variant="default">{tProps("total")}: {counts.total}</Badge>
         <Badge variant="error">{tProps("occupied")}: {counts.occupied}</Badge>
         <Badge variant="success">{tProps("available")}: {counts.available}</Badge>
-        {counts.maintenance > 0 && (
-          <Badge variant="warning">{tProps("maintenance")}: {counts.maintenance}</Badge>
-        )}
       </div>
 
       <div className="relative mb-4">
@@ -307,7 +300,7 @@ export default function OwnerPropertiesPage() {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        {(["All", "Occupied", "Available", "Maintenance", "Draft"] as const).map(
+        {(["All", "Occupied", "Available", "Draft"] as const).map(
           (option) => (
             <button
               key={option}
@@ -319,7 +312,7 @@ export default function OwnerPropertiesPage() {
                   : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
               }`}
             >
-              {option === "All" ? tProps("all") : tProps(option.toLowerCase() as "occupied" | "available" | "maintenance" | "draft")}
+              {option === "All" ? tProps("all") : tProps(option.toLowerCase() as "occupied" | "available" | "draft")}
             </button>
           )
         )}

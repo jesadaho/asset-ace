@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { useLiff } from "@/providers/LiffProvider";
 
 type PropertyType = "Condo" | "House" | "Apartment";
-type PropertyStatus = "Available" | "Occupied" | "Maintenance" | "Draft";
+type PropertyStatus = "Available" | "Occupied" | "Draft";
 
 type Property = {
   id: string;
@@ -24,11 +24,10 @@ type Property = {
 
 const statusBadgeVariant: Record<
   PropertyStatus,
-  "success" | "error" | "warning" | "default"
+  "success" | "error" | "default"
 > = {
   Available: "success",
   Occupied: "error",
-  Maintenance: "warning",
   Draft: "default",
 };
 

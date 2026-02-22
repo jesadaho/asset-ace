@@ -9,15 +9,14 @@ import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 
 type PropertyType = "Condo" | "House" | "Apartment";
-type PropertyStatus = "Available" | "Occupied" | "Maintenance" | "Draft";
+type PropertyStatus = "Available" | "Occupied" | "Draft";
 
 const statusBadgeVariant: Record<
   PropertyStatus,
-  "success" | "error" | "warning" | "default"
+  "success" | "error" | "default"
 > = {
   Available: "success",
   Occupied: "error",
-  Maintenance: "warning",
   Draft: "default",
 };
 
@@ -44,7 +43,20 @@ type PropertyDetail = {
   agentLineId?: string;
   lineGroup?: string;
   contractStartDate?: string;
+  leaseDurationMonths?: number;
+  contractUrl?: string;
   createdAt?: string;
+};
+
+type RentalHistoryItem = {
+  id: string;
+  tenantName: string;
+  agentName?: string;
+  startDate: string;
+  endDate: string | null;
+  durationMonths: number;
+  contractUrl?: string;
+  rentPriceAtThatTime: number;
 };
 
 export default function PropertyDetailPage() {
@@ -67,6 +79,10 @@ export default function PropertyDetailPage() {
   const [cloneLoading, setCloneLoading] = useState(false);
   const [cloneError, setCloneError] = useState<string | null>(null);
   const [cloneBulkSuccess, setCloneBulkSuccess] = useState<number | null>(null);
+  const [rentalHistory, setRentalHistory] = useState<RentalHistoryItem[]>([]);
+  const [rentalHistoryLoading, setRentalHistoryLoading] = useState(false);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const copyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -131,6 +147,73 @@ export default function PropertyDetailPage() {
       cancelled = true;
     };
   }, [id, t, tAuth]);
+
+  useEffect(() => {
+    if (!id || !property) return;
+    let cancelled = false;
+    async function fetchHistory() {
+      setRentalHistoryLoading(true);
+      try {
+        const liff = (await import("@line/liff")).default;
+        const token = liff.getAccessToken();
+        if (!token || cancelled) return;
+        const res = await fetch(`/api/owner/properties/${id}/rental-history`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (cancelled) return;
+        if (res.ok) {
+          const data = await res.json();
+          setRentalHistory(data.history ?? []);
+        }
+      } catch {
+        if (!cancelled) setRentalHistory([]);
+      } finally {
+        if (!cancelled) setRentalHistoryLoading(false);
+      }
+    }
+    fetchHistory();
+    return () => { cancelled = true; };
+  }, [id, property]);
+
+  const handleCheckout = useCallback(async () => {
+    if (!id) return;
+    setCheckoutLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setCheckoutLoading(false);
+        return;
+      }
+      const res = await fetch(`/api/owner/properties/${id}/checkout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setCheckoutLoading(false);
+        return;
+      }
+      setCheckoutModalOpen(false);
+      const refetchRes = await fetch(`/api/owner/properties/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (refetchRes.ok) {
+        const data = await refetchRes.json();
+        setProperty(data.property ?? null);
+      }
+      setRentalHistory((prev) => []);
+      const historyRes = await fetch(`/api/owner/properties/${id}/rental-history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (historyRes.ok) {
+        const historyData = await historyRes.json();
+        setRentalHistory(historyData.history ?? []);
+      }
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }, [id]);
 
   const handleCloneConfirm = useCallback(async () => {
     if (!id) return;
@@ -589,8 +672,65 @@ export default function PropertyDetailPage() {
                   {property.contractStartDate && (
                     <p>{t("contractStart")}: {property.contractStartDate}</p>
                   )}
+                  {property.leaseDurationMonths != null && (
+                    <p>{t("leaseDuration")}: {property.leaseDurationMonths} {t("months")}</p>
+                  )}
+                  {property.contractUrl && (
+                    <a
+                      href={property.contractUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#10B981] hover:underline text-sm"
+                    >
+                      {t("viewContract")}
+                    </a>
+                  )}
                 </div>
+                {property.status === "Occupied" && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <Link
+                      href={`/owner/properties/${id}/edit`}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-[#0F172A] font-medium hover:bg-slate-50 text-sm"
+                    >
+                      {t("edit")}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setCheckoutModalOpen(true)}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100 text-sm"
+                    >
+                      {t("checkout")}
+                    </button>
+                  </div>
+                )}
               </section>
+            )}
+
+            {checkoutModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+                <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
+                  <h2 id="checkout-title" className="text-lg font-semibold text-[#0F172A]">{t("checkoutConfirmTitle")}</h2>
+                  <p className="text-sm text-slate-600">{t("checkoutConfirmMessage")}</p>
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => { if (!checkoutLoading) setCheckoutModalOpen(false); }}
+                      className="px-4 py-2 rounded-lg text-slate-600 font-medium hover:bg-slate-100 disabled:opacity-50"
+                      disabled={checkoutLoading}
+                    >
+                      {t("cloneCancel")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCheckout}
+                      className="px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 disabled:opacity-50"
+                      disabled={checkoutLoading}
+                    >
+                      {checkoutLoading ? t("loading") : t("checkout")}
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
 
             {(property.tenantLineId ?? property.agentLineId ?? property.lineGroup) && (
@@ -655,6 +795,32 @@ export default function PropertyDetailPage() {
                 </div>
               </section>
             )}
+
+            <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+              <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
+                {t("rentalHistory")}
+              </h3>
+              {rentalHistoryLoading ? (
+                <p className="text-sm text-slate-500">{t("loading")}</p>
+              ) : rentalHistory.length === 0 ? (
+                <p className="text-sm text-slate-500">{t("noRentalHistory")}</p>
+              ) : (
+                <ul className="space-y-3">
+                  {rentalHistory.map((record) => (
+                    <li key={record.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                      <div className="text-sm text-slate-600 space-y-0.5">
+                        <p><span className="font-medium text-[#0F172A]">{record.tenantName}</span>{record.agentName ? ` · ${t("agent")}: ${record.agentName}` : ""}</p>
+                        <p>{t("contractStart")}: {record.startDate} {record.endDate ? `– ${record.endDate}` : `(${t("current")})`}</p>
+                        <p>{t("leaseDuration")}: {record.durationMonths} {t("months")} · ฿{record.rentPriceAtThatTime.toLocaleString()}{tProps("perMonth")}</p>
+                        {record.contractUrl && (
+                          <a href={record.contractUrl} target="_blank" rel="noopener noreferrer" className="text-[#10B981] hover:underline text-sm">{t("viewContract")}</a>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
           </div>
           );
         })()}

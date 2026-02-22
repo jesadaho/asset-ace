@@ -10,9 +10,13 @@ import {
   Search,
   Plus,
   Check,
+  Copy,
+  Download,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { uploadFilesWithProgress } from "@/lib/uploadWithProgress";
+import { useToast } from "@/components/ui/Toast";
 
 const MAX_PHOTOS = 10;
 
@@ -42,7 +46,7 @@ const AMENITY_OPTIONS = [
   { id: "air-conditioning", label: "Air Conditioning" },
 ];
 
-const STATUS_OPTIONS = ["Available", "Occupied", "Maintenance", "Draft"] as const;
+const STATUS_OPTIONS = ["Available", "Occupied", "Draft"] as const;
 type Status = (typeof STATUS_OPTIONS)[number];
 
 const inputBase =
@@ -72,13 +76,27 @@ type PropertyData = {
   agentLineId?: string;
   lineGroup?: string;
   contractStartDate?: string;
+  openForAgent?: boolean;
+  publicListing?: boolean;
+  leaseDurationMonths?: number;
+  contractKey?: string;
 };
+
+const LISTING_PLATFORMS = [
+  "Facebook Marketplace",
+  "DDproperty",
+  "Livinginsider",
+  "DotProperty",
+] as const;
 
 export default function EditPropertyPage() {
   const router = useRouter();
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const contractInputRef = useRef<HTMLInputElement>(null);
+  const modalContractInputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -101,6 +119,20 @@ export default function EditPropertyPage() {
   const [agentLineId, setAgentLineId] = useState("");
   const [contractStartDate, setContractStartDate] = useState("");
   const [lineGroup, setLineGroup] = useState("");
+  const [openForAgent, setOpenForAgent] = useState(false);
+  const [publicListing, setPublicListing] = useState(false);
+  const [leaseDurationMonths, setLeaseDurationMonths] = useState("");
+  const [contractKey, setContractKey] = useState<string | undefined>(undefined);
+  const [contractFile, setContractFile] = useState<File | null>(null);
+  const [setRentedModalOpen, setSetRentedModalOpen] = useState(false);
+  const [setRentedLoading, setSetRentedLoading] = useState(false);
+  const [modalTenantName, setModalTenantName] = useState("");
+  const [modalTenantContact, setModalTenantContact] = useState("");
+  const [modalAgentName, setModalAgentName] = useState("");
+  const [modalContractStartDate, setModalContractStartDate] = useState("");
+  const [modalLeaseDurationMonths, setModalLeaseDurationMonths] = useState("");
+  const [modalContractFile, setModalContractFile] = useState<File | null>(null);
+  const [setRentedError, setSetRentedError] = useState<string | null>(null);
   const [existingImageKeys, setExistingImageKeys] = useState<string[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -171,6 +203,10 @@ export default function EditPropertyPage() {
         setAgentLineId(p.agentLineId ?? "");
         setContractStartDate(p.contractStartDate ?? "");
         setLineGroup(p.lineGroup ?? "");
+        setOpenForAgent((p as { openForAgent?: boolean }).openForAgent ?? false);
+        setPublicListing((p as { publicListing?: boolean }).publicListing ?? false);
+        setLeaseDurationMonths((p as { leaseDurationMonths?: number }).leaseDurationMonths != null ? String((p as { leaseDurationMonths?: number }).leaseDurationMonths) : "");
+        setContractKey((p as { contractKey?: string }).contractKey ?? undefined);
         setExistingImageKeys(Array.isArray(p.imageKeys) ? p.imageKeys : []);
         setExistingImageUrls(Array.isArray(p.imageUrls) ? p.imageUrls : []);
         setLoadError(null);
@@ -268,6 +304,21 @@ export default function EditPropertyPage() {
       }
 
       const imageKeys = [...existingImageKeys, ...newKeys];
+      let finalContractKey: string | undefined = contractKey;
+      if (contractFile) {
+        setUploadProgress(0);
+        try {
+          const contractUpload = await uploadFilesWithProgress([contractFile], setUploadProgress);
+          setUploadProgress(null);
+          const keys = (contractUpload.uploads ?? []).map((u) => u.key);
+          if (keys.length > 0) finalContractKey = keys[0];
+        } catch (contractErr) {
+          setUploadProgress(null);
+          setUploadError(contractErr instanceof Error ? contractErr.message : "Contract upload failed");
+          setSaving(false);
+          return;
+        }
+      }
       const price = Number(monthlyRent.replace(/,/g, "")) || 0;
       const payload = {
         name: name.trim(),
@@ -289,6 +340,10 @@ export default function EditPropertyPage() {
         agentLineId: agentLineId.trim() || undefined,
         contractStartDate: contractStartDate.trim() || undefined,
         lineGroup: lineGroup.trim() || undefined,
+        openForAgent: openForAgent || undefined,
+        publicListing: publicListing || undefined,
+        leaseDurationMonths: leaseDurationMonths.trim() ? parseInt(leaseDurationMonths, 10) : undefined,
+        contractKey: finalContractKey,
       };
 
       const patchRes = await fetch(`/api/owner/properties/${id}`, {
@@ -315,6 +370,85 @@ export default function EditPropertyPage() {
       setUploadError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSetRentedSubmit = async () => {
+    if (!modalTenantName.trim()) {
+      setSetRentedError("Tenant name is required");
+      return;
+    }
+    if (!modalContractStartDate.trim()) {
+      setSetRentedError("Lease start date is required");
+      return;
+    }
+    const startDate = new Date(modalContractStartDate);
+    if (Number.isNaN(startDate.getTime())) {
+      setSetRentedError("Invalid lease start date");
+      return;
+    }
+    const duration = parseInt(modalLeaseDurationMonths, 10);
+    if (!Number.isInteger(duration) || duration < 1) {
+      setSetRentedError("Lease duration (months) is required");
+      return;
+    }
+    setSetRentedLoading(true);
+    setSetRentedError(null);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setSetRentedError("Please log in with LINE.");
+        setSetRentedLoading(false);
+        return;
+      }
+      let contractKey: string | undefined;
+      if (modalContractFile) {
+        const uploadRes = await uploadFilesWithProgress([modalContractFile], () => {});
+        const keys = (uploadRes.uploads ?? []).map((u) => u.key);
+        if (keys.length > 0) contractKey = keys[0];
+      }
+      const price = Number(monthlyRent.replace(/,/g, "")) || 0;
+      const res = await fetch(`/api/owner/properties/${id}/set-rented`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          tenantName: modalTenantName.trim(),
+          tenantLineId: modalTenantContact.trim() || undefined,
+          agentName: modalAgentName.trim() || undefined,
+          contractStartDate: modalContractStartDate,
+          leaseDurationMonths: duration,
+          contractKey,
+          rentPriceAtThatTime: price,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSetRentedError(data.message ?? "Failed to set as rented");
+        setSetRentedLoading(false);
+        return;
+      }
+      setStatus("Occupied");
+      setTenantName(modalTenantName.trim());
+      setTenantLineId(modalTenantContact.trim());
+      setAgentName(modalAgentName.trim());
+      setContractStartDate(modalContractStartDate);
+      setLeaseDurationMonths(String(duration));
+      if (contractKey) setContractKey(contractKey);
+      setSetRentedModalOpen(false);
+      setModalTenantName("");
+      setModalTenantContact("");
+      setModalAgentName("");
+      setModalContractStartDate("");
+      setModalLeaseDurationMonths("");
+      setModalContractFile(null);
+    } catch (err) {
+      setSetRentedError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSetRentedLoading(false);
     }
   };
 
@@ -359,6 +493,112 @@ export default function EditPropertyPage() {
           <span className="w-10" aria-hidden />
         </div>
       </header>
+
+      {setRentedModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="set-rented-title">
+          <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-slate-200 p-4 max-h-[90vh] overflow-y-auto space-y-4">
+            <h2 id="set-rented-title" className="text-lg font-semibold text-[#0F172A]">Set as Rented</h2>
+            <p className="text-sm text-slate-600">Enter tenant and lease details.</p>
+            <div>
+              <label htmlFor="modal-tenant-name" className="block text-sm font-medium text-[#0F172A] mb-1">Tenant Name *</label>
+              <input
+                id="modal-tenant-name"
+                type="text"
+                value={modalTenantName}
+                onChange={(e) => setModalTenantName(e.target.value)}
+                placeholder="Enter tenant name"
+                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                disabled={setRentedLoading}
+              />
+            </div>
+            <div>
+              <label htmlFor="modal-tenant-contact" className="block text-sm font-medium text-[#0F172A] mb-1">Tenant Contact (LINE ID or phone) *</label>
+              <input
+                id="modal-tenant-contact"
+                type="text"
+                value={modalTenantContact}
+                onChange={(e) => setModalTenantContact(e.target.value)}
+                placeholder="LINE ID or phone"
+                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                disabled={setRentedLoading}
+              />
+            </div>
+            <div>
+              <label htmlFor="modal-agent-name" className="block text-sm text-slate-500 mb-1">Agent Name (optional)</label>
+              <input
+                id="modal-agent-name"
+                type="text"
+                value={modalAgentName}
+                onChange={(e) => setModalAgentName(e.target.value)}
+                placeholder="Enter agent name"
+                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                disabled={setRentedLoading}
+              />
+            </div>
+            <div>
+              <label htmlFor="modal-contract-start" className="block text-sm font-medium text-[#0F172A] mb-1">Lease Start Date *</label>
+              <input
+                id="modal-contract-start"
+                type="date"
+                value={modalContractStartDate}
+                onChange={(e) => setModalContractStartDate(e.target.value)}
+                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                disabled={setRentedLoading}
+              />
+            </div>
+            <div>
+              <label htmlFor="modal-lease-duration" className="block text-sm font-medium text-[#0F172A] mb-1">Lease Duration (months) *</label>
+              <input
+                id="modal-lease-duration"
+                type="number"
+                min={1}
+                value={modalLeaseDurationMonths}
+                onChange={(e) => setModalLeaseDurationMonths(e.target.value)}
+                placeholder="e.g. 12"
+                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                disabled={setRentedLoading}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-500 mb-1">Contract file (optional)</label>
+              <input
+                ref={modalContractInputRef}
+                type="file"
+                accept=".pdf,image/*"
+                onChange={(e) => setModalContractFile(e.target.files?.[0] ?? null)}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => modalContractInputRef.current?.click()}
+                className="text-sm text-[#10B981] hover:underline"
+                disabled={setRentedLoading}
+              >
+                {modalContractFile ? modalContractFile.name : "Choose file (PDF or image)"}
+              </button>
+            </div>
+            {setRentedError && <p className="text-sm text-red-600" role="alert">{setRentedError}</p>}
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => { if (!setRentedLoading) setSetRentedModalOpen(false); setSetRentedError(null); }}
+                className="px-4 py-2 rounded-lg text-slate-600 font-medium hover:bg-slate-100 disabled:opacity-50"
+                disabled={setRentedLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSetRentedSubmit}
+                className="px-4 py-2 rounded-lg bg-[#10B981] text-white font-medium hover:bg-[#10B981]/90 disabled:opacity-50"
+                disabled={setRentedLoading}
+              >
+                {setRentedLoading ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form
         id="edit-property-form"
@@ -781,7 +1021,14 @@ export default function EditPropertyPage() {
                 <button
                   key={opt}
                   type="button"
-                  onClick={() => setStatus(opt)}
+                  onClick={() => {
+                    if (opt === "Occupied" && status !== "Occupied") {
+                      setSetRentedModalOpen(true);
+                      setSetRentedError(null);
+                    } else {
+                      setStatus(opt);
+                    }
+                  }}
                   className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-colors tap-target min-h-[44px] ${
                     status === opt
                       ? "bg-[#003366] text-white"
@@ -793,6 +1040,72 @@ export default function EditPropertyPage() {
               ))}
             </div>
           </section>
+
+          {status === "Available" && (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+                Listing options
+              </h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={openForAgent}
+                  onChange={(e) => setOpenForAgent(e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                <span className="text-sm text-[#0F172A]">Open for Agent</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={publicListing}
+                  onChange={(e) => setPublicListing(e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                <span className="text-sm text-[#0F172A]">Public Listing</span>
+              </label>
+              {publicListing && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const text = [
+                        name.trim(),
+                        propertyType,
+                        `฿${(Number(monthlyRent.replace(/,/g, "")) || 0).toLocaleString()}/mo`,
+                        address.trim(),
+                        description.trim(),
+                      ].filter(Boolean).join("\n");
+                      navigator.clipboard.writeText(text).then(() => toast.show("Copied to clipboard"));
+                    }}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy Text for Facebook
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      existingImageUrls.forEach((url, i) => {
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `property-${i + 1}.jpg`;
+                        a.target = "_blank";
+                        a.rel = "noopener";
+                        a.click();
+                      });
+                      if (existingImageUrls.length === 0) toast.show("No photos to download");
+                      else toast.show("Downloading photos...");
+                    }}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Photos for DDproperty
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
 
           {status === "Occupied" && (
             <section className="space-y-4">
@@ -894,8 +1207,92 @@ export default function EditPropertyPage() {
                   className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 />
               </div>
+              <div>
+                <label htmlFor="edit-lease-duration" className="block text-sm font-medium text-[#0F172A] mb-1">
+                  Lease Duration (months)
+                </label>
+                <input
+                  id="edit-lease-duration"
+                  type="number"
+                  min={1}
+                  value={leaseDurationMonths}
+                  onChange={(e) => setLeaseDurationMonths(e.target.value)}
+                  placeholder="e.g. 12"
+                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-500 mb-1">Contract file (optional)</label>
+                <input
+                  ref={contractInputRef}
+                  type="file"
+                  accept=".pdf,image/*"
+                  onChange={(e) => setContractFile(e.target.files?.[0] ?? null)}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => contractInputRef.current?.click()}
+                  className="text-sm text-[#10B981] hover:underline"
+                >
+                  {contractFile ? contractFile.name : contractKey ? "Replace contract file" : "Choose file (PDF or image)"}
+                </button>
+              </div>
             </section>
           )}
+
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+              Publish to Listing Sites
+            </h2>
+            <p className="text-sm text-slate-600">Public listing page</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const url = typeof window !== "undefined" ? `${window.location.origin}/listings/${id}` : "";
+                  navigator.clipboard.writeText(url).then(() => toast.show("Link copied to clipboard"));
+                }}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
+              >
+                <Copy className="h-4 w-4" />
+                Copy Link
+              </button>
+              <a
+                href={`/listings/${id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Preview
+              </a>
+            </div>
+            <p className="text-xs text-slate-500">Enable &quot;Public Listing&quot; above when status is Available for the page to be visible.</p>
+            <div className="pt-2">
+              <p className="text-sm font-medium text-[#0F172A] mb-2">Listing platforms (coming soon)</p>
+              <div className="grid grid-cols-2 gap-2">
+                {LISTING_PLATFORMS.map((platform) => (
+                  <button
+                    key={platform}
+                    type="button"
+                    onClick={() => {
+                      toast.show(`ฟีเจอร์นี้กำลังพัฒนา! คุณอยากให้เราเชื่อมต่อกับ ${platform} ก่อนใครหรือไม่?`);
+                      fetch("/api/log/listing-interest", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ platform }),
+                      }).catch(() => {});
+                    }}
+                    className="flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 relative grayscale opacity-90"
+                  >
+                    <span className="text-xs font-medium text-center">{platform}</span>
+                    <span className="text-[10px] text-amber-600 font-medium">Coming Soon</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
         </div>
       </form>
 

@@ -5,7 +5,7 @@ import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { getPresignedGetUrl } from "@/lib/s3";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
-const STATUSES = ["Available", "Occupied", "Maintenance", "Draft"] as const;
+const STATUSES = ["Available", "Occupied", "Draft"] as const;
 
 export async function GET(request: NextRequest) {
   const ownerId = await getLineUserIdFromRequest(request);
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
   }
   if (!STATUSES.includes(status as (typeof STATUSES)[number])) {
     return NextResponse.json(
-      { message: "status must be Available, Occupied, Maintenance, or Draft" },
+      { message: "status must be Available, Occupied, or Draft" },
       { status: 400 }
     );
   }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLiff } from "@/providers/LiffProvider";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { ToastProvider } from "@/components/ui/Toast";
 
 export function MainLayoutClient({
   children,
@@ -12,6 +13,7 @@ export function MainLayoutClient({
   const { isInClient } = useLiff();
 
   return (
+    <ToastProvider>
     <div className="min-h-dvh flex flex-col bg-[#F8FAFC]">
       {!isInClient && (
         <header className="sticky top-0 z-40 border-b border-[#0F172A]/10 bg-white/95 backdrop-blur safe-area-top">
@@ -32,5 +34,6 @@ export function MainLayoutClient({
       </main>
       {!isInClient && <BottomNav />}
     </div>
+    </ToastProvider>
   );
 }

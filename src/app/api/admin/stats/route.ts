@@ -13,19 +13,17 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const [totalProperties, activeOwners, totalAgents, pendingMaintenance] =
+    const [totalProperties, activeOwners, totalAgents] =
       await Promise.all([
         Property.countDocuments(),
         User.countDocuments({ role: "owner" }),
         User.countDocuments({ role: "agent" }),
-        Property.countDocuments({ status: "Maintenance" }),
       ]);
 
     return NextResponse.json({
       totalProperties,
       activeOwners,
       totalAgents,
-      pendingMaintenance,
     });
   } catch (err) {
     console.error("[GET /api/admin/stats]", err);

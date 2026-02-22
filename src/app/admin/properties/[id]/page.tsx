@@ -100,7 +100,7 @@ export default function AdminPropertyDetailPage() {
   const statusStyles: Record<string, string> = {
     Available: "bg-emerald-100 text-emerald-800",
     Occupied: "bg-amber-100 text-amber-800",
-    Maintenance: "bg-slate-200 text-slate-700",
+    Draft: "bg-slate-200 text-slate-700",
   };
 
   return (

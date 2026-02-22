@@ -6,7 +6,6 @@ import {
   Building2,
   Users,
   UserCog,
-  Wrench,
   Search,
   Eye,
   Loader2,
@@ -21,7 +20,6 @@ type Stats = {
   totalProperties: number;
   activeOwners: number;
   totalAgents: number;
-  pendingMaintenance: number;
 };
 
 type PropertyRow = {
@@ -45,7 +43,7 @@ const STATUS_OPTIONS = [
   { value: "", label: "All statuses" },
   { value: "Available", label: "Available" },
   { value: "Occupied", label: "Occupied" },
-  { value: "Maintenance", label: "Maintenance" },
+  { value: "Draft", label: "Draft" },
 ];
 
 const AGENT_OPTIONS = [
@@ -170,7 +168,7 @@ export default function AdminDashboardPage() {
     const styles: Record<string, string> = {
       Available: "bg-emerald-100 text-emerald-800",
       Occupied: "bg-amber-100 text-amber-800",
-      Maintenance: "bg-slate-200 text-slate-700",
+      Draft: "bg-slate-200 text-slate-700",
     };
     return (
       <span
@@ -200,7 +198,7 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Stats cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <Card
           variant="light"
           className={cn(
@@ -268,23 +266,6 @@ export default function AdminDashboardPage() {
             ) : (
               <span className="text-2xl font-bold text-slate-800">
                 {stats?.totalAgents ?? "—"}
-              </span>
-            )}
-          </CardContent>
-        </Card>
-        <Card variant="light" className="border-slate-200">
-          <CardHeader className="pb-1">
-            <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
-              <Wrench className="h-4 w-4 text-amber-600" />
-              Pending Maintenance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {statsLoading ? (
-              <Loader2 className="h-7 w-7 animate-spin text-slate-400" />
-            ) : (
-              <span className="text-2xl font-bold text-slate-800">
-                {stats?.pendingMaintenance ?? "—"}
               </span>
             )}
           </CardContent>

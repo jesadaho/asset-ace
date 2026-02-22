@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
-const STATUSES = ["Available", "Occupied", "Maintenance", "Draft"] as const;
+const STATUSES = ["Available", "Occupied", "Draft"] as const;
 
 export type PropertyType = (typeof PROPERTY_TYPES)[number];
 export type PropertyStatus = (typeof STATUSES)[number];
@@ -27,6 +27,10 @@ export interface IProperty {
   agentLineId?: string;
   lineGroup?: string;
   contractStartDate?: Date;
+  openForAgent?: boolean;
+  publicListing?: boolean;
+  leaseDurationMonths?: number;
+  contractKey?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -53,6 +57,10 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     agentLineId: String,
     lineGroup: String,
     contractStartDate: Date,
+    openForAgent: Boolean,
+    publicListing: Boolean,
+    leaseDurationMonths: Number,
+    contractKey: String,
   },
   { timestamps: true }
 );

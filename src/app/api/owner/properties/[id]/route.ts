@@ -6,7 +6,7 @@ import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { getPresignedGetUrl } from "@/lib/s3";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
-const STATUSES = ["Available", "Occupied", "Maintenance", "Draft"] as const;
+const STATUSES = ["Available", "Occupied", "Draft"] as const;
 
 type PropertyDoc = IProperty & { _id: mongoose.Types.ObjectId };
 
@@ -34,6 +34,10 @@ function toResponse(doc: PropertyDoc) {
     contractStartDate: doc.contractStartDate
       ? (doc.contractStartDate as Date).toISOString().slice(0, 10)
       : undefined,
+    openForAgent: doc.openForAgent,
+    publicListing: doc.publicListing,
+    leaseDurationMonths: doc.leaseDurationMonths,
+    contractKey: doc.contractKey,
     createdAt: doc.createdAt,
   };
 }
@@ -66,12 +70,17 @@ export async function GET(
     const imageUrls = urlResults.filter(
       (u): u is string => u != null
     );
+    const docTyped = doc as unknown as PropertyDoc & { contractKey?: string };
+    const contractUrl = docTyped.contractKey
+      ? await getPresignedGetUrl(docTyped.contractKey)
+      : undefined;
     const property = toResponse(doc as unknown as PropertyDoc);
     return NextResponse.json({
       property: {
         ...property,
         imageUrl: imageUrls[0] ?? undefined,
         imageUrls,
+        contractUrl: contractUrl ?? undefined,
       },
     });
   } catch (err) {
@@ -156,6 +165,18 @@ export async function PATCH(
     } else if (body.contractStartDate === null || body.contractStartDate === "") {
       property.contractStartDate = undefined;
     }
+    if (typeof body.openForAgent === "boolean") property.openForAgent = body.openForAgent;
+    if (typeof body.publicListing === "boolean") property.publicListing = body.publicListing;
+    const leaseDurationMonths =
+      typeof body.leaseDurationMonths === "number"
+        ? body.leaseDurationMonths
+        : typeof body.leaseDurationMonths === "string"
+          ? parseInt(body.leaseDurationMonths, 10)
+          : undefined;
+    if (leaseDurationMonths !== undefined && !Number.isNaN(leaseDurationMonths) && leaseDurationMonths >= 0) {
+      property.leaseDurationMonths = leaseDurationMonths;
+    }
+    if (typeof body.contractKey === "string") property.contractKey = body.contractKey || undefined;
 
     await property.save();
 

@@ -57,7 +57,6 @@
     "total": "ทั้งหมด",
     "occupied": "มีการเช่า",
     "available": "ว่าง",
-    "maintenance": "ซ่อมบำรุง",
     "draft": "ฉบับร่าง",
     "searchPlaceholder": "ค้นหาชื่อหรือที่อยู่...",
     "all": "ทั้งหมด",
@@ -66,7 +65,6 @@
     "status": {
       "Available": "ว่าง",
       "Occupied": "มีการเช่า",
-      "Maintenance": "ซ่อมบำรุง",
       "Draft": "ฉบับร่าง"
     }
   },
@@ -109,6 +107,15 @@
     "cloneMultipleCount": "จำนวนที่ต้องการคัดลอก",
     "cloneMultipleUnitNumbers": "เลขห้อง (หนึ่งบรรทัดต่อห้อง ไม่บังคับ)",
     "cloneMultipleSubmit": "สร้างสำเนา",
-    "cloneMultipleSuccess": "สร้าง {count} รายการแล้ว"
+    "cloneMultipleSuccess": "สร้าง {count} รายการแล้ว",
+    "leaseDuration": "ระยะเวลาสัญญา",
+    "months": "เดือน",
+    "viewContract": "ดูสัญญา",
+    "checkout": "เช็คเอาท์ / ย้ายออก",
+    "checkoutConfirmTitle": "เช็คเอาท์ผู้เช่า",
+    "checkoutConfirmMessage": "เปลี่ยนสถานะเป็นว่าง และเก็บประวัติการเช่านี้หรือไม่?",
+    "rentalHistory": "ประวัติการเช่า",
+    "noRentalHistory": "ยังไม่มีประวัติการเช่า",
+    "current": "ปัจจุบัน"
   }
 }
