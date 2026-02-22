@@ -1321,58 +1321,60 @@ export default function EditPropertyPage() {
             </section>
           )}
 
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-              Publish to Listing Sites
-            </h2>
-            <p className="text-sm text-slate-600">Public listing page</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const url = typeof window !== "undefined" ? `${window.location.origin}/listings/${id}` : "";
-                  navigator.clipboard.writeText(url).then(() => toast.show("Link copied to clipboard"));
-                }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
-              >
-                <Copy className="h-4 w-4" />
-                Copy Link
-              </button>
-              <a
-                href={`/listings/${id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Preview
-              </a>
-            </div>
-            <p className="text-xs text-slate-500">Enable &quot;Public Listing&quot; above when status is Available for the page to be visible.</p>
-            <div className="pt-2">
-              <p className="text-sm font-medium text-[#0F172A] mb-2">Listing platforms (coming soon)</p>
-              <div className="grid grid-cols-2 gap-2">
-                {LISTING_PLATFORMS.map((platform) => (
-                  <button
-                    key={platform}
-                    type="button"
-                    onClick={() => {
-                      toast.show(`ฟีเจอร์นี้กำลังพัฒนา! คุณอยากให้เราเชื่อมต่อกับ ${platform} ก่อนใครหรือไม่?`);
-                      fetch("/api/log/listing-interest", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ platform }),
-                      }).catch(() => {});
-                    }}
-                    className="flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 relative grayscale opacity-90"
-                  >
-                    <span className="text-xs font-medium text-center">{platform}</span>
-                    <span className="text-[10px] text-amber-600 font-medium">Coming Soon</span>
-                  </button>
-                ))}
+          {status === "Available" && (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+                Publish to Listing Sites
+              </h2>
+              <p className="text-sm text-slate-600">Public listing page</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = typeof window !== "undefined" ? `${window.location.origin}/listings/${id}` : "";
+                    navigator.clipboard.writeText(url).then(() => toast.show("Link copied to clipboard"));
+                  }}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy Link
+                </button>
+                <a
+                  href={`/listings/${id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Preview
+                </a>
               </div>
-            </div>
-          </section>
+              <p className="text-xs text-slate-500">Enable &quot;Public Listing&quot; above for the page to be visible.</p>
+              <div className="pt-2">
+                <p className="text-sm font-medium text-[#0F172A] mb-2">Listing platforms (coming soon)</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {LISTING_PLATFORMS.map((platform) => (
+                    <button
+                      key={platform}
+                      type="button"
+                      onClick={() => {
+                        toast.show(`ฟีเจอร์นี้กำลังพัฒนา! คุณอยากให้เราเชื่อมต่อกับ ${platform} ก่อนใครหรือไม่?`);
+                        fetch("/api/log/listing-interest", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ platform }),
+                        }).catch(() => {});
+                      }}
+                      className="flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 relative grayscale opacity-90"
+                    >
+                      <span className="text-xs font-medium text-center">{platform}</span>
+                      <span className="text-[10px] text-amber-600 font-medium">Coming Soon</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
         </div>
       </form>
 
