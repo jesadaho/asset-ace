@@ -1060,38 +1060,6 @@ export default function EditPropertyPage() {
             <p className="text-sm text-[#0F172A] font-medium mb-2">
               {tProps(`status.${status}`)}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {status === "Occupied" && (
-                <button
-                  type="button"
-                  onClick={() => setCheckoutModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
-                >
-                  {t("notifyMoveOut")}
-                </button>
-              )}
-              {status === "Available" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSetRentedModalOpen(true);
-                    setSetRentedError(null);
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
-                >
-                  {t("gotTenant")}
-                </button>
-              )}
-              {status === "Draft" && (
-                <button
-                  type="button"
-                  onClick={() => setStatus("Available")}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
-                >
-                  {t("publish")}
-                </button>
-              )}
-            </div>
           </section>
 
           {checkoutModalOpen && (
@@ -1378,7 +1346,37 @@ export default function EditPropertyPage() {
         </div>
       </form>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 max-w-lg mx-auto safe-area-bottom bg-white border-t border-slate-100 p-4">
+      <div className="fixed bottom-0 left-0 right-0 z-30 max-w-lg mx-auto safe-area-bottom bg-white border-t border-slate-100 p-4 space-y-3">
+        {status === "Occupied" && (
+          <button
+            type="button"
+            onClick={() => setCheckoutModalOpen(true)}
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-red-200 bg-red-50 text-red-800 text-base font-medium hover:bg-red-100 tap-target min-h-[48px]"
+          >
+            {t("notifyMoveOut")}
+          </button>
+        )}
+        {status === "Available" && (
+          <button
+            type="button"
+            onClick={() => {
+              setSetRentedModalOpen(true);
+              setSetRentedError(null);
+            }}
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-red-200 bg-red-50 text-red-800 text-base font-medium hover:bg-red-100 tap-target min-h-[48px]"
+          >
+            {t("gotTenant")}
+          </button>
+        )}
+        {status === "Draft" && (
+          <button
+            type="button"
+            onClick={() => setStatus("Available")}
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-red-200 bg-red-50 text-red-800 text-base font-medium hover:bg-red-100 tap-target min-h-[48px]"
+          >
+            {t("publish")}
+          </button>
+        )}
         <Button
           type="submit"
           form="edit-property-form"
