@@ -16,7 +16,9 @@ export async function GET(
   try {
     await connectDB();
     const doc = await Property.findOne({ _id: id }).lean();
-    if (!doc || !(doc as { publicListing?: boolean }).publicListing) {
+    const publicListing = (doc as { publicListing?: boolean }).publicListing;
+    const status = (doc as { status?: string }).status;
+    if (!doc || !publicListing || status !== "Available") {
       return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
 

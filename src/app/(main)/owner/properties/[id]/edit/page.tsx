@@ -133,6 +133,7 @@ export default function EditPropertyPage() {
   const [modalLeaseDurationMonths, setModalLeaseDurationMonths] = useState("");
   const [modalContractFile, setModalContractFile] = useState<File | null>(null);
   const [setRentedError, setSetRentedError] = useState<string | null>(null);
+  const [changeStatusMenuOpen, setChangeStatusMenuOpen] = useState(false);
   const [existingImageKeys, setExistingImageKeys] = useState<string[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -1016,28 +1017,42 @@ export default function EditPropertyPage() {
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide mb-3">
               Rental Status
             </h2>
-            <div className="flex rounded-lg border border-slate-200 p-1 bg-slate-50/50">
-              {STATUS_OPTIONS.map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => {
-                    if (opt === "Occupied" && status !== "Occupied") {
-                      setSetRentedModalOpen(true);
-                      setSetRentedError(null);
-                    } else {
-                      setStatus(opt);
-                    }
-                  }}
-                  className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-colors tap-target min-h-[44px] ${
-                    status === opt
-                      ? "bg-[#003366] text-white"
-                      : "text-slate-600 hover:text-[#0F172A]"
-                  }`}
+            <p className="text-sm text-[#0F172A] font-medium mb-2">{status}</p>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setChangeStatusMenuOpen((open) => !open)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
+              >
+                Change status
+              </button>
+              {changeStatusMenuOpen && (
+                <div
+                  className="absolute left-0 top-full mt-1 z-10 min-w-[10rem] rounded-lg border border-slate-200 bg-white shadow-lg py-1"
+                  role="menu"
+                  aria-label="Change rental status"
                 >
-                  {opt}
-                </button>
-              ))}
+                  {STATUS_OPTIONS.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setChangeStatusMenuOpen(false);
+                        if (opt === "Occupied" && status !== "Occupied") {
+                          setSetRentedModalOpen(true);
+                          setSetRentedError(null);
+                        } else {
+                          setStatus(opt);
+                        }
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#0F172A] hover:bg-slate-100 tap-target"
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 
