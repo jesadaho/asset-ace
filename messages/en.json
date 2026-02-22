@@ -114,6 +114,10 @@
     "checkout": "Check-out / Move-out",
     "checkoutConfirmTitle": "Check-out tenant",
     "checkoutConfirmMessage": "Return status to Available and archive this rental to history?",
+    "rentalStatus": "Rental Status",
+    "notifyMoveOut": "Check-out / Available",
+    "gotTenant": "Got tenant / Occupied",
+    "publish": "Publish / Available",
     "rentalHistory": "Rental History",
     "noRentalHistory": "No rental history yet.",
     "current": "Current"

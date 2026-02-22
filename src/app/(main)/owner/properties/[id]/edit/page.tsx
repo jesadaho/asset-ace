@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { uploadFilesWithProgress } from "@/lib/uploadWithProgress";
 import { useToast } from "@/components/ui/Toast";
+import { useTranslations } from "next-intl";
 
 const MAX_PHOTOS = 10;
 
@@ -97,6 +98,8 @@ export default function EditPropertyPage() {
   const contractInputRef = useRef<HTMLInputElement>(null);
   const modalContractInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
+  const t = useTranslations("propertyDetail");
+  const tProps = useTranslations("properties");
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -133,7 +136,8 @@ export default function EditPropertyPage() {
   const [modalLeaseDurationMonths, setModalLeaseDurationMonths] = useState("");
   const [modalContractFile, setModalContractFile] = useState<File | null>(null);
   const [setRentedError, setSetRentedError] = useState<string | null>(null);
-  const [changeStatusMenuOpen, setChangeStatusMenuOpen] = useState(false);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [existingImageKeys, setExistingImageKeys] = useState<string[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -142,6 +146,33 @@ export default function EditPropertyPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const setFormFromProperty = (p: PropertyData) => {
+    setName(p.name ?? "");
+    setListingType((p.listingType === "sale" ? "sale" : "rent") as "sale" | "rent");
+    setPropertyType(p.type ?? "Condo");
+    setMonthlyRent(String(p.price ?? ""));
+    setAddress(p.address ?? "");
+    setBedrooms(p.bedrooms ?? "");
+    setBathrooms(p.bathrooms ?? "");
+    setAddressPrivate(p.addressPrivate ?? false);
+    setDescription(p.description ?? "");
+    setSquareMeters(p.squareMeters ?? "");
+    setAmenities(Array.isArray(p.amenities) ? p.amenities : []);
+    setStatus((STATUS_OPTIONS.includes(p.status as Status) ? p.status : "Available") as Status);
+    setTenantName(p.tenantName ?? "");
+    setTenantLineId(p.tenantLineId ?? "");
+    setAgentName(p.agentName ?? "");
+    setAgentLineId(p.agentLineId ?? "");
+    setContractStartDate(p.contractStartDate ?? "");
+    setLineGroup(p.lineGroup ?? "");
+    setOpenForAgent((p as { openForAgent?: boolean }).openForAgent ?? false);
+    setPublicListing((p as { publicListing?: boolean }).publicListing ?? false);
+    setLeaseDurationMonths((p as { leaseDurationMonths?: number }).leaseDurationMonths != null ? String((p as { leaseDurationMonths?: number }).leaseDurationMonths) : "");
+    setContractKey((p as { contractKey?: string }).contractKey ?? undefined);
+    setExistingImageKeys(Array.isArray(p.imageKeys) ? p.imageKeys : []);
+    setExistingImageUrls(Array.isArray(p.imageUrls) ? p.imageUrls : []);
+  };
 
   useEffect(() => {
     if (!id) {
@@ -186,30 +217,7 @@ export default function EditPropertyPage() {
           setLoading(false);
           return;
         }
-        setName(p.name ?? "");
-        setListingType((p.listingType === "sale" ? "sale" : "rent") as "sale" | "rent");
-        setPropertyType(p.type ?? "Condo");
-        setMonthlyRent(String(p.price ?? ""));
-        setAddress(p.address ?? "");
-        setBedrooms(p.bedrooms ?? "");
-        setBathrooms(p.bathrooms ?? "");
-        setAddressPrivate(p.addressPrivate ?? false);
-        setDescription(p.description ?? "");
-        setSquareMeters(p.squareMeters ?? "");
-        setAmenities(Array.isArray(p.amenities) ? p.amenities : []);
-        setStatus((STATUS_OPTIONS.includes(p.status as Status) ? p.status : "Available") as Status);
-        setTenantName(p.tenantName ?? "");
-        setTenantLineId(p.tenantLineId ?? "");
-        setAgentName(p.agentName ?? "");
-        setAgentLineId(p.agentLineId ?? "");
-        setContractStartDate(p.contractStartDate ?? "");
-        setLineGroup(p.lineGroup ?? "");
-        setOpenForAgent((p as { openForAgent?: boolean }).openForAgent ?? false);
-        setPublicListing((p as { publicListing?: boolean }).publicListing ?? false);
-        setLeaseDurationMonths((p as { leaseDurationMonths?: number }).leaseDurationMonths != null ? String((p as { leaseDurationMonths?: number }).leaseDurationMonths) : "");
-        setContractKey((p as { contractKey?: string }).contractKey ?? undefined);
-        setExistingImageKeys(Array.isArray(p.imageKeys) ? p.imageKeys : []);
-        setExistingImageUrls(Array.isArray(p.imageUrls) ? p.imageUrls : []);
+        setFormFromProperty(p);
         setLoadError(null);
       } catch (err) {
         if (!cancelled) {
@@ -450,6 +458,38 @@ export default function EditPropertyPage() {
       setSetRentedError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setSetRentedLoading(false);
+    }
+  };
+
+  const handleCheckoutConfirm = async () => {
+    if (!id) return;
+    setCheckoutLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setCheckoutLoading(false);
+        return;
+      }
+      const res = await fetch(`/api/owner/properties/${id}/checkout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        setCheckoutLoading(false);
+        return;
+      }
+      setCheckoutModalOpen(false);
+      const refetchRes = await fetch(`/api/owner/properties/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (refetchRes.ok) {
+        const data = await refetchRes.json();
+        const p: PropertyData = data.property;
+        if (p) setFormFromProperty(p);
+      }
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
@@ -1015,46 +1055,71 @@ export default function EditPropertyPage() {
 
           <section>
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide mb-3">
-              Rental Status
+              {t("rentalStatus")}
             </h2>
-            <p className="text-sm text-[#0F172A] font-medium mb-2">{status}</p>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setChangeStatusMenuOpen((open) => !open)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
-              >
-                Change status
-              </button>
-              {changeStatusMenuOpen && (
-                <div
-                  className="absolute left-0 top-full mt-1 z-10 min-w-[10rem] rounded-lg border border-slate-200 bg-white shadow-lg py-1"
-                  role="menu"
-                  aria-label="Change rental status"
+            <p className="text-sm text-[#0F172A] font-medium mb-2">
+              {tProps(`status.${status}`)}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {status === "Occupied" && (
+                <button
+                  type="button"
+                  onClick={() => setCheckoutModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
                 >
-                  {STATUS_OPTIONS.map((opt) => (
-                    <button
-                      key={opt}
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setChangeStatusMenuOpen(false);
-                        if (opt === "Occupied" && status !== "Occupied") {
-                          setSetRentedModalOpen(true);
-                          setSetRentedError(null);
-                        } else {
-                          setStatus(opt);
-                        }
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#0F172A] hover:bg-slate-100 tap-target"
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
+                  {t("notifyMoveOut")}
+                </button>
+              )}
+              {status === "Available" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSetRentedModalOpen(true);
+                    setSetRentedError(null);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
+                >
+                  {t("gotTenant")}
+                </button>
+              )}
+              {status === "Draft" && (
+                <button
+                  type="button"
+                  onClick={() => setStatus("Available")}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
+                >
+                  {t("publish")}
+                </button>
               )}
             </div>
           </section>
+
+          {checkoutModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+              <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
+                <h2 id="checkout-title" className="text-lg font-semibold text-[#0F172A]">{t("checkoutConfirmTitle")}</h2>
+                <p className="text-sm text-slate-600">{t("checkoutConfirmMessage")}</p>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => { if (!checkoutLoading) setCheckoutModalOpen(false); }}
+                    className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
+                    disabled={checkoutLoading}
+                  >
+                    {t("cloneCancel")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCheckoutConfirm}
+                    className="px-4 py-2.5 rounded-lg bg-[#003366] text-white text-sm font-medium hover:bg-[#002244] tap-target min-h-[44px] disabled:opacity-60"
+                    disabled={checkoutLoading}
+                  >
+                    {checkoutLoading ? t("loading") : t("checkout")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {status === "Available" && (
             <section className="space-y-3">

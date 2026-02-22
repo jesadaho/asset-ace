@@ -114,6 +114,10 @@
     "checkout": "เช็คเอาท์ / ย้ายออก",
     "checkoutConfirmTitle": "เช็คเอาท์ผู้เช่า",
     "checkoutConfirmMessage": "เปลี่ยนสถานะเป็นว่าง และเก็บประวัติการเช่านี้หรือไม่?",
+    "rentalStatus": "สถานะการเช่า",
+    "notifyMoveOut": "แจ้งออก / ว่าง",
+    "gotTenant": "ได้ผู้เช่า / มีการเช่า",
+    "publish": "เผยแพร่ / ว่าง",
     "rentalHistory": "ประวัติการเช่า",
     "noRentalHistory": "ยังไม่มีประวัติการเช่า",
     "current": "ปัจจุบัน"
