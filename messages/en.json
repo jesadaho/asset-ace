@@ -120,6 +120,8 @@
     "publish": "Publish / Available",
     "rentalHistory": "Rental History",
     "noRentalHistory": "No rental history yet.",
-    "current": "Current"
+    "current": "Current",
+    "checkoutSuccess": "Checked out. Status updated to Available.",
+    "checkoutFailed": "Check-out failed. Please try again."
   }
 }

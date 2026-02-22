@@ -100,6 +100,7 @@ export default function EditPropertyPage() {
   const toast = useToast();
   const t = useTranslations("propertyDetail");
   const tProps = useTranslations("properties");
+  const tAuth = useTranslations("auth");
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -468,6 +469,7 @@ export default function EditPropertyPage() {
       const liff = (await import("@line/liff")).default;
       const token = liff.getAccessToken();
       if (!token) {
+        toast.show(tAuth("pleaseLogin"));
         setCheckoutLoading(false);
         return;
       }
@@ -476,6 +478,8 @@ export default function EditPropertyPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { message?: string };
+        toast.show(data.message ?? t("checkoutFailed"));
         setCheckoutLoading(false);
         return;
       }
@@ -487,7 +491,13 @@ export default function EditPropertyPage() {
         const data = await refetchRes.json();
         const p: PropertyData = data.property;
         if (p) setFormFromProperty(p);
+        toast.show(t("checkoutSuccess"));
+      } else {
+        toast.show(t("checkoutSuccess"));
       }
+    } catch (err) {
+      console.error("[EditProperty checkout]", err);
+      toast.show(t("checkoutFailed"));
     } finally {
       setCheckoutLoading(false);
     }
