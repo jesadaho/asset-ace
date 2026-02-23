@@ -581,7 +581,7 @@ export default function EditPropertyPage() {
                 type="text"
                 value={modalAgentName}
                 onChange={(e) => setModalAgentName(e.target.value)}
-                placeholder="Enter agent name"
+                placeholder="Leave blank if no agent"
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 disabled={setRentedLoading}
               />
@@ -1205,16 +1205,16 @@ export default function EditPropertyPage() {
               <div>
                 <label
                   htmlFor="edit-agent"
-                  className="block text-sm font-medium text-[#0F172A] mb-1"
+                  className="block text-sm text-slate-500 mb-1"
                 >
-                  Agent Name
+                  Agent Name (optional)
                 </label>
                 <input
                   id="edit-agent"
                   type="text"
                   value={agentName}
                   onChange={(e) => setAgentName(e.target.value)}
-                  placeholder="Enter agent name..."
+                  placeholder="Enter agent name (leave blank if none)"
                   className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 />
               </div>

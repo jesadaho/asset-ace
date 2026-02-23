@@ -658,15 +658,15 @@ export default function AddPropertyPage() {
                 />
               </div>
               <div>
-                <label htmlFor="agent" className="block text-sm font-medium text-[#0F172A] mb-1">
-                  Agent Name
+                <label htmlFor="agent" className="block text-sm text-slate-500 mb-1">
+                  Agent Name (optional)
                 </label>
                 <input
                   id="agent"
                   type="text"
                   value={agentName}
                   onChange={(e) => setAgentName(e.target.value)}
-                  placeholder="Enter agent name..."
+                  placeholder="Enter agent name (leave blank if none)"
                   className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 />
               </div>
