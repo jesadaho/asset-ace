@@ -39,25 +39,11 @@ export async function GET(request: NextRequest) {
     const filter: Record<string, unknown> = {};
     if (openForAgent) {
       filter.openForAgent = true;
-    } else {
-      // "Show all": only show open-for-agent OR owner-managed that are Available (ไม่แสดงห้องไม่ว่างในส่วนเจ้าของดูแลเอง)
-      filter.$and = [
-        {
-          $or: [
-            { openForAgent: true },
-            { openForAgent: { $ne: true }, status: "Available" },
-          ],
-        },
-      ];
     }
+    // When openForAgent is false (default "แสดงทั้งหมด"): no filter on openForAgent/status → แสดงห้องทั้งหมด
 
     if (location) {
-      const locationCond = { address: { $regex: location, $options: "i" } };
-      if (filter.$and) {
-        (filter.$and as unknown[]).push(locationCond);
-      } else {
-        filter.address = (locationCond as { address: unknown }).address;
-      }
+      filter.address = { $regex: location, $options: "i" };
     }
     if (
       (minPriceNum != null && !Number.isNaN(minPriceNum)) ||
@@ -70,12 +56,7 @@ export async function GET(request: NextRequest) {
       if (maxPriceNum != null && !Number.isNaN(maxPriceNum)) {
         priceCond.$lte = maxPriceNum;
       }
-      const priceFilter = { price: priceCond };
-      if (filter.$and) {
-        (filter.$and as unknown[]).push(priceFilter);
-      } else {
-        filter.price = priceCond;
-      }
+      filter.price = priceCond;
     }
 
     // Cursor-based pagination: next page = docs strictly before (createdAt desc, then _id desc)
@@ -89,18 +70,13 @@ export async function GET(request: NextRequest) {
         /^[a-f0-9A-F]{24}$/.test(cursorId)
       ) {
         const { ObjectId } = await import("mongodb");
-        const cursorOr = [
+        filter.$or = [
           { createdAt: { $lt: new Date(createdAtMs) } },
           {
             createdAt: new Date(createdAtMs),
             _id: { $lt: new ObjectId(cursorId) },
           },
         ];
-        if (filter.$and) {
-          (filter.$and as unknown[]).push({ $or: cursorOr });
-        } else {
-          filter.$or = cursorOr;
-        }
       }
     }
 
