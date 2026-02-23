@@ -34,8 +34,6 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const filter: Record<string, unknown> = { openForAgent: true };
-    // Only list properties that are available for rent
-    filter.status = "Available";
 
     if (location) {
       filter.address = { $regex: location, $options: "i" };
