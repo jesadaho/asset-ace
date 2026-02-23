@@ -33,6 +33,20 @@ function isValidCustomPayload(obj: unknown): obj is RichMenuPayload {
  */
 export async function POST(request: NextRequest) {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  // #region agent log
+  fetch("http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
+    body: JSON.stringify({
+      sessionId: "d6e810",
+      hypothesisId: "H3_H4",
+      location: "api/richmenu/route.ts:POST",
+      message: "Create rich menu entry",
+      data: { hasToken: !!token?.trim(), tokenLength: token?.length ?? 0 },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   if (!token?.trim()) {
     return NextResponse.json(
       { error: "LINE_CHANNEL_ACCESS_TOKEN is not set" },
@@ -101,6 +115,26 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // #region agent log
+    const bodySummary = {
+      size: body.size,
+      areasLength: body.areas?.length ?? 0,
+      firstActionType: body.areas?.[0]?.action?.type,
+      name: body.name?.slice(0, 40),
+    };
+    fetch("http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
+      body: JSON.stringify({
+        sessionId: "d6e810",
+        hypothesisId: "H2_H5",
+        location: "api/richmenu/route.ts:before LINE fetch",
+        message: "Request body summary",
+        data: bodySummary,
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     const res = await fetch("https://api.line.me/v2/bot/richmenu", {
       method: "POST",
       headers: {
@@ -110,7 +144,29 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(body),
     });
 
-    const data = (await res.json().catch(() => ({}))) as { richMenuId?: string; message?: string };
+    const data = (await res.json().catch(() => ({}))) as { richMenuId?: string; message?: string; details?: string };
+
+    // #region agent log
+    fetch("http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
+      body: JSON.stringify({
+        sessionId: "d6e810",
+        hypothesisId: "H1_H2_H4",
+        location: "api/richmenu/route.ts:after LINE fetch",
+        message: "LINE API response",
+        data: {
+          status: res.status,
+          ok: res.ok,
+          richMenuId: data.richMenuId,
+          message: data.message,
+          details: data.details,
+          dataKeys: Object.keys(data),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
 
     if (!res.ok) {
       return NextResponse.json(
@@ -129,6 +185,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ richMenuId: data.richMenuId });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // #region agent log
+    fetch("http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
+      body: JSON.stringify({
+        sessionId: "d6e810",
+        hypothesisId: "H4",
+        location: "api/richmenu/route.ts:catch",
+        message: "Create rich menu throw",
+        data: { error: message },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     return NextResponse.json(
       { error: "Failed to create rich menu", detail: message },
       { status: 500 }

@@ -127,6 +127,8 @@
     "reserved": "Reserved",
     "clearReservation": "Clear reservation",
     "reservedByName": "Reserved by (name)",
-    "reservedByContact": "Contact (phone / LINE)"
+    "reservedByContact": "Contact (phone / LINE)",
+    "contractCompleted": "Contract completed",
+    "contractEnded": "Contract ended"
   }
 }

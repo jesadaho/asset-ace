@@ -109,6 +109,20 @@ export default function AdminRichMenuPage() {
       });
       const createData = await createRes.json().catch(() => ({}));
       if (!createRes.ok) {
+        // #region agent log
+        fetch("http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
+          body: JSON.stringify({
+            sessionId: "d6e810",
+            hypothesisId: "H1_H4",
+            location: "admin/richmenu/page.tsx:register create failed",
+            message: "Register Owner Rich Menu create API error",
+            data: { status: createRes.status, error: createData.error, message: createData.message, createDataKeys: Object.keys(createData) },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         setRegisterError(createData.error || createData.message || `Error ${createRes.status}`);
         return;
       }

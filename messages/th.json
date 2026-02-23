@@ -127,6 +127,8 @@
     "reserved": "จองแล้ว",
     "clearReservation": "ยกเลิกการจอง",
     "reservedByName": "ชื่อผู้จอง",
-    "reservedByContact": "ติดต่อผู้จอง (เบอร์ / LINE)"
+    "reservedByContact": "ติดต่อผู้จอง (เบอร์ / LINE)",
+    "contractCompleted": "ครบสัญญา",
+    "contractEnded": "ครบสัญญาแล้ว"
   }
 }

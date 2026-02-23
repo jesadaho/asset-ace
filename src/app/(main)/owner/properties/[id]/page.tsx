@@ -62,6 +62,17 @@ type RentalHistoryItem = {
   rentPriceAtThatTime: number;
 };
 
+function isContractEnded(contractStartDate: string, leaseDurationMonths: number): boolean {
+  const start = new Date(contractStartDate);
+  if (Number.isNaN(start.getTime())) return false;
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + leaseDurationMonths);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  return today >= end;
+}
+
 export default function PropertyDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -806,8 +817,11 @@ export default function PropertyDetailPage() {
 
             {property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.contractStartDate) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
+                <h3 className="text-sm font-semibold text-[#0F172A] mb-3 flex items-center gap-2 flex-wrap">
                   {t("residentAgent")}
+                  {property.status === "Occupied" && property.contractStartDate && property.leaseDurationMonths != null && isContractEnded(property.contractStartDate, property.leaseDurationMonths) && (
+                    <Badge variant="default">{t("contractEnded")}</Badge>
+                  )}
                 </h3>
                 <div className="space-y-1 text-sm text-slate-600">
                   {(property.tenantName || property.tenantLineId) && (
@@ -969,7 +983,11 @@ export default function PropertyDetailPage() {
                   {rentalHistory.map((record) => (
                     <li key={record.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
                       <div className="text-sm text-slate-600 space-y-0.5">
-                        <p><span className="font-medium text-[#0F172A]">{record.tenantName}</span>{record.agentName ? ` · ${t("agent")}: ${record.agentName}` : ""}</p>
+                        <p className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-[#0F172A]">{record.tenantName}</span>
+                          {record.agentName ? <span>· {t("agent")}: {record.agentName}</span> : null}
+                          {record.endDate ? <Badge variant="default">{t("contractCompleted")}</Badge> : null}
+                        </p>
                         <p>{t("contractStart")}: {record.startDate} {record.endDate ? `– ${record.endDate}` : `(${t("current")})`}</p>
                         <p>{t("leaseDuration")}: {record.durationMonths} {t("months")} · ฿{record.rentPriceAtThatTime.toLocaleString()}{tProps("perMonth")}</p>
                         {record.contractUrl && (

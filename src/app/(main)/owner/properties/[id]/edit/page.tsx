@@ -96,6 +96,28 @@ type PropertyData = {
   reservedByContact?: string;
 };
 
+type RentalHistoryItem = {
+  id: string;
+  tenantName: string;
+  agentName?: string;
+  startDate: string;
+  endDate: string | null;
+  durationMonths: number;
+  contractUrl?: string;
+  rentPriceAtThatTime: number;
+};
+
+function isContractEnded(contractStartDate: string, leaseDurationMonths: number): boolean {
+  const start = new Date(contractStartDate);
+  if (Number.isNaN(start.getTime())) return false;
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + leaseDurationMonths);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  return today >= end;
+}
+
 const LISTING_PLATFORMS = [
   "Facebook Marketplace",
   "DDproperty",
@@ -159,6 +181,8 @@ export default function EditPropertyPage() {
   const [reserveLoading, setReserveLoading] = useState(false);
   const [reserveName, setReserveName] = useState("");
   const [reserveContact, setReserveContact] = useState("");
+  const [rentalHistory, setRentalHistory] = useState<RentalHistoryItem[]>([]);
+  const [rentalHistoryLoading, setRentalHistoryLoading] = useState(false);
   const [existingImageKeys, setExistingImageKeys] = useState<string[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -197,6 +221,33 @@ export default function EditPropertyPage() {
     setReservedByName(p.reservedByName ?? "");
     setReservedByContact(p.reservedByContact ?? "");
   };
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    async function fetchHistory() {
+      setRentalHistoryLoading(true);
+      try {
+        const liff = (await import("@line/liff")).default;
+        const token = liff.getAccessToken();
+        if (!token || cancelled) return;
+        const res = await fetch(`/api/owner/properties/${id}/rental-history`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (cancelled) return;
+        if (res.ok) {
+          const data = await res.json();
+          setRentalHistory(data.history ?? []);
+        }
+      } catch {
+        if (!cancelled) setRentalHistory([]);
+      } finally {
+        if (!cancelled) setRentalHistoryLoading(false);
+      }
+    }
+    fetchHistory();
+    return () => { cancelled = true; };
+  }, [id]);
 
   useEffect(() => {
     if (!id) {
@@ -1344,8 +1395,11 @@ export default function EditPropertyPage() {
 
           {status === "Occupied" && (
             <section className="space-y-4">
-              <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+              <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide flex items-center gap-2 flex-wrap">
                 Resident Details
+                {contractStartDate.trim() && !Number.isNaN(parseInt(leaseDurationMonths, 10)) && isContractEnded(contractStartDate, parseInt(leaseDurationMonths, 10)) && (
+                  <Badge variant="default">{t("contractEnded")}</Badge>
+                )}
               </h2>
               <div>
                 <label
@@ -1475,6 +1529,37 @@ export default function EditPropertyPage() {
               </div>
             </section>
           )}
+
+          <hr className="border-t-2 border-slate-200 my-6" aria-hidden />
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+              {t("rentalHistory")}
+            </h2>
+            {rentalHistoryLoading ? (
+              <p className="text-sm text-slate-500">{t("loading")}</p>
+            ) : rentalHistory.length === 0 ? (
+              <p className="text-sm text-slate-500">{t("noRentalHistory")}</p>
+            ) : (
+              <ul className="space-y-3">
+                {rentalHistory.map((record) => (
+                  <li key={record.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                    <div className="text-sm text-slate-600 space-y-0.5">
+                      <p className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-[#0F172A]">{record.tenantName}</span>
+                        {record.agentName ? <span>· {t("agent")}: {record.agentName}</span> : null}
+                        {record.endDate ? <Badge variant="default">{t("contractCompleted")}</Badge> : null}
+                      </p>
+                      <p>{t("contractStart")}: {record.startDate} {record.endDate ? `– ${record.endDate}` : `(${t("current")})`}</p>
+                      <p>{t("leaseDuration")}: {record.durationMonths} {t("months")} · ฿{record.rentPriceAtThatTime.toLocaleString()}{tProps("perMonth")}</p>
+                      {record.contractUrl && (
+                        <a href={record.contractUrl} target="_blank" rel="noopener noreferrer" className="text-[#10B981] hover:underline text-sm">{t("viewContract")}</a>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
 
           {status === "Available" && (
             <section className="space-y-3">
