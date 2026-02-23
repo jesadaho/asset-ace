@@ -130,5 +130,33 @@
     "reservedByContact": "Contact (phone / LINE)",
     "contractCompleted": "Contract completed",
     "contractEnded": "Contract ended"
+  },
+  "marketplace": {
+    "title": "Agent Marketplace",
+    "welcome": "Welcome",
+    "searchPlaceholder": "Search by area or address...",
+    "filterByLocationPrice": "Filter by Location & Price",
+    "location": "Location",
+    "locationPlaceholder": "District or address",
+    "minPrice": "Min price (฿)",
+    "maxPrice": "Max price (฿)",
+    "noLimit": "No limit",
+    "applyFilters": "Apply",
+    "clearFilters": "Clear",
+    "closeFilters": "Close",
+    "loading": "Loading...",
+    "failedToLoad": "Failed to load listings",
+    "noListings": "No properties open for agents yet",
+    "commissionBadge": "Commission: 1 Month",
+    "viewDetails": "View Details"
+  },
+  "agentProperty": {
+    "title": "Property Details",
+    "backToMarketplace": "Back to Marketplace",
+    "requestToAgent": "Request to Agent",
+    "loading": "Loading...",
+    "notFound": "Property not found",
+    "failedToLoad": "Failed to load",
+    "requestSent": "Request sent. The owner will get back to you."
   }
 }

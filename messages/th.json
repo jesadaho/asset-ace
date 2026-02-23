@@ -130,5 +130,33 @@
     "reservedByContact": "ติดต่อผู้จอง (เบอร์ / LINE)",
     "contractCompleted": "ครบสัญญา",
     "contractEnded": "ครบสัญญาแล้ว"
+  },
+  "marketplace": {
+    "title": "ตลาดตัวแทน",
+    "welcome": "ยินดีต้อนรับ",
+    "searchPlaceholder": "ค้นหาตามพื้นที่หรือที่อยู่...",
+    "filterByLocationPrice": "กรองตามพื้นที่และราคา",
+    "location": "พื้นที่",
+    "locationPlaceholder": "เขต หรือที่อยู่",
+    "minPrice": "ราคาขั้นต่ำ (฿)",
+    "maxPrice": "ราคาสูงสุด (฿)",
+    "noLimit": "ไม่จำกัด",
+    "applyFilters": "ใช้ตัวกรอง",
+    "clearFilters": "ล้างตัวกรอง",
+    "closeFilters": "ปิด",
+    "loading": "กำลังโหลด...",
+    "failedToLoad": "โหลดรายการไม่สำเร็จ",
+    "noListings": "ยังไม่มีรายการที่เปิดให้ตัวแทน",
+    "commissionBadge": "คอมมิชชั่น: 1 เดือน",
+    "viewDetails": "ดูรายละเอียด"
+  },
+  "agentProperty": {
+    "title": "รายละเอียดทรัพย์สิน",
+    "backToMarketplace": "กลับไปตลาดตัวแทน",
+    "requestToAgent": "ติดต่อเพื่อเป็นตัวแทน",
+    "loading": "กำลังโหลด...",
+    "notFound": "ไม่พบทรัพย์สิน",
+    "failedToLoad": "โหลดไม่สำเร็จ",
+    "requestSent": "ส่งคำขอแล้ว เจ้าของจะติดต่อกลับ"
   }
 }
