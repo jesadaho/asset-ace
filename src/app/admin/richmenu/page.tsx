@@ -106,7 +106,16 @@ export default function AdminRichMenuPage() {
       const createData = await createRes.json().catch(() => ({}));
       if (!createRes.ok) {
         const msg = createData.error || createData.message || `Error ${createRes.status}`;
-        const detail = [createData.message, createData.details].filter(Boolean).join(" — ");
+        const detailsRaw = createData.details;
+        const detailsStr =
+          detailsRaw == null
+            ? ""
+            : Array.isArray(detailsRaw)
+              ? detailsRaw.map((d: { message?: string; property?: string }) => [d.property, d.message].filter(Boolean).join(": ")).join("; ")
+              : typeof detailsRaw === "object"
+                ? JSON.stringify(detailsRaw)
+                : String(detailsRaw);
+        const detail = [createData.message, detailsStr].filter(Boolean).join(" — ");
         setRegisterError(detail ? `${msg}: ${detail}` : msg);
         return;
       }
