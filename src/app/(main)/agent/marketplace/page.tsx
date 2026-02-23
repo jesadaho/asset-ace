@@ -17,8 +17,10 @@ type Property = {
   id: string;
   name: string;
   type: string;
+  status?: string;
   price: number;
   address: string;
+  openForAgent?: boolean;
   imageUrl?: string;
 };
 
@@ -95,15 +97,19 @@ export default function AgentMarketplacePage() {
             id: string;
             name: string;
             type: string;
+            status?: string;
             price: number;
             address: string;
+            openForAgent?: boolean;
             imageUrl?: string;
           }) => ({
             id: p.id,
             name: p.name,
             type: p.type,
+            status: p.status,
             price: p.price,
             address: p.address,
+            openForAgent: p.openForAgent,
             imageUrl: p.imageUrl,
           })
         );
@@ -407,14 +413,44 @@ export default function AgentMarketplacePage() {
                       <ImageIcon className="h-12 w-12" aria-hidden />
                     </div>
                   )}
-                  <span className="absolute top-2 right-2">
-                    <Badge
-                      variant="success"
-                      className="bg-[#10B981]/90 text-white border-[#10B981]"
-                    >
-                      {t("commissionBadge")}
-                    </Badge>
-                  </span>
+                  <div className="absolute inset-x-2 top-2 flex flex-wrap items-start justify-between gap-2">
+                    {property.status && (
+                      <Badge
+                        variant={
+                          property.status === "Available"
+                            ? "success"
+                            : property.status === "Occupied"
+                              ? "warning"
+                              : "default"
+                        }
+                        className={
+                          property.status === "Available"
+                            ? "bg-emerald-500/90 text-white border-emerald-600"
+                            : property.status === "Occupied"
+                              ? "bg-amber-500/90 text-white border-amber-600"
+                              : "bg-slate-500/90 text-white border-slate-600"
+                        }
+                      >
+                        {tProps(`status.${property.status}`)}
+                      </Badge>
+                    )}
+                    <span className="flex flex-wrap gap-1.5">
+                      {property.openForAgent && (
+                        <Badge
+                          variant="success"
+                          className="bg-[#10B981]/90 text-white border-[#10B981]"
+                        >
+                          {t("openForAgentBadge")}
+                        </Badge>
+                      )}
+                      <Badge
+                        variant="success"
+                        className="bg-[#10B981]/90 text-white border-[#10B981]"
+                      >
+                        {t("commissionBadge")}
+                      </Badge>
+                    </span>
+                  </div>
                 </div>
                 <div className="p-4">
                   <h2 className="font-bold text-[#0F172A] text-base">

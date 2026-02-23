@@ -108,8 +108,10 @@ export async function GET(request: NextRequest) {
           id: doc._id.toString(),
           name: doc.name,
           type: doc.type,
+          status: doc.status,
           price: doc.price,
           address: doc.address,
+          openForAgent: !!doc.openForAgent,
           imageUrl: imageUrl ?? undefined,
         };
       })
