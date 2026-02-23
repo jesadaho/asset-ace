@@ -433,37 +433,22 @@ export default function AgentPropertyDetailPage() {
                 {t("goToCompleteProfile")}
               </Link>
             </div>
-          ) : property.openForAgent === false && property.status === "Available" ? (
-            <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center">
+          ) : property.openForAgent === false ? (
+            <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center space-y-3">
               <p className="text-sm text-slate-600">
-                {t("requestDisabledNotOpen")}
+                {property.status === "Available"
+                  ? t("requestDisabledNotOpen")
+                  : tMarket("ownerManagedBadge")}
               </p>
-              <div className="mt-3 flex flex-col gap-2">
-                <button
-                  type="button"
-                  disabled
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-slate-300 text-slate-500 font-medium cursor-not-allowed min-h-[48px]"
-                  aria-disabled="true"
-                >
-                  <MessageCircle className="h-5 w-5" aria-hidden />
-                  {t("contactOwner")}
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-slate-300 text-slate-500 font-medium cursor-not-allowed min-h-[48px]"
-                  aria-disabled="true"
-                >
-                  <Copy className="h-5 w-5" aria-hidden />
-                  {t("copyData")}
-                </button>
-              </div>
-            </div>
-          ) : property.openForAgent === false && property.status !== "Available" ? (
-            <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center">
-              <p className="text-sm text-slate-600">
-                {tMarket("ownerManagedBadge")}
-              </p>
+              <button
+                type="button"
+                disabled
+                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#10B981]/40 text-white font-medium cursor-not-allowed min-h-[48px] border-2 border-[#10B981]/50"
+                aria-disabled="true"
+              >
+                <MessageCircle className="h-5 w-5" aria-hidden />
+                {t("requestContactWorkWithOwner")}
+              </button>
             </div>
           ) : (
             <button
