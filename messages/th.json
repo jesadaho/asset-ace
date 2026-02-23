@@ -153,6 +153,7 @@
     "loadMore": "โหลดเพิ่ม",
     "showAll": "แสดงทั้งหมด",
     "openForAgentBadge": "เปิดให้ตัวแทน",
+    "ownerManagedBadge": "เจ้าของดูแลเอง",
     "commissionBadge": "คอมมิชชั่น: 1 เดือน",
     "viewDetails": "ดูรายละเอียด"
   },
@@ -160,6 +161,7 @@
     "title": "รายละเอียดทรัพย์สิน",
     "backToMarketplace": "กลับไปตลาดตัวแทน",
     "requestToAgent": "ติดต่อเพื่อเป็นตัวแทน",
+    "requestDisabledNotOpen": "รายการนี้เจ้าของดูแลเอง ไม่สามารถติดต่อหรือคัดลอกได้",
     "loading": "กำลังโหลด...",
     "notFound": "ไม่พบทรัพย์สิน",
     "failedToLoad": "โหลดไม่สำเร็จ",

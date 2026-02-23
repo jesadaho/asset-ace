@@ -22,10 +22,10 @@ export async function GET(
   try {
     await connectDB();
     const doc = await Property.findOne({ _id: id }).lean();
-    const openForAgent = (doc as { openForAgent?: boolean }).openForAgent;
-    if (!doc || !openForAgent) {
+    if (!doc) {
       return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
+    const openForAgent = !!(doc as { openForAgent?: boolean }).openForAgent;
 
     const keys = (doc as { imageKeys?: string[] }).imageKeys ?? [];
     const imageUrls: string[] = [];
@@ -46,6 +46,7 @@ export async function GET(
       squareMeters: (doc as { squareMeters?: string }).squareMeters,
       amenities: (doc as { amenities?: string[] }).amenities ?? [],
       imageUrls,
+      openForAgent,
     });
   } catch (err) {
     console.error("[GET /api/agent/property/[id]]", err);

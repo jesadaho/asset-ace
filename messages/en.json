@@ -153,6 +153,7 @@
     "loadMore": "Load more",
     "showAll": "Show all",
     "openForAgentBadge": "Open for agents",
+    "ownerManagedBadge": "Owner managed",
     "commissionBadge": "Commission: 1 Month",
     "viewDetails": "View Details"
   },
@@ -160,6 +161,7 @@
     "title": "Property Details",
     "backToMarketplace": "Back to Marketplace",
     "requestToAgent": "Request to Agent",
+    "requestDisabledNotOpen": "This listing is managed by the owner. Contact and copy are not available.",
     "loading": "Loading...",
     "notFound": "Property not found",
     "failedToLoad": "Failed to load",

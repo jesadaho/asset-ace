@@ -443,6 +443,14 @@ export default function AgentMarketplacePage() {
                           {t("openForAgentBadge")}
                         </Badge>
                       )}
+                      {!property.openForAgent && (
+                        <Badge
+                          variant="default"
+                          className="bg-slate-500/90 text-white border-slate-600"
+                        >
+                          {t("ownerManagedBadge")}
+                        </Badge>
+                      )}
                       <Badge
                         variant="success"
                         className="bg-[#10B981]/90 text-white border-[#10B981]"

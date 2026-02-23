@@ -19,6 +19,7 @@ type PropertyDetail = {
   squareMeters?: string;
   amenities?: string[];
   imageUrls?: string[];
+  openForAgent?: boolean;
 };
 
 export default function AgentPropertyDetailPage() {
@@ -92,6 +93,7 @@ export default function AgentPropertyDetailPage() {
           squareMeters: data.squareMeters,
           amenities: data.amenities ?? [],
           imageUrls: data.imageUrls ?? [],
+          openForAgent: data.openForAgent,
         });
         setError(null);
       } catch (err) {
@@ -201,14 +203,32 @@ export default function AgentPropertyDetailPage() {
             </div>
           )}
           <div className="p-4">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start justify-between gap-2 flex-wrap">
               <h2 className="text-xl font-bold text-[#0F172A]">{property.name}</h2>
-              <Badge
-                variant="success"
-                className="bg-[#10B981]/90 text-white border-[#10B981] shrink-0"
-              >
-                {tMarket("commissionBadge")}
-              </Badge>
+              <span className="flex flex-wrap gap-1.5 shrink-0">
+                {property.openForAgent !== false && (
+                  <Badge
+                    variant="success"
+                    className="bg-[#10B981]/90 text-white border-[#10B981]"
+                  >
+                    {tMarket("openForAgentBadge")}
+                  </Badge>
+                )}
+                {property.openForAgent === false && (
+                  <Badge
+                    variant="default"
+                    className="bg-slate-500/90 text-white border-slate-600"
+                  >
+                    {tMarket("ownerManagedBadge")}
+                  </Badge>
+                )}
+                <Badge
+                  variant="success"
+                  className="bg-[#10B981]/90 text-white border-[#10B981]"
+                >
+                  {tMarket("commissionBadge")}
+                </Badge>
+              </span>
             </div>
             <p className="text-slate-500 text-sm mt-0.5">{property.type}</p>
             <p className="font-semibold text-[#0F172A] mt-2">
@@ -268,6 +288,21 @@ export default function AgentPropertyDetailPage() {
               <p className="text-sm font-medium text-[#0D9668]">
                 {t("requestSent")}
               </p>
+            </div>
+          ) : property.openForAgent === false ? (
+            <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center">
+              <p className="text-sm text-slate-600">
+                {t("requestDisabledNotOpen")}
+              </p>
+              <button
+                type="button"
+                disabled
+                className="mt-3 w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-slate-300 text-slate-500 font-medium cursor-not-allowed min-h-[48px]"
+                aria-disabled="true"
+              >
+                <MessageCircle className="h-5 w-5" aria-hidden />
+                {t("requestToAgent")}
+              </button>
             </div>
           ) : (
             <button
