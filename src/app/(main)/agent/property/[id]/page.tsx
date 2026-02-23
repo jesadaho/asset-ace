@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, ImageIcon, MessageCircle } from "lucide-react";
+import { ArrowLeft, ImageIcon, MessageCircle, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
 type PropertyDetail = {
@@ -21,7 +21,20 @@ type PropertyDetail = {
   amenities?: string[];
   imageUrls?: string[];
   openForAgent?: boolean;
+  contractStartDate?: string;
+  leaseDurationMonths?: number;
 };
+
+function isContractEnded(
+  contractStartDate: string | undefined,
+  leaseDurationMonths: number | undefined
+): boolean {
+  if (contractStartDate == null || leaseDurationMonths == null) return false;
+  const start = new Date(contractStartDate);
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + leaseDurationMonths);
+  return new Date() >= end;
+}
 
 export default function AgentPropertyDetailPage() {
   const params = useParams();
@@ -96,6 +109,8 @@ export default function AgentPropertyDetailPage() {
           amenities: data.amenities ?? [],
           imageUrls: data.imageUrls ?? [],
           openForAgent: data.openForAgent,
+          contractStartDate: data.contractStartDate,
+          leaseDurationMonths: data.leaseDurationMonths,
         });
         setError(null);
       } catch (err) {
@@ -224,6 +239,14 @@ export default function AgentPropertyDetailPage() {
                     {tMarket("ownerManagedBadge")}
                   </Badge>
                 )}
+                {isContractEnded(property.contractStartDate, property.leaseDurationMonths) && (
+                  <Badge
+                    variant="default"
+                    className="bg-slate-500/90 text-white border-slate-600"
+                  >
+                    {tProps("contractEnded")}
+                  </Badge>
+                )}
                 <Badge
                   variant="success"
                   className="bg-[#10B981]/90 text-white border-[#10B981]"
@@ -237,6 +260,25 @@ export default function AgentPropertyDetailPage() {
               ฿{property.price.toLocaleString()} {tProps("perMonth")}
             </p>
             <p className="text-slate-600 text-sm mt-1">{property.address}</p>
+            {(property.contractStartDate != null || property.leaseDurationMonths != null) && (
+              <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600">
+                {property.contractStartDate != null && (
+                  <span>
+                    {tDetail("contractStart")}:{" "}
+                    {new Date(property.contractStartDate).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
+                )}
+                {property.leaseDurationMonths != null && (
+                  <span>
+                    {tDetail("leaseDuration")}: {property.leaseDurationMonths} {tDetail("months")}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -296,15 +338,26 @@ export default function AgentPropertyDetailPage() {
               <p className="text-sm text-slate-600">
                 {t("requestDisabledNotOpen")}
               </p>
-              <button
-                type="button"
-                disabled
-                className="mt-3 w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-slate-300 text-slate-500 font-medium cursor-not-allowed min-h-[48px]"
-                aria-disabled="true"
-              >
-                <MessageCircle className="h-5 w-5" aria-hidden />
-                {t("requestToAgent")}
-              </button>
+              <div className="mt-3 flex flex-col gap-2">
+                <button
+                  type="button"
+                  disabled
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-slate-300 text-slate-500 font-medium cursor-not-allowed min-h-[48px]"
+                  aria-disabled="true"
+                >
+                  <MessageCircle className="h-5 w-5" aria-hidden />
+                  {t("contactOwner")}
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-slate-300 text-slate-500 font-medium cursor-not-allowed min-h-[48px]"
+                  aria-disabled="true"
+                >
+                  <Copy className="h-5 w-5" aria-hidden />
+                  {t("copyData")}
+                </button>
+              </div>
             </div>
           ) : (
             <button

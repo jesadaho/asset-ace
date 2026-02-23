@@ -34,6 +34,9 @@ export async function GET(
       if (url) imageUrls.push(url);
     }
 
+    const contractStartDate = (doc as { contractStartDate?: Date }).contractStartDate;
+    const leaseDurationMonths = (doc as { leaseDurationMonths?: number }).leaseDurationMonths;
+
     return NextResponse.json({
       id: (doc as { _id: mongoose.Types.ObjectId })._id.toString(),
       name: (doc as { name: string }).name,
@@ -48,6 +51,8 @@ export async function GET(
       amenities: (doc as { amenities?: string[] }).amenities ?? [],
       imageUrls,
       openForAgent,
+      ...(contractStartDate != null && { contractStartDate: contractStartDate.toISOString() }),
+      ...(leaseDurationMonths != null && { leaseDurationMonths }),
     });
   } catch (err) {
     console.error("[GET /api/agent/property/[id]]", err);

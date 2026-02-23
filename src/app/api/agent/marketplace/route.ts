@@ -39,10 +39,25 @@ export async function GET(request: NextRequest) {
     const filter: Record<string, unknown> = {};
     if (openForAgent) {
       filter.openForAgent = true;
+    } else {
+      // "Show all": only show open-for-agent OR owner-managed that are Available (ไม่แสดงห้องไม่ว่างในส่วนเจ้าของดูแลเอง)
+      filter.$and = [
+        {
+          $or: [
+            { openForAgent: true },
+            { openForAgent: { $ne: true }, status: "Available" },
+          ],
+        },
+      ];
     }
 
     if (location) {
-      filter.address = { $regex: location, $options: "i" };
+      const locationCond = { address: { $regex: location, $options: "i" } };
+      if (filter.$and) {
+        (filter.$and as unknown[]).push(locationCond);
+      } else {
+        filter.address = (locationCond as { address: unknown }).address;
+      }
     }
     if (
       (minPriceNum != null && !Number.isNaN(minPriceNum)) ||
@@ -55,7 +70,12 @@ export async function GET(request: NextRequest) {
       if (maxPriceNum != null && !Number.isNaN(maxPriceNum)) {
         priceCond.$lte = maxPriceNum;
       }
-      filter.price = priceCond;
+      const priceFilter = { price: priceCond };
+      if (filter.$and) {
+        (filter.$and as unknown[]).push(priceFilter);
+      } else {
+        filter.price = priceCond;
+      }
     }
 
     // Cursor-based pagination: next page = docs strictly before (createdAt desc, then _id desc)
@@ -69,13 +89,18 @@ export async function GET(request: NextRequest) {
         /^[a-f0-9A-F]{24}$/.test(cursorId)
       ) {
         const { ObjectId } = await import("mongodb");
-        filter.$or = [
+        const cursorOr = [
           { createdAt: { $lt: new Date(createdAtMs) } },
           {
             createdAt: new Date(createdAtMs),
             _id: { $lt: new ObjectId(cursorId) },
           },
         ];
+        if (filter.$and) {
+          (filter.$and as unknown[]).push({ $or: cursorOr });
+        } else {
+          filter.$or = cursorOr;
+        }
       }
     }
 

@@ -161,6 +161,8 @@
     "title": "Property Details",
     "backToMarketplace": "Back to Marketplace",
     "requestToAgent": "Request to Agent",
+    "contactOwner": "Contact owner",
+    "copyData": "Copy data",
     "requestDisabledNotOpen": "This listing is managed by the owner. Contact and copy are not available.",
     "loading": "Loading...",
     "notFound": "Property not found",
