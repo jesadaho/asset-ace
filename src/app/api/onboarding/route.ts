@@ -117,6 +117,23 @@ export async function POST(request: NextRequest) {
       } else {
         richMenuDebug = { attempted: false, linked: false, message: "No channel token" };
       }
+    } else if (role === "agent") {
+      const agentRichMenuId =
+        process.env.LINE_RICH_MENU_ID_AGENT ??
+        "richmenu-0a7785cb35c79c6b32d2151d39177a91";
+      const hasToken = Boolean(process.env.LINE_CHANNEL_ACCESS_TOKEN);
+      if (hasToken) {
+        const result = await linkRichMenuToUser(lineUserId, agentRichMenuId);
+        richMenuDebug = {
+          attempted: true,
+          linked: result.linked,
+          status: result.status,
+          message: result.message,
+          richMenuId: agentRichMenuId,
+        };
+      } else {
+        richMenuDebug = { attempted: false, linked: false, message: "No channel token" };
+      }
     }
 
     return NextResponse.json({ success: true, debug: richMenuDebug ? { richMenu: richMenuDebug } : undefined });

@@ -114,6 +114,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // LINE allows chatBarText max 14 characters
+  body.chatBarText = (body.chatBarText || "Menu").slice(0, 14);
+
   try {
     // #region agent log
     const bodySummary = {
