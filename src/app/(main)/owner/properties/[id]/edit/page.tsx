@@ -1373,7 +1373,7 @@ export default function EditPropertyPage() {
               setSetRentedModalOpen(true);
               setSetRentedError(null);
             }}
-            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-red-200 bg-red-50 text-red-800 text-base font-medium hover:bg-red-100 tap-target min-h-[48px]"
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-green-200 bg-green-50 text-green-800 text-base font-medium hover:bg-green-100 tap-target min-h-[48px]"
           >
             {t("gotTenant")}
           </button>
