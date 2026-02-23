@@ -169,6 +169,8 @@ export async function POST(request: NextRequest) {
     // #endregion
 
     if (!res.ok) {
+      // Visible in Vercel Function Logs when running on Vercel
+      console.error("[Rich Menu] LINE API error", { status: res.status, message: data.message, details: data.details, ...data });
       return NextResponse.json(
         { error: "LINE API error", status: res.status, ...data },
         { status: res.status }

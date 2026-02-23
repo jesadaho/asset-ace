@@ -61,7 +61,9 @@ export default function AdminRichMenuPage() {
       }
       // #region agent log
       const rms = (data as { richmenus?: { richMenuId?: string; name?: string }[] }).richmenus ?? [];
-      fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'H3',location:'admin/richmenu/page.tsx loadList',message:'After setListData',data:{richmenusLength:rms.length,firstTwo:rms.slice(0,2).map(m=>({id:m.richMenuId,name:m.name})),dataKeys:Object.keys(data as object)},timestamp:Date.now()})}).catch(()=>{});
+      if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+        fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'H3',location:'admin/richmenu/page.tsx loadList',message:'After setListData',data:{richmenusLength:rms.length,firstTwo:rms.slice(0,2).map(m=>({id:m.richMenuId,name:m.name})),dataKeys:Object.keys(data as object)},timestamp:Date.now()})}).catch(()=>{});
+      }
       // #endregion
       setListData(data);
     } catch (e) {
@@ -110,20 +112,25 @@ export default function AdminRichMenuPage() {
       const createData = await createRes.json().catch(() => ({}));
       if (!createRes.ok) {
         // #region agent log
-        fetch("http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
-          body: JSON.stringify({
-            sessionId: "d6e810",
-            hypothesisId: "H1_H4",
-            location: "admin/richmenu/page.tsx:register create failed",
-            message: "Register Owner Rich Menu create API error",
-            data: { status: createRes.status, error: createData.error, message: createData.message, createDataKeys: Object.keys(createData) },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
+        const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+        if (isLocalhost) {
+          fetch("http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
+            body: JSON.stringify({
+              sessionId: "d6e810",
+              hypothesisId: "H1_H4",
+              location: "admin/richmenu/page.tsx:register create failed",
+              message: "Register Owner Rich Menu create API error",
+              data: { status: createRes.status, error: createData.error, message: createData.message, createDataKeys: Object.keys(createData) },
+              timestamp: Date.now(),
+            }),
+          }).catch(() => {});
+        }
         // #endregion
-        setRegisterError(createData.error || createData.message || `Error ${createRes.status}`);
+        const msg = createData.error || createData.message || `Error ${createRes.status}`;
+        const detail = [createData.message, createData.details].filter(Boolean).join(" — ");
+        setRegisterError(detail ? `${msg}: ${detail}` : msg);
         return;
       }
       const richMenuId = createData.richMenuId;
@@ -385,7 +392,7 @@ export default function AdminRichMenuPage() {
           <div>
             <label className={labelClass}>Target</label>
               {/* #region agent log */}
-              {(() => {
+              {typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && (() => {
                 fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'H1_H4',location:'admin/richmenu/page.tsx Switch Target',message:'Switch dropdown render',data:{menusLength:menus.length,listDataHasRichmenus:!!listData?.richmenus,listRichmenusLength:listData?.richmenus?.length ?? 0,optionsPreview:menus.slice(0,5).map(m=>({id:m.richMenuId,label:m.name||m.chatBarText||m.richMenuId}))},timestamp:Date.now()})}).catch(()=>{});
                 return null;
               })()}
