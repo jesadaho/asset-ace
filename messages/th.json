@@ -66,7 +66,9 @@
       "Available": "ว่าง",
       "Occupied": "มีการเช่า",
       "Draft": "ฉบับร่าง"
-    }
+    },
+    "contractCompleted": "ครบสัญญา",
+    "contractEnded": "ครบสัญญาแล้ว"
   },
   "propertyDetail": {
     "title": "รายละเอียดทรัพย์สิน",
@@ -161,9 +163,16 @@
     "title": "รายละเอียดทรัพย์สิน",
     "backToMarketplace": "กลับไปตลาดตัวแทน",
     "requestToAgent": "ติดต่อเพื่อเป็นตัวแทน",
+    "requestContactWorkWithOwner": "ขอข้อมูลติดต่อ / ทำงานกับเจ้าของ",
     "contactOwner": "ติดต่อเจ้าของ",
     "copyData": "คัดลอกข้อมูล",
     "requestDisabledNotOpen": "รายการนี้เจ้าของดูแลเอง ไม่สามารถติดต่อหรือคัดลอกได้",
+    "completeProfileFirst": "กรุณากรอกโปรไฟล์ (ชื่อและเบอร์โทร) ให้ครบก่อน",
+    "goToCompleteProfile": "กรอกโปรไฟล์",
+    "ownerContact": "ข้อมูลติดต่อเจ้าของ",
+    "ownerName": "ชื่อ",
+    "ownerPhone": "เบอร์โทร",
+    "messageOnLine": "ส่งข้อความทาง LINE",
     "loading": "กำลังโหลด...",
     "notFound": "ไม่พบทรัพย์สิน",
     "failedToLoad": "โหลดไม่สำเร็จ",

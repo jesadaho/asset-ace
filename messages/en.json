@@ -66,7 +66,9 @@
       "Available": "Available",
       "Occupied": "Occupied",
       "Draft": "Draft"
-    }
+    },
+    "contractCompleted": "Contract completed",
+    "contractEnded": "Contract ended"
   },
   "propertyDetail": {
     "title": "Property Details",
@@ -161,9 +163,16 @@
     "title": "Property Details",
     "backToMarketplace": "Back to Marketplace",
     "requestToAgent": "Request to Agent",
+    "requestContactWorkWithOwner": "Request Contact / Work with Owner",
     "contactOwner": "Contact owner",
     "copyData": "Copy data",
     "requestDisabledNotOpen": "This listing is managed by the owner. Contact and copy are not available.",
+    "completeProfileFirst": "Please complete your profile (name and phone) first.",
+    "goToCompleteProfile": "Complete profile",
+    "ownerContact": "Owner contact",
+    "ownerName": "Name",
+    "ownerPhone": "Phone",
+    "messageOnLine": "Message on LINE",
     "loading": "Loading...",
     "notFound": "Property not found",
     "failedToLoad": "Failed to load",

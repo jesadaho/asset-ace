@@ -50,6 +50,14 @@ export default function AgentPropertyDetailPage() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [requestSent, setRequestSent] = useState(false);
+  const [ownerContact, setOwnerContact] = useState<{
+    name: string;
+    phone: string;
+    lineUserId: string;
+  } | null>(null);
+  const [lineChatUrl, setLineChatUrl] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [requestLoading, setRequestLoading] = useState(false);
 
   const handleCarouselScroll = useCallback(() => {
     const el = carouselRef.current;
@@ -127,8 +135,38 @@ export default function AgentPropertyDetailPage() {
     };
   }, [id, t, tAuth]);
 
-  const handleRequestToAgent = () => {
-    setRequestSent(true);
+  const handleRequestContact = async () => {
+    if (!id || requestLoading) return;
+    setRequestError(null);
+    setRequestLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setRequestError(tAuth("pleaseLogin"));
+        return;
+      }
+      const res = await fetch(`/api/agent/property/${id}/request-contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (data.code === "PROFILE_INCOMPLETE" || res.status === 400) {
+          setRequestError(data.message ?? t("completeProfileFirst"));
+        } else {
+          setRequestError(data.message ?? t("failedToLoad"));
+        }
+        return;
+      }
+      setRequestSent(true);
+      if (data.ownerContact) setOwnerContact(data.ownerContact);
+      if (data.lineChatUrl) setLineChatUrl(data.lineChatUrl);
+    } catch (err) {
+      setRequestError(err instanceof Error ? err.message : t("failedToLoad"));
+    } finally {
+      setRequestLoading(false);
+    }
   };
 
   if (loading) {
@@ -347,11 +385,53 @@ export default function AgentPropertyDetailPage() {
         )}
 
         <div className="mt-6">
-          {requestSent ? (
+          {requestSent && (ownerContact || lineChatUrl) ? (
+            <div className="rounded-xl border-2 border-[#10B981]/30 bg-[#10B981]/10 p-4 space-y-4">
+              <p className="text-sm font-medium text-[#0D9668] text-center">
+                {t("requestSent")}
+              </p>
+              {ownerContact && (
+                <div className="bg-white/60 rounded-lg p-3 text-left space-y-2">
+                  <p className="text-xs font-semibold text-[#0F172A] uppercase tracking-wide">
+                    {t("ownerContact")}
+                  </p>
+                  <p className="text-sm text-slate-700">
+                    <span className="font-medium text-slate-500">{t("ownerName")}:</span>{" "}
+                    {ownerContact.name}
+                  </p>
+                  <p className="text-sm text-slate-700">
+                    <span className="font-medium text-slate-500">{t("ownerPhone")}:</span>{" "}
+                    {ownerContact.phone}
+                  </p>
+                </div>
+              )}
+              {lineChatUrl && (
+                <a
+                  href={lineChatUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#06C755] text-white font-medium hover:opacity-90 active:opacity-80 tap-target min-h-[48px] shadow-lg"
+                >
+                  <MessageCircle className="h-5 w-5" aria-hidden />
+                  {t("messageOnLine")}
+                </a>
+              )}
+            </div>
+          ) : requestSent ? (
             <div className="rounded-xl border-2 border-[#10B981]/30 bg-[#10B981]/10 p-4 text-center">
               <p className="text-sm font-medium text-[#0D9668]">
                 {t("requestSent")}
               </p>
+            </div>
+          ) : requestError ? (
+            <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4 text-center space-y-3">
+              <p className="text-sm text-amber-800">{requestError}</p>
+              <Link
+                href="/onboarding?role=agent"
+                className="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 tap-target"
+              >
+                {t("goToCompleteProfile")}
+              </Link>
             </div>
           ) : property.openForAgent === false && property.status === "Available" ? (
             <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center">
@@ -388,11 +468,21 @@ export default function AgentPropertyDetailPage() {
           ) : (
             <button
               type="button"
-              onClick={handleRequestToAgent}
-              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#10B981] text-white font-medium hover:bg-[#0D9668] active:bg-[#0B7A56] tap-target min-h-[48px] shadow-lg shadow-[#10B981]/20"
+              onClick={handleRequestContact}
+              disabled={requestLoading}
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#10B981] text-white font-medium hover:bg-[#0D9668] active:bg-[#0B7A56] tap-target min-h-[48px] shadow-lg shadow-[#10B981]/20 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <MessageCircle className="h-5 w-5" aria-hidden />
-              {t("requestToAgent")}
+              {requestLoading ? (
+                <>
+                  <span className="h-5 w-5 shrink-0 rounded-full border-2 border-white border-t-transparent animate-spin" aria-hidden />
+                  {t("loading")}
+                </>
+              ) : (
+                <>
+                  <MessageCircle className="h-5 w-5" aria-hidden />
+                  {t("requestContactWorkWithOwner")}
+                </>
+              )}
             </button>
           )}
         </div>
