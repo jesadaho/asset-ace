@@ -435,7 +435,7 @@ export default function AgentMarketplacePage() {
                       </Badge>
                     )}
                     <span className="flex flex-wrap gap-1.5">
-                      {property.openForAgent && (
+                      {(openForAgentOnly || property.openForAgent) && (
                         <Badge
                           variant="success"
                           className="bg-[#10B981]/90 text-white border-[#10B981]"
