@@ -28,7 +28,11 @@ export default function AgentMarketplacePage() {
   const tProps = useTranslations("properties");
   const { profile } = useLiff();
   const [properties, setProperties] = useState<Property[]>([]);
+  const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -36,15 +40,23 @@ export default function AgentMarketplacePage() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
+  const PAGE_SIZE = 10;
+
   const fetchProperties = useCallback(
-    async (overrides?: {
+    async (opts?: {
       location?: string;
       minPrice?: string;
       maxPrice?: string;
+      cursor?: string;
+      append?: boolean;
     }) => {
-      const loc = (overrides?.location ?? searchQuery).trim();
-      const minStr = overrides?.minPrice ?? minPrice;
-      const maxStr = overrides?.maxPrice ?? maxPrice;
+      const loc = (opts?.location ?? searchQuery).trim();
+      const minStr = opts?.minPrice ?? minPrice;
+      const maxStr = opts?.maxPrice ?? maxPrice;
+      const cursor = opts?.cursor;
+      const append = opts?.append ?? false;
+      if (append) setLoadingMore(true);
+      else setLoading(true);
       try {
         const liff = (await import("@line/liff")).default;
         const token = liff.getAccessToken();
@@ -53,11 +65,13 @@ export default function AgentMarketplacePage() {
           return;
         }
         const params = new URLSearchParams();
+        params.set("limit", String(PAGE_SIZE));
         if (loc) params.set("location", loc);
         const min = minStr.trim() ? Number(minStr) : undefined;
         const max = maxStr.trim() ? Number(maxStr) : undefined;
         if (min != null && !Number.isNaN(min)) params.set("minPrice", String(min));
         if (max != null && !Number.isNaN(max)) params.set("maxPrice", String(max));
+        if (cursor) params.set("cursor", cursor);
 
         const res = await fetch(`/api/agent/marketplace?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -89,30 +103,37 @@ export default function AgentMarketplacePage() {
             imageUrl: p.imageUrl,
           })
         );
-        setProperties(list);
+        if (append) {
+          setProperties((prev) => [...prev, ...list]);
+        } else {
+          setProperties(list);
+        }
+        if (data.totalCount !== undefined) setTotalCount(data.totalCount);
+        setHasMore(!!data.hasMore);
+        setNextCursor(data.nextCursor ?? undefined);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : t("failedToLoad"));
       } finally {
         setLoading(false);
+        setLoadingMore(false);
       }
     },
     [searchQuery, minPrice, maxPrice, t, tAuth]
   );
 
   useEffect(() => {
-    setLoading(true);
     fetchProperties();
   }, []);
 
   const applyFilters = () => {
     setSearchQuery(locationFilter);
     setFilterOpen(false);
-    setLoading(true);
     fetchProperties({
       location: locationFilter,
       minPrice,
       maxPrice,
+      append: false,
     });
   };
 
@@ -122,13 +143,22 @@ export default function AgentMarketplacePage() {
     setMaxPrice("");
     setSearchQuery("");
     setFilterOpen(false);
-    setLoading(true);
-    fetchProperties({ location: "", minPrice: "", maxPrice: "" });
+    fetchProperties({ location: "", minPrice: "", maxPrice: "", append: false });
   };
 
   const handleSearchSubmit = () => {
-    setLoading(true);
-    fetchProperties({ location: searchQuery, minPrice, maxPrice });
+    fetchProperties({ location: searchQuery, minPrice, maxPrice, append: false });
+  };
+
+  const loadMore = () => {
+    if (!nextCursor || loadingMore) return;
+    fetchProperties({
+      location: searchQuery.trim(),
+      minPrice,
+      maxPrice,
+      cursor: nextCursor,
+      append: true,
+    });
   };
 
   const hasActiveFilters =
@@ -162,6 +192,16 @@ export default function AgentMarketplacePage() {
             aria-label={t("searchPlaceholder")}
           />
         </div>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="shrink-0 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 hover:border-slate-300 hover:bg-slate-50 tap-target"
+            aria-label={t("showAll")}
+          >
+            {t("showAll")}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setFilterOpen((o) => !o)}
@@ -289,6 +329,17 @@ export default function AgentMarketplacePage() {
         </div>
       )}
 
+      {!loading && properties.length > 0 && (
+        <p className="text-slate-500 text-sm mb-3" aria-live="polite">
+          {totalCount !== undefined
+            ? t("showingPropertiesOf", {
+                count: properties.length,
+                total: totalCount,
+              })
+            : t("showingProperties", { count: properties.length })}
+        </p>
+      )}
+
       {!loading && (
         <ul className="space-y-4">
           {properties.map((property) => (
@@ -339,6 +390,29 @@ export default function AgentMarketplacePage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {!loading && hasMore && properties.length > 0 && (
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="rounded-xl border-2 border-[#10B981] bg-white px-6 py-3 text-sm font-medium text-[#10B981] hover:bg-[#10B981]/5 disabled:opacity-50 tap-target"
+          >
+            {loadingMore ? (
+              <span className="inline-flex items-center gap-2">
+                <span
+                  className="h-4 w-4 shrink-0 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin"
+                  aria-hidden
+                />
+                {t("loading")}
+              </span>
+            ) : (
+              t("loadMore")
+            )}
+          </button>
+        </div>
       )}
 
       {!loading && properties.length === 0 && !error && (

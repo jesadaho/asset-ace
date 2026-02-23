@@ -14,6 +14,12 @@ export async function GET(request: NextRequest) {
   const location = searchParams.get("location")?.trim() || "";
   const minPrice = searchParams.get("minPrice");
   const maxPrice = searchParams.get("maxPrice");
+  const limitParam = searchParams.get("limit");
+  const limit = Math.min(
+    Math.max(limitParam ? parseInt(limitParam, 10) : 10, 1),
+    50
+  );
+  const cursor = searchParams.get("cursor")?.trim() || undefined;
 
   const minPriceNum =
     minPrice !== null && minPrice !== undefined && minPrice !== ""
@@ -48,12 +54,47 @@ export async function GET(request: NextRequest) {
       filter.price = priceCond;
     }
 
+    // Cursor-based pagination: next page = docs strictly before (createdAt desc, then _id desc)
+    if (cursor) {
+      const parts = cursor.split("_");
+      const createdAtMs = parts[0] ? parseInt(parts[0], 10) : NaN;
+      const cursorId = parts.slice(1).join("_");
+      if (
+        !Number.isNaN(createdAtMs) &&
+        cursorId &&
+        /^[a-f0-9A-F]{24}$/.test(cursorId)
+      ) {
+        const { ObjectId } = await import("mongodb");
+        filter.$or = [
+          { createdAt: { $lt: new Date(createdAtMs) } },
+          {
+            createdAt: new Date(createdAtMs),
+            _id: { $lt: new ObjectId(cursorId) },
+          },
+        ];
+      }
+    }
+
+    const isFirstPage = !cursor;
+    const totalCount = isFirstPage
+      ? await Property.countDocuments(filter)
+      : undefined;
+
     const docs = await Property.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(limit + 1)
       .lean();
 
+    const hasMore = docs.length > limit;
+    const page = hasMore ? docs.slice(0, limit) : docs;
+    const lastDoc = page[page.length - 1];
+    const nextCursor =
+      hasMore && lastDoc
+        ? `${(lastDoc as { createdAt?: Date }).createdAt?.getTime() ?? 0}_${lastDoc._id.toString()}`
+        : undefined;
+
     const properties = await Promise.all(
-      docs.map(async (doc) => {
+      page.map(async (doc) => {
         const firstKey =
           doc.imageKeys && doc.imageKeys.length > 0 ? doc.imageKeys[0] : null;
         const imageUrl = firstKey
@@ -70,7 +111,12 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    return NextResponse.json({ properties });
+    return NextResponse.json({
+      properties,
+      ...(totalCount !== undefined && { totalCount }),
+      hasMore: !!hasMore,
+      ...(nextCursor && { nextCursor }),
+    });
   } catch (err) {
     console.error("[GET /api/agent/marketplace]", err);
     return NextResponse.json(

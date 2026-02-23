@@ -147,6 +147,10 @@
     "loading": "กำลังโหลด...",
     "failedToLoad": "โหลดรายการไม่สำเร็จ",
     "noListings": "ยังไม่มีรายการที่เปิดให้ตัวแทน",
+    "showingProperties": "แสดง {count} รายการ",
+    "showingPropertiesOf": "แสดง {count} จาก {total} รายการ",
+    "loadMore": "โหลดเพิ่ม",
+    "showAll": "แสดงทั้งหมด",
     "commissionBadge": "คอมมิชชั่น: 1 เดือน",
     "viewDetails": "ดูรายละเอียด"
   },

@@ -147,6 +147,10 @@
     "loading": "Loading...",
     "failedToLoad": "Failed to load listings",
     "noListings": "No properties open for agents yet",
+    "showingProperties": "Showing {count} properties",
+    "showingPropertiesOf": "Showing {count} of {total} properties",
+    "loadMore": "Load more",
+    "showAll": "Show all",
     "commissionBadge": "Commission: 1 Month",
     "viewDetails": "View Details"
   },
