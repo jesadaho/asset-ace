@@ -223,6 +223,26 @@ export default function AgentPropertyDetailPage() {
             <div className="flex items-start justify-between gap-2 flex-wrap">
               <h2 className="text-xl font-bold text-[#0F172A]">{property.name}</h2>
               <span className="flex flex-wrap gap-1.5 shrink-0">
+                {property.status && (
+                  <Badge
+                    variant={
+                      property.status === "Available"
+                        ? "success"
+                        : property.status === "Occupied"
+                          ? "warning"
+                          : "default"
+                    }
+                    className={
+                      property.status === "Available"
+                        ? "bg-emerald-500/90 text-white border-emerald-600"
+                        : property.status === "Occupied"
+                          ? "bg-amber-500/90 text-white border-amber-600"
+                          : "bg-slate-500/90 text-white border-slate-600"
+                    }
+                  >
+                    {tProps(`status.${property.status}`)}
+                  </Badge>
+                )}
                 {property.status === "Available" && property.openForAgent !== false && (
                   <Badge
                     variant="success"
@@ -333,7 +353,7 @@ export default function AgentPropertyDetailPage() {
                 {t("requestSent")}
               </p>
             </div>
-          ) : property.openForAgent === false ? (
+          ) : property.openForAgent === false && property.status === "Available" ? (
             <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center">
               <p className="text-sm text-slate-600">
                 {t("requestDisabledNotOpen")}
@@ -358,6 +378,12 @@ export default function AgentPropertyDetailPage() {
                   {t("copyData")}
                 </button>
               </div>
+            </div>
+          ) : property.openForAgent === false && property.status !== "Available" ? (
+            <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center">
+              <p className="text-sm text-slate-600">
+                {tMarket("ownerManagedBadge")}
+              </p>
             </div>
           ) : (
             <button
