@@ -435,11 +435,11 @@ export default function AgentPropertyDetailPage() {
             </div>
           ) : property.openForAgent === false ? (
             <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center space-y-3">
-              <p className="text-sm text-slate-600">
-                {property.status === "Available"
-                  ? t("requestDisabledNotOpen")
-                  : tMarket("ownerManagedBadge")}
-              </p>
+              {property.status === "Available" && (
+                <p className="text-sm text-slate-600">
+                  {t("requestDisabledNotOpen")}
+                </p>
+              )}
               <button
                 type="button"
                 disabled
