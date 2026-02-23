@@ -15,6 +15,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { uploadFilesWithProgress } from "@/lib/uploadWithProgress";
 import { useToast } from "@/components/ui/Toast";
 import { useTranslations } from "next-intl";
@@ -50,6 +51,15 @@ const AMENITY_OPTIONS = [
 const STATUS_OPTIONS = ["Available", "Occupied", "Draft"] as const;
 type Status = (typeof STATUS_OPTIONS)[number];
 
+const statusBadgeVariant: Record<
+  Status,
+  "success" | "error" | "default"
+> = {
+  Available: "success",
+  Occupied: "error",
+  Draft: "default",
+};
+
 const inputBase =
   "w-full rounded-lg border-b border-slate-200 bg-white px-0 py-3 text-base text-[#0F172A] placeholder:text-slate-400 transition-colors focus:border-[#003366] focus:outline-none focus:ring-0 tap-target min-h-[44px]";
 const inputError = "border-red-500 focus:border-red-500";
@@ -81,6 +91,9 @@ type PropertyData = {
   publicListing?: boolean;
   leaseDurationMonths?: number;
   contractKey?: string;
+  reservedAt?: string;
+  reservedByName?: string;
+  reservedByContact?: string;
 };
 
 const LISTING_PLATFORMS = [
@@ -139,6 +152,13 @@ export default function EditPropertyPage() {
   const [setRentedError, setSetRentedError] = useState<string | null>(null);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [reservedAt, setReservedAt] = useState<string | undefined>(undefined);
+  const [reservedByName, setReservedByName] = useState("");
+  const [reservedByContact, setReservedByContact] = useState("");
+  const [reserveModalOpen, setReserveModalOpen] = useState(false);
+  const [reserveLoading, setReserveLoading] = useState(false);
+  const [reserveName, setReserveName] = useState("");
+  const [reserveContact, setReserveContact] = useState("");
   const [existingImageKeys, setExistingImageKeys] = useState<string[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -173,6 +193,9 @@ export default function EditPropertyPage() {
     setContractKey((p as { contractKey?: string }).contractKey ?? undefined);
     setExistingImageKeys(Array.isArray(p.imageKeys) ? p.imageKeys : []);
     setExistingImageUrls(Array.isArray(p.imageUrls) ? p.imageUrls : []);
+    setReservedAt(p.reservedAt ?? undefined);
+    setReservedByName(p.reservedByName ?? "");
+    setReservedByContact(p.reservedByContact ?? "");
   };
 
   useEffect(() => {
@@ -500,6 +523,71 @@ export default function EditPropertyPage() {
       toast.show(t("checkoutFailed"));
     } finally {
       setCheckoutLoading(false);
+    }
+  };
+
+  const handleReserve = async () => {
+    if (!id) return;
+    setReserveLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setReserveLoading(false);
+        return;
+      }
+      const res = await fetch(`/api/owner/properties/${id}/reserve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          reservedByName: reserveName.trim() || undefined,
+          reservedByContact: reserveContact.trim() || undefined,
+        }),
+      });
+      if (!res.ok) {
+        setReserveLoading(false);
+        return;
+      }
+      setReserveModalOpen(false);
+      setReserveName("");
+      setReserveContact("");
+      const refetchRes = await fetch(`/api/owner/properties/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (refetchRes.ok) {
+        const data = await refetchRes.json();
+        const p: PropertyData = data.property;
+        if (p) setFormFromProperty(p);
+      }
+    } finally {
+      setReserveLoading(false);
+    }
+  };
+
+  const handleClearReservation = async () => {
+    if (!id) return;
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) return;
+      const res = await fetch(`/api/owner/properties/${id}/reserve`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const refetchRes = await fetch(`/api/owner/properties/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (refetchRes.ok) {
+        const data = await refetchRes.json();
+        const p: PropertyData = data.property;
+        if (p) setFormFromProperty(p);
+      }
+    } catch {
+      // ignore
     }
   };
 
@@ -1067,10 +1155,99 @@ export default function EditPropertyPage() {
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide mb-3">
               {t("rentalStatus")}
             </h2>
-            <p className="text-sm text-[#0F172A] font-medium mb-2">
-              {tProps(`status.${status}`)}
-            </p>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <Badge variant={statusBadgeVariant[status]} className="text-xs">
+                {tProps(`status.${status}`)}
+              </Badge>
+              {status === "Available" && reservedAt && (
+                <Badge variant="warning" className="text-xs">
+                  {t("reserved")}
+                </Badge>
+              )}
+            </div>
+            {status === "Available" && (
+              <div className="space-y-2">
+                {!reservedAt ? (
+                  <button
+                    type="button"
+                    onClick={() => setReserveModalOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm font-medium hover:bg-amber-100 tap-target min-h-[44px]"
+                  >
+                    {t("reserve")}
+                  </button>
+                ) : (
+                  <>
+                    {(reservedByName || reservedByContact) && (
+                      <div className="text-sm text-slate-600 space-y-0.5">
+                        {reservedByName && (
+                          <p>{t("reservedByName")}: {reservedByName}</p>
+                        )}
+                        {reservedByContact && (
+                          <p>{t("reservedByContact")}: {reservedByContact}</p>
+                        )}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleClearReservation}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 tap-target min-h-[40px]"
+                    >
+                      {t("clearReservation")}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </section>
+
+          {reserveModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="reserve-modal-title">
+              <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
+                <h2 id="reserve-modal-title" className="text-lg font-semibold text-[#0F172A]">{t("reserve")}</h2>
+                <p className="text-sm text-slate-600">{t("reservedByName")} / {t("reservedByContact")} (optional)</p>
+                <div>
+                  <label htmlFor="edit-reserve-name" className="block text-sm text-slate-500 mb-1">{t("reservedByName")}</label>
+                  <input
+                    id="edit-reserve-name"
+                    type="text"
+                    value={reserveName}
+                    onChange={(e) => setReserveName(e.target.value)}
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                    disabled={reserveLoading}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="edit-reserve-contact" className="block text-sm text-slate-500 mb-1">{t("reservedByContact")}</label>
+                  <input
+                    id="edit-reserve-contact"
+                    type="text"
+                    value={reserveContact}
+                    onChange={(e) => setReserveContact(e.target.value)}
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                    disabled={reserveLoading}
+                  />
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => { if (!reserveLoading) setReserveModalOpen(false); }}
+                    className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 min-h-[44px]"
+                    disabled={reserveLoading}
+                  >
+                    {t("cloneCancel")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleReserve}
+                    className="px-4 py-2.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 min-h-[44px] disabled:opacity-60"
+                    disabled={reserveLoading}
+                  >
+                    {reserveLoading ? t("loading") : t("reserve")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {checkoutModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="checkout-title">

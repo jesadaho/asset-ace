@@ -45,6 +45,9 @@ type PropertyDetail = {
   contractStartDate?: string;
   leaseDurationMonths?: number;
   contractUrl?: string;
+  reservedAt?: string;
+  reservedByName?: string;
+  reservedByContact?: string;
   createdAt?: string;
 };
 
@@ -83,6 +86,10 @@ export default function PropertyDetailPage() {
   const [rentalHistoryLoading, setRentalHistoryLoading] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [reserveModalOpen, setReserveModalOpen] = useState(false);
+  const [reserveLoading, setReserveLoading] = useState(false);
+  const [reserveName, setReserveName] = useState("");
+  const [reserveContact, setReserveContact] = useState("");
 
   const copyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -212,6 +219,69 @@ export default function PropertyDetailPage() {
       }
     } finally {
       setCheckoutLoading(false);
+    }
+  }, [id]);
+
+  const handleReserve = useCallback(async () => {
+    if (!id) return;
+    setReserveLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setReserveLoading(false);
+        return;
+      }
+      const res = await fetch(`/api/owner/properties/${id}/reserve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          reservedByName: reserveName.trim() || undefined,
+          reservedByContact: reserveContact.trim() || undefined,
+        }),
+      });
+      if (!res.ok) {
+        setReserveLoading(false);
+        return;
+      }
+      setReserveModalOpen(false);
+      setReserveName("");
+      setReserveContact("");
+      const refetchRes = await fetch(`/api/owner/properties/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (refetchRes.ok) {
+        const data = await refetchRes.json();
+        setProperty(data.property ?? null);
+      }
+    } finally {
+      setReserveLoading(false);
+    }
+  }, [id, reserveName, reserveContact]);
+
+  const handleClearReservation = useCallback(async () => {
+    if (!id) return;
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) return;
+      const res = await fetch(`/api/owner/properties/${id}/reserve`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const refetchRes = await fetch(`/api/owner/properties/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (refetchRes.ok) {
+        const data = await refetchRes.json();
+        setProperty(data.property ?? null);
+      }
+    } catch {
+      // ignore
     }
   }, [id]);
 
@@ -604,6 +674,96 @@ export default function PropertyDetailPage() {
                 <p className="text-slate-600 text-sm">{property.address}</p>
               </div>
             </div>
+
+            {property.status === "Available" && (
+              <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                {!property.reservedAt ? (
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setReserveModalOpen(true)}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm font-medium hover:bg-amber-100 tap-target min-h-[44px]"
+                    >
+                      {t("reserve")}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="warning">{t("reserved")}</Badge>
+                    </div>
+                    {(property.reservedByName || property.reservedByContact) && (
+                      <div className="text-sm text-slate-600 space-y-0.5">
+                        {property.reservedByName && (
+                          <p>{t("reservedByName")}: {property.reservedByName}</p>
+                        )}
+                        {property.reservedByContact && (
+                          <p>{t("reservedByContact")}: {property.reservedByContact}</p>
+                        )}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleClearReservation}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 tap-target min-h-[40px]"
+                    >
+                      {t("clearReservation")}
+                    </button>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {reserveModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="reserve-title">
+                <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
+                  <h2 id="reserve-title" className="text-lg font-semibold text-[#0F172A]">{t("reserve")}</h2>
+                  <p className="text-sm text-slate-600">{t("reservedByName")} / {t("reservedByContact")} (optional)</p>
+                  <div>
+                    <label htmlFor="reserve-name" className="block text-sm text-slate-500 mb-1">{t("reservedByName")}</label>
+                    <input
+                      id="reserve-name"
+                      type="text"
+                      value={reserveName}
+                      onChange={(e) => setReserveName(e.target.value)}
+                      placeholder=""
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-[#0F172A] min-h-[44px]"
+                      disabled={reserveLoading}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="reserve-contact" className="block text-sm text-slate-500 mb-1">{t("reservedByContact")}</label>
+                    <input
+                      id="reserve-contact"
+                      type="text"
+                      value={reserveContact}
+                      onChange={(e) => setReserveContact(e.target.value)}
+                      placeholder=""
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-[#0F172A] min-h-[44px]"
+                      disabled={reserveLoading}
+                    />
+                  </div>
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => { if (!reserveLoading) setReserveModalOpen(false); }}
+                      className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 min-h-[44px]"
+                      disabled={reserveLoading}
+                    >
+                      {t("cloneCancel")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleReserve}
+                      className="px-4 py-2.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 min-h-[44px] disabled:opacity-60"
+                      disabled={reserveLoading}
+                    >
+                      {reserveLoading ? t("loading") : t("reserve")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {(property.description ?? property.bedrooms ?? property.bathrooms ?? property.squareMeters) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">

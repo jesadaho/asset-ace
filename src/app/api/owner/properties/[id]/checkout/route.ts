@@ -58,6 +58,9 @@ export async function POST(
     property.contractStartDate = undefined;
     property.leaseDurationMonths = undefined;
     property.contractKey = undefined;
+    property.reservedAt = undefined;
+    property.reservedByName = undefined;
+    property.reservedByContact = undefined;
     await property.save();
 
     return NextResponse.json({ success: true, propertyId });

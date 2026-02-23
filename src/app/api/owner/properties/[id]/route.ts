@@ -38,6 +38,11 @@ function toResponse(doc: PropertyDoc) {
     publicListing: doc.publicListing,
     leaseDurationMonths: doc.leaseDurationMonths,
     contractKey: doc.contractKey,
+    reservedAt: doc.reservedAt
+      ? (doc.reservedAt as Date).toISOString()
+      : undefined,
+    reservedByName: doc.reservedByName,
+    reservedByContact: doc.reservedByContact,
     createdAt: doc.createdAt,
   };
 }

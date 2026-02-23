@@ -122,6 +122,11 @@
     "noRentalHistory": "No rental history yet.",
     "current": "Current",
     "checkoutSuccess": "Checked out. Status updated to Available.",
-    "checkoutFailed": "Check-out failed. Please try again."
+    "checkoutFailed": "Check-out failed. Please try again.",
+    "reserve": "Reserve",
+    "reserved": "Reserved",
+    "clearReservation": "Clear reservation",
+    "reservedByName": "Reserved by (name)",
+    "reservedByContact": "Contact (phone / LINE)"
   }
 }

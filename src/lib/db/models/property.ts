@@ -31,6 +31,9 @@ export interface IProperty {
   publicListing?: boolean;
   leaseDurationMonths?: number;
   contractKey?: string;
+  reservedAt?: Date;
+  reservedByName?: string;
+  reservedByContact?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -61,6 +64,9 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     publicListing: Boolean,
     leaseDurationMonths: Number,
     contractKey: String,
+    reservedAt: Date,
+    reservedByName: String,
+    reservedByContact: String,
   },
   { timestamps: true }
 );

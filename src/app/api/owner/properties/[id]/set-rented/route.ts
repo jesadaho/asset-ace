@@ -107,6 +107,9 @@ export async function POST(
     property.contractStartDate = startDate;
     property.leaseDurationMonths = leaseDurationMonths;
     property.contractKey = contractKey;
+    property.reservedAt = undefined;
+    property.reservedByName = undefined;
+    property.reservedByContact = undefined;
     await property.save();
 
     return NextResponse.json({ success: true, propertyId });

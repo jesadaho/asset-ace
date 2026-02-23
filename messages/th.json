@@ -122,6 +122,11 @@
     "noRentalHistory": "ยังไม่มีประวัติการเช่า",
     "current": "ปัจจุบัน",
     "checkoutSuccess": "แจ้งออกเรียบร้อย สถานะเป็นว่างแล้ว",
-    "checkoutFailed": "แจ้งออกไม่สำเร็จ กรุณาลองใหม่"
+    "checkoutFailed": "แจ้งออกไม่สำเร็จ กรุณาลองใหม่",
+    "reserve": "จอง",
+    "reserved": "จองแล้ว",
+    "clearReservation": "ยกเลิกการจอง",
+    "reservedByName": "ชื่อผู้จอง",
+    "reservedByContact": "ติดต่อผู้จอง (เบอร์ / LINE)"
   }
 }
