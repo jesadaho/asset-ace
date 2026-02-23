@@ -563,13 +563,13 @@ export default function EditPropertyPage() {
               />
             </div>
             <div>
-              <label htmlFor="modal-tenant-contact" className="block text-sm font-medium text-[#0F172A] mb-1">Tenant Contact (LINE ID or phone) *</label>
+              <label htmlFor="modal-tenant-contact" className="block text-sm text-slate-500 mb-1">Tenant Contact (LINE ID or phone, optional)</label>
               <input
                 id="modal-tenant-contact"
                 type="text"
                 value={modalTenantContact}
                 onChange={(e) => setModalTenantContact(e.target.value)}
-                placeholder="LINE ID or phone"
+                placeholder="Leave blank if none"
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 disabled={setRentedLoading}
               />

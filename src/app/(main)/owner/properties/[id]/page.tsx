@@ -644,7 +644,7 @@ export default function PropertyDetailPage() {
               </section>
             )}
 
-            {(property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.contractStartDate) && (
+            {property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.contractStartDate) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
                   {t("residentAgent")}
@@ -733,7 +733,7 @@ export default function PropertyDetailPage() {
               </div>
             )}
 
-            {(property.tenantLineId ?? property.agentLineId ?? property.lineGroup) && (
+            {property.status !== "Available" && (property.tenantLineId ?? property.agentLineId ?? property.lineGroup) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
                   {t("contactCommunity")}
