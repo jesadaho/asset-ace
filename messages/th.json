@@ -141,6 +141,7 @@
     "minPrice": "ราคาขั้นต่ำ (฿)",
     "maxPrice": "ราคาสูงสุด (฿)",
     "noLimit": "ไม่จำกัด",
+    "openForAgentOnly": "แสดงเฉพาะที่เปิดให้ตัวแทน",
     "applyFilters": "ใช้ตัวกรอง",
     "clearFilters": "ล้างตัวกรอง",
     "closeFilters": "ปิด",

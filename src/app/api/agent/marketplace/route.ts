@@ -14,6 +14,9 @@ export async function GET(request: NextRequest) {
   const location = searchParams.get("location")?.trim() || "";
   const minPrice = searchParams.get("minPrice");
   const maxPrice = searchParams.get("maxPrice");
+  const openForAgentParam = searchParams.get("openForAgent");
+  const openForAgent =
+    openForAgentParam === "false" || openForAgentParam === "0" ? false : true;
   const limitParam = searchParams.get("limit");
   const limit = Math.min(
     Math.max(limitParam ? parseInt(limitParam, 10) : 10, 1),
@@ -33,7 +36,10 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const filter: Record<string, unknown> = { openForAgent: true };
+    const filter: Record<string, unknown> = {};
+    if (openForAgent) {
+      filter.openForAgent = true;
+    }
 
     if (location) {
       filter.address = { $regex: location, $options: "i" };

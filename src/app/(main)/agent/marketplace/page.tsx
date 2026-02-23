@@ -39,6 +39,7 @@ export default function AgentMarketplacePage() {
   const [locationFilter, setLocationFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [openForAgentOnly, setOpenForAgentOnly] = useState(true);
 
   const PAGE_SIZE = 10;
 
@@ -47,12 +48,14 @@ export default function AgentMarketplacePage() {
       location?: string;
       minPrice?: string;
       maxPrice?: string;
+      openForAgent?: boolean;
       cursor?: string;
       append?: boolean;
     }) => {
       const loc = (opts?.location ?? searchQuery).trim();
       const minStr = opts?.minPrice ?? minPrice;
       const maxStr = opts?.maxPrice ?? maxPrice;
+      const openForAgent = opts?.openForAgent ?? openForAgentOnly;
       const cursor = opts?.cursor;
       const append = opts?.append ?? false;
       if (append) setLoadingMore(true);
@@ -66,6 +69,7 @@ export default function AgentMarketplacePage() {
         }
         const params = new URLSearchParams();
         params.set("limit", String(PAGE_SIZE));
+        params.set("openForAgent", openForAgent ? "true" : "false");
         if (loc) params.set("location", loc);
         const min = minStr.trim() ? Number(minStr) : undefined;
         const max = maxStr.trim() ? Number(maxStr) : undefined;
@@ -119,7 +123,7 @@ export default function AgentMarketplacePage() {
         setLoadingMore(false);
       }
     },
-    [searchQuery, minPrice, maxPrice, t, tAuth]
+    [searchQuery, minPrice, maxPrice, openForAgentOnly, t, tAuth]
   );
 
   useEffect(() => {
@@ -133,6 +137,7 @@ export default function AgentMarketplacePage() {
       location: locationFilter,
       minPrice,
       maxPrice,
+      openForAgent: openForAgentOnly,
       append: false,
     });
   };
@@ -142,12 +147,25 @@ export default function AgentMarketplacePage() {
     setMinPrice("");
     setMaxPrice("");
     setSearchQuery("");
+    setOpenForAgentOnly(true);
     setFilterOpen(false);
-    fetchProperties({ location: "", minPrice: "", maxPrice: "", append: false });
+    fetchProperties({
+      location: "",
+      minPrice: "",
+      maxPrice: "",
+      openForAgent: true,
+      append: false,
+    });
   };
 
   const handleSearchSubmit = () => {
-    fetchProperties({ location: searchQuery, minPrice, maxPrice, append: false });
+    fetchProperties({
+      location: searchQuery,
+      minPrice,
+      maxPrice,
+      openForAgent: openForAgentOnly,
+      append: false,
+    });
   };
 
   const loadMore = () => {
@@ -156,6 +174,7 @@ export default function AgentMarketplacePage() {
       location: searchQuery.trim(),
       minPrice,
       maxPrice,
+      openForAgent: openForAgentOnly,
       cursor: nextCursor,
       append: true,
     });
@@ -164,7 +183,8 @@ export default function AgentMarketplacePage() {
   const hasActiveFilters =
     locationFilter.trim() !== "" ||
     minPrice.trim() !== "" ||
-    maxPrice.trim() !== "";
+    maxPrice.trim() !== "" ||
+    !openForAgentOnly;
 
   return (
     <div className="min-h-full bg-slate-50 p-4 pb-24">
@@ -230,6 +250,33 @@ export default function AgentMarketplacePage() {
               aria-label={t("closeFilters")}
             >
               <X className="h-5 w-5" aria-hidden />
+            </button>
+          </div>
+          <div className="flex items-center justify-between gap-3 py-1">
+            <span className="text-sm text-slate-700">
+              {t("openForAgentOnly")}
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={openForAgentOnly}
+              onClick={() => {
+                setOpenForAgentOnly((v) => !v);
+              }}
+              className={`relative inline-flex h-7 w-12 shrink-0 rounded-full border-2 transition-colors tap-target focus:outline-none focus:ring-2 focus:ring-[#10B981]/30 focus:ring-offset-2 ${
+                openForAgentOnly
+                  ? "border-[#10B981] bg-[#10B981]"
+                  : "border-slate-300 bg-slate-200"
+              }`}
+              aria-label={t("openForAgentOnly")}
+            >
+              <span
+                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
+                  openForAgentOnly ? "translate-x-[22px]" : "translate-x-0.5"
+                }`}
+                style={{ marginTop: 2 }}
+                aria-hidden
+              />
             </button>
           </div>
           <div>

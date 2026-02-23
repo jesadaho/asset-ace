@@ -141,6 +141,7 @@
     "minPrice": "Min price (฿)",
     "maxPrice": "Max price (฿)",
     "noLimit": "No limit",
+    "openForAgentOnly": "Open for agents only",
     "applyFilters": "Apply",
     "clearFilters": "Clear",
     "closeFilters": "Close",
