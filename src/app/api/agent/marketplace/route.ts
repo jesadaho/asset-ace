@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     if (openForAgent) {
       filter.openForAgent = true;
     }
-    // When openForAgent is false (default "แสดงทั้งหมด"): no filter on openForAgent/status → แสดงห้องทั้งหมด
+    // No status filter: show all rooms (Available, Occupied, Draft) — แสดงห้องว่างและห้องไม่ว่าง
 
     if (location) {
       filter.address = { $regex: location, $options: "i" };
