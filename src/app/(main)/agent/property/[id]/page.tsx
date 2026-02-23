@@ -11,6 +11,7 @@ type PropertyDetail = {
   id: string;
   name: string;
   type: string;
+  status?: string;
   price: number;
   address: string;
   description?: string;
@@ -85,6 +86,7 @@ export default function AgentPropertyDetailPage() {
           id: data.id,
           name: data.name,
           type: data.type,
+          status: data.status,
           price: data.price,
           address: data.address,
           description: data.description,
@@ -206,7 +208,7 @@ export default function AgentPropertyDetailPage() {
             <div className="flex items-start justify-between gap-2 flex-wrap">
               <h2 className="text-xl font-bold text-[#0F172A]">{property.name}</h2>
               <span className="flex flex-wrap gap-1.5 shrink-0">
-                {property.openForAgent !== false && (
+                {property.status === "Available" && property.openForAgent !== false && (
                   <Badge
                     variant="success"
                     className="bg-[#10B981]/90 text-white border-[#10B981]"
@@ -214,7 +216,7 @@ export default function AgentPropertyDetailPage() {
                     {tMarket("openForAgentBadge")}
                   </Badge>
                 )}
-                {property.openForAgent === false && (
+                {property.status === "Available" && property.openForAgent === false && (
                   <Badge
                     variant="default"
                     className="bg-slate-500/90 text-white border-slate-600"

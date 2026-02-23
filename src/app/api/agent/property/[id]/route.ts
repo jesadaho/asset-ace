@@ -38,6 +38,7 @@ export async function GET(
       id: (doc as { _id: mongoose.Types.ObjectId })._id.toString(),
       name: (doc as { name: string }).name,
       type: (doc as { type: string }).type,
+      status: (doc as { status?: string }).status,
       price: (doc as { price: number }).price,
       address: (doc as { address: string }).address,
       description: (doc as { description?: string }).description,

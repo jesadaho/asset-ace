@@ -41,7 +41,7 @@ export default function AgentMarketplacePage() {
   const [locationFilter, setLocationFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [openForAgentOnly, setOpenForAgentOnly] = useState(true);
+  const [openForAgentOnly, setOpenForAgentOnly] = useState(false);
 
   const PAGE_SIZE = 10;
 
@@ -153,13 +153,13 @@ export default function AgentMarketplacePage() {
     setMinPrice("");
     setMaxPrice("");
     setSearchQuery("");
-    setOpenForAgentOnly(true);
+    setOpenForAgentOnly(false);
     setFilterOpen(false);
     fetchProperties({
       location: "",
       minPrice: "",
       maxPrice: "",
-      openForAgent: true,
+      openForAgent: false,
       append: false,
     });
   };
@@ -435,7 +435,7 @@ export default function AgentMarketplacePage() {
                       </Badge>
                     )}
                     <span className="flex flex-wrap gap-1.5">
-                      {(openForAgentOnly || property.openForAgent) && (
+                      {property.status === "Available" && (openForAgentOnly || property.openForAgent) && (
                         <Badge
                           variant="success"
                           className="bg-[#10B981]/90 text-white border-[#10B981]"
@@ -443,7 +443,7 @@ export default function AgentMarketplacePage() {
                           {t("openForAgentBadge")}
                         </Badge>
                       )}
-                      {!property.openForAgent && (
+                      {property.status === "Available" && !property.openForAgent && (
                         <Badge
                           variant="default"
                           className="bg-slate-500/90 text-white border-slate-600"
