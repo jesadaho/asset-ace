@@ -904,21 +904,35 @@ export default function PropertyDetailPage() {
                     </a>
                   )}
                 </div>
-                {property.status === "Occupied" && (
+                {(property.status === "Occupied" || property.status === "Available") && (
                   <div className="flex flex-wrap gap-2 mt-3">
-                    <Link
-                      href={`/owner/properties/${id}/edit`}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-[#0F172A] font-medium hover:bg-slate-50 text-sm"
-                    >
-                      {t("edit")}
-                    </Link>
                     <button
                       type="button"
-                      onClick={() => setCheckoutModalOpen(true)}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100 text-sm"
+                      onClick={handleInviteAgent}
+                      disabled={inviteLoading}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-[#06C755]/30 bg-[#06C755]/10 text-[#06C755] font-medium hover:bg-[#06C755]/20 text-sm disabled:opacity-50"
+                      aria-label={tInvite("inviteAgentAria")}
                     >
-                      {t("checkout")}
+                      <UserPlus className="h-4 w-4" aria-hidden />
+                      {tInvite("inviteAgent")}
                     </button>
+                    {property.status === "Occupied" && (
+                      <>
+                        <Link
+                          href={`/owner/properties/${id}/edit`}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-[#0F172A] font-medium hover:bg-slate-50 text-sm"
+                        >
+                          {t("edit")}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setCheckoutModalOpen(true)}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100 text-sm"
+                        >
+                          {t("checkout")}
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </section>
