@@ -904,8 +904,7 @@ export default function PropertyDetailPage() {
                     </a>
                   )}
                 </div>
-                {(property.status === "Occupied" || property.status === "Available") && (
-                  <div className="flex flex-wrap gap-2 mt-3">
+                <div className="flex flex-wrap gap-2 mt-3">
                     <button
                       type="button"
                       onClick={handleInviteAgent}
@@ -934,7 +933,6 @@ export default function PropertyDetailPage() {
                       </>
                     )}
                   </div>
-                )}
               </section>
             )}
 
