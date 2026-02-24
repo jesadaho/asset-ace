@@ -429,7 +429,7 @@ export default function PropertyDetailPage() {
           </h1>
           {property && (
             <>
-              {property.status === "Available" && (
+              {(property.status === "Available" || property.status === "Occupied") && (
                 <button
                   type="button"
                   onClick={handleInviteAgent}
