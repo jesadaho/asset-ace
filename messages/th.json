@@ -177,5 +177,21 @@
     "notFound": "ไม่พบทรัพย์สิน",
     "failedToLoad": "โหลดไม่สำเร็จ",
     "requestSent": "ส่งคำขอแล้ว เจ้าของจะติดต่อกลับ"
+  },
+  "invite": {
+    "shareMessage": "ร่วมงานกับเรา! รับงานปล่อยเช่าห้องนี้ ค่าคอม 1 เดือน - {url}",
+    "inviteAgent": "เชิญตัวแทน",
+    "inviteAgentAria": "เชิญตัวแทนผ่าน LINE",
+    "copyLink": "คัดลอกลิงก์",
+    "headline": "คุณถูกเชิญให้รับงานปล่อยเช่าห้องนี้",
+    "benefits": "ค่าคอม: 1 เดือน ค่าห้อง กรอกโปรไฟล์แล้วเริ่มจัดการได้เลย",
+    "ctaAccept": "รับงานและกรอกโปรไฟล์",
+    "propertyYouWillManage": "ทรัพย์สินที่คุณจะจัดการ",
+    "loading": "กำลังโหลด...",
+    "propertyNotFound": "ไม่พบทรัพย์สิน",
+    "failedToLoad": "โหลดไม่สำเร็จ"
+  },
+  "inviteNotify": {
+    "agentAccepted": "ตัวแทน {agentName} รับงานของคุณแล้ว!"
   }
 }

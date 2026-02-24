@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, ImageIcon, Pencil, MessageCircle, Copy, Users, Layers } from "lucide-react";
+import { ArrowLeft, ImageIcon, Pencil, MessageCircle, Copy, Users, Layers, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 
@@ -80,6 +80,7 @@ export default function PropertyDetailPage() {
   const t = useTranslations("propertyDetail");
   const tAuth = useTranslations("auth");
   const tProps = useTranslations("properties");
+  const tInvite = useTranslations("invite");
   const [property, setProperty] = useState<PropertyDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +102,7 @@ export default function PropertyDetailPage() {
   const [reserveLoading, setReserveLoading] = useState(false);
   const [reserveName, setReserveName] = useState("");
   const [reserveContact, setReserveContact] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   const copyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -273,6 +275,36 @@ export default function PropertyDetailPage() {
     }
   }, [id, reserveName, reserveContact]);
 
+  const handleInviteAgent = useCallback(async () => {
+    if (!id) return;
+    setInviteLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setInviteLoading(false);
+        return;
+      }
+      const res = await fetch(`/api/owner/properties/${id}/invite-link`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        setInviteLoading(false);
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      const inviteUrl = data.inviteUrl;
+      if (!inviteUrl || typeof inviteUrl !== "string") {
+        setInviteLoading(false);
+        return;
+      }
+      const shareText = tInvite("shareMessage").replace("{url}", inviteUrl);
+      window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
+    } finally {
+      setInviteLoading(false);
+    }
+  }, [id, tInvite]);
+
   const handleClearReservation = useCallback(async () => {
     if (!id) return;
     try {
@@ -397,6 +429,18 @@ export default function PropertyDetailPage() {
           </h1>
           {property && (
             <>
+              {property.status === "Available" && (
+                <button
+                  type="button"
+                  onClick={handleInviteAgent}
+                  disabled={inviteLoading}
+                  className="shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[#06C755] font-medium hover:bg-[#06C755]/10 tap-target min-h-[44px] disabled:opacity-50"
+                  aria-label={tInvite("inviteAgentAria")}
+                >
+                  <UserPlus className="h-4 w-4" aria-hidden />
+                  <span className="text-sm sr-only sm:not-sr-only">{tInvite("inviteAgent")}</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setCloneModalOpen(true)}

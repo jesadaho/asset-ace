@@ -177,5 +177,21 @@
     "notFound": "Property not found",
     "failedToLoad": "Failed to load",
     "requestSent": "Request sent. The owner will get back to you."
+  },
+  "invite": {
+    "shareMessage": "Join us! Help list this property – commission 1 month. {url}",
+    "inviteAgent": "Invite Agent",
+    "inviteAgentAria": "Invite an agent via LINE",
+    "copyLink": "Copy link",
+    "headline": "You're invited to list this property",
+    "benefits": "Commission: 1 month rent. Complete your profile and start managing.",
+    "ctaAccept": "Accept & set up profile",
+    "propertyYouWillManage": "Property you will manage",
+    "loading": "Loading...",
+    "propertyNotFound": "Property not found",
+    "failedToLoad": "Failed to load"
+  },
+  "inviteNotify": {
+    "agentAccepted": "Agent {agentName} accepted your invite!"
   }
 }

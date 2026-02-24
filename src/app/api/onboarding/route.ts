@@ -5,6 +5,7 @@ import { User } from "@/lib/db/models/user";
 import { Property } from "@/lib/db/models/property";
 import { verifyLiffToken, getBearerToken } from "@/lib/auth/liff";
 import { linkRichMenuToUser } from "@/lib/line/richmenu";
+import { pushMessage } from "@/lib/line/push";
 
 const ROLES = ["owner", "agent", "tenant"] as const;
 
@@ -84,10 +85,15 @@ export async function POST(request: NextRequest) {
 
     if (role === "agent" && propId?.trim() && mongoose.Types.ObjectId.isValid(propId)) {
       try {
-        await Property.findOneAndUpdate(
+        const updated = await Property.findOneAndUpdate(
           { _id: propId },
-          { $set: { agentLineId: lineUserId, agentName: name.trim() } }
-        );
+          { $set: { agentLineId: lineUserId, agentName: name.trim() } },
+          { new: true, select: "ownerId" }
+        ).lean();
+        if (updated?.ownerId) {
+          const notifyText = `Agent ${name.trim()} accepted your invite!`;
+          await pushMessage(updated.ownerId, notifyText);
+        }
       } catch (propErr) {
         console.error("Onboarding: failed to link agent to property", propId, propErr);
       }
