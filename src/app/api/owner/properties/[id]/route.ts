@@ -161,7 +161,7 @@ export async function PATCH(
     }
     if (typeof body.tenantName === "string") property.tenantName = body.tenantName;
     if (typeof body.tenantLineId === "string") property.tenantLineId = body.tenantLineId || undefined;
-    if (typeof body.agentName === "string") property.agentName = body.agentName;
+    if (typeof body.agentName === "string") property.agentName = body.agentName.trim() || undefined;
     if (typeof body.agentLineId === "string") property.agentLineId = body.agentLineId || undefined;
     if (typeof body.lineGroup === "string") property.lineGroup = body.lineGroup || undefined;
     if (typeof body.contractStartDate === "string" && body.contractStartDate.trim()) {

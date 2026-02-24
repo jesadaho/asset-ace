@@ -131,7 +131,15 @@
     "reservedByName": "ชื่อผู้จอง",
     "reservedByContact": "ติดต่อผู้จอง (เบอร์ / LINE)",
     "contractCompleted": "ครบสัญญา",
-    "contractEnded": "ครบสัญญาแล้ว"
+    "contractEnded": "ครบสัญญาแล้ว",
+    "agentPlaceholder": "ใส่ชื่อตัวแทนหรือค้นหา...",
+    "connected": "เชื่อมต่อแล้ว",
+    "verified": "ยืนยันตัวตน",
+    "removeAgent": "ลบตัวแทน",
+    "removeAgentConfirm": "ลบตัวแทนคนนี้หรือไม่? พวกเขาจะเข้าถึงไม่ได้อีก",
+    "tenantSection": "ผู้เช่า",
+    "agentSection": "ตัวแทน",
+    "chat": "แชท"
   },
   "marketplace": {
     "title": "ตลาดตัวแทน",

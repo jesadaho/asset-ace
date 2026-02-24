@@ -131,7 +131,15 @@
     "reservedByName": "Reserved by (name)",
     "reservedByContact": "Contact (phone / LINE)",
     "contractCompleted": "Contract completed",
-    "contractEnded": "Contract ended"
+    "contractEnded": "Contract ended",
+    "agentPlaceholder": "Enter agent name or search...",
+    "connected": "Connected",
+    "verified": "Verified",
+    "removeAgent": "Remove Agent",
+    "removeAgentConfirm": "Remove this agent? They will lose access.",
+    "tenantSection": "Tenant",
+    "agentSection": "Agent",
+    "chat": "Chat"
   },
   "marketplace": {
     "title": "Agent Marketplace",

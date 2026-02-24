@@ -14,6 +14,7 @@ import {
   Download,
   ExternalLink,
   UserPlus,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -194,6 +195,8 @@ export default function EditPropertyPage() {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [removeAgentModalOpen, setRemoveAgentModalOpen] = useState(false);
+  const [removeAgentLoading, setRemoveAgentLoading] = useState(false);
 
   const setFormFromProperty = (p: PropertyData) => {
     setName(p.name ?? "");
@@ -611,6 +614,36 @@ export default function EditPropertyPage() {
     }
   };
 
+  const handleRemoveAgent = async () => {
+    if (!id) return;
+    setRemoveAgentLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setRemoveAgentLoading(false);
+        return;
+      }
+      const res = await fetch(`/api/owner/properties/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ agentLineId: "", agentName: "" }),
+      });
+      if (!res.ok) {
+        setRemoveAgentLoading(false);
+        return;
+      }
+      setRemoveAgentModalOpen(false);
+      setAgentLineId("");
+      setAgentName("");
+    } finally {
+      setRemoveAgentLoading(false);
+    }
+  };
+
   const handleReserve = async () => {
     if (!id) return;
     setReserveLoading(true);
@@ -748,16 +781,28 @@ export default function EditPropertyPage() {
               />
             </div>
             <div>
-              <label htmlFor="modal-agent-name" className="block text-sm text-slate-500 mb-1">Agent Name (optional)</label>
-              <input
-                id="modal-agent-name"
-                type="text"
-                value={modalAgentName}
-                onChange={(e) => setModalAgentName(e.target.value)}
-                placeholder="Leave blank if no agent"
-                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                disabled={setRentedLoading}
-              />
+              <label htmlFor="modal-agent-name" className="block text-sm text-slate-500 mb-1">{t("agentSection")}</label>
+              <div className="flex gap-0 rounded-lg border border-slate-200 bg-white overflow-hidden">
+                <input
+                  id="modal-agent-name"
+                  type="text"
+                  value={modalAgentName}
+                  onChange={(e) => setModalAgentName(e.target.value)}
+                  placeholder={t("agentPlaceholder")}
+                  className={`${inputBase} border-0 rounded-none flex-1 min-w-0 px-3`}
+                  disabled={setRentedLoading}
+                />
+                <button
+                  type="button"
+                  onClick={handleInviteAgent}
+                  disabled={inviteLoading || setRentedLoading}
+                  className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 border-l border-slate-200 border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/5 tap-target min-h-[44px] disabled:opacity-50"
+                  aria-label={tInvite("inviteAgentAria")}
+                >
+                  <UserPlus className="h-4 w-4" aria-hidden />
+                  {tInvite("inviteAgent")}
+                </button>
+              </div>
             </div>
             <div>
               <label htmlFor="modal-contract-start" className="block text-sm font-medium text-[#0F172A] mb-1">Lease Start Date *</label>
@@ -1360,6 +1405,32 @@ export default function EditPropertyPage() {
               </div>
             </div>
           )}
+          {removeAgentModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="remove-agent-title">
+              <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
+                <h2 id="remove-agent-title" className="text-lg font-semibold text-[#0F172A]">{t("removeAgent")}</h2>
+                <p className="text-sm text-slate-600">{t("removeAgentConfirm")}</p>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => { if (!removeAgentLoading) setRemoveAgentModalOpen(false); }}
+                    className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
+                    disabled={removeAgentLoading}
+                  >
+                    {t("cloneCancel")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveAgent}
+                    className="px-4 py-2.5 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 tap-target min-h-[44px] disabled:opacity-60"
+                    disabled={removeAgentLoading}
+                  >
+                    {removeAgentLoading ? t("loading") : t("removeAgent")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {status === "Available" && (
             <section className="space-y-3">
@@ -1428,150 +1499,166 @@ export default function EditPropertyPage() {
           )}
 
           {status === "Occupied" && (
-            <section className="space-y-4">
+            <section className="space-y-6">
               <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide flex items-center gap-2 flex-wrap">
                 Resident Details
                 {contractStartDate.trim() && !Number.isNaN(parseInt(leaseDurationMonths, 10)) && isContractEnded(contractStartDate, parseInt(leaseDurationMonths, 10)) && (
                   <Badge variant="default">{t("contractEnded")}</Badge>
                 )}
               </h2>
-              <div>
-                <label
-                  htmlFor="edit-tenant"
-                  className="block text-sm font-medium text-[#0F172A] mb-1"
-                >
-                  Tenant Name
-                </label>
-                <input
-                  id="edit-tenant"
-                  type="text"
-                  value={tenantName}
-                  onChange={(e) => setTenantName(e.target.value)}
-                  placeholder="Enter tenant name..."
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
+
+              {/* Tenant section */}
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-4">
+                <h3 className="text-sm font-medium text-[#0F172A]">{t("tenantSection")}</h3>
+                <div>
+                  <label htmlFor="edit-tenant" className="block text-sm font-medium text-[#0F172A] mb-1">
+                    Tenant Name
+                  </label>
+                  <input
+                    id="edit-tenant"
+                    type="text"
+                    value={tenantName}
+                    onChange={(e) => setTenantName(e.target.value)}
+                    placeholder="Enter tenant name..."
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="edit-tenant-line-id" className="block text-sm text-slate-500 mb-1">
+                    LINE ID (Optional)
+                  </label>
+                  <input
+                    id="edit-tenant-line-id"
+                    type="text"
+                    value={tenantLineId}
+                    onChange={(e) => setTenantLineId(e.target.value)}
+                    placeholder="Paste tenant LINE user ID"
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
               </div>
-              <div>
-                <label
-                  htmlFor="edit-tenant-line-id"
-                  className="block text-sm text-slate-500 mb-1"
-                >
-                  LINE ID (Optional)
-                </label>
-                <input
-                  id="edit-tenant-line-id"
-                  type="text"
-                  value={tenantLineId}
-                  onChange={(e) => setTenantLineId(e.target.value)}
-                  placeholder="Paste tenant LINE user ID"
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
+
+              {/* Agent section */}
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-4">
+                <h3 className="text-sm font-medium text-[#0F172A]">{t("agentSection")}</h3>
+                {agentLineId?.trim() ? (
+                  /* Connected Agent Card */
+                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-slate-200 flex items-center justify-center text-sm font-semibold text-slate-600 shrink-0">
+                        {(agentName || "A").trim().slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-[#0F172A] truncate">{agentName?.trim() || t("agent")}</p>
+                        <p className="flex items-center gap-1 text-xs text-emerald-600">
+                          <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                          {t("connected")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={`https://line.me/ti/p/~${agentLineId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/10 tap-target min-h-[44px]"
+                      >
+                        <MessageCircle className="h-4 w-4" aria-hidden />
+                        {t("chat")}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setRemoveAgentModalOpen(true)}
+                        className="text-sm text-red-600 hover:underline"
+                      >
+                        {t("removeAgent")}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Input group: agent name + Invite */
+                  <div className="flex gap-0 rounded-lg border border-slate-200 bg-white overflow-hidden">
+                    <input
+                      id="edit-agent"
+                      type="text"
+                      value={agentName}
+                      onChange={(e) => setAgentName(e.target.value)}
+                      placeholder={t("agentPlaceholder")}
+                      className={`${inputBase} border-0 rounded-none flex-1 min-w-0 px-3`}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleInviteAgent}
+                      disabled={inviteLoading}
+                      className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 border-l border-slate-200 border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/5 tap-target min-h-[44px] disabled:opacity-50"
+                      aria-label={tInvite("inviteAgentAria")}
+                    >
+                      <UserPlus className="h-4 w-4" aria-hidden />
+                      {tInvite("inviteAgent")}
+                    </button>
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="edit-line-group" className="block text-sm text-slate-500 mb-1">
+                    LINE Group (Optional)
+                  </label>
+                  <input
+                    id="edit-line-group"
+                    type="text"
+                    value={lineGroup}
+                    onChange={(e) => setLineGroup(e.target.value)}
+                    placeholder="Name or invite link of LINE group for this property"
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
               </div>
-              <div>
-                <label
-                  htmlFor="edit-agent"
-                  className="block text-sm text-slate-500 mb-1"
-                >
-                  Agent Name (optional)
-                </label>
-                <input
-                  id="edit-agent"
-                  type="text"
-                  value={agentName}
-                  onChange={(e) => setAgentName(e.target.value)}
-                  placeholder="Enter agent name (leave blank if none)"
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="edit-agent-line-id"
-                  className="block text-sm text-slate-500 mb-1"
-                >
-                  LINE ID (Optional)
-                </label>
-                <input
-                  id="edit-agent-line-id"
-                  type="text"
-                  value={agentLineId}
-                  onChange={(e) => setAgentLineId(e.target.value)}
-                  placeholder="Paste agent LINE user ID"
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="edit-line-group"
-                  className="block text-sm text-slate-500 mb-1"
-                >
-                  LINE Group (Optional)
-                </label>
-                <input
-                  id="edit-line-group"
-                  type="text"
-                  value={lineGroup}
-                  onChange={(e) => setLineGroup(e.target.value)}
-                  placeholder="Name or invite link of LINE group for this property"
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
-              </div>
-              <div>
-                <button
-                  type="button"
-                  onClick={handleInviteAgent}
-                  disabled={inviteLoading}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#06C755]/30 bg-[#06C755]/10 text-[#06C755] font-medium hover:bg-[#06C755]/20 text-sm tap-target min-h-[44px] disabled:opacity-50"
-                  aria-label={tInvite("inviteAgentAria")}
-                >
-                  <UserPlus className="h-4 w-4" aria-hidden />
-                  {tInvite("inviteAgent")}
-                </button>
-              </div>
-              <div>
-                <label
-                  htmlFor="edit-contract-start-date"
-                  className="block text-sm font-medium text-[#0F172A] mb-1"
-                >
-                  Contract start date (optional)
-                </label>
-                <input
-                  id="edit-contract-start-date"
-                  type="date"
-                  value={contractStartDate}
-                  onChange={(e) => setContractStartDate(e.target.value)}
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-lease-duration" className="block text-sm font-medium text-[#0F172A] mb-1">
-                  Lease Duration (months)
-                </label>
-                <input
-                  id="edit-lease-duration"
-                  type="number"
-                  min={1}
-                  value={leaseDurationMonths}
-                  onChange={(e) => setLeaseDurationMonths(e.target.value)}
-                  placeholder="e.g. 12"
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-500 mb-1">Contract file (optional)</label>
-                <input
-                  ref={contractInputRef}
-                  type="file"
-                  accept=".pdf,image/*"
-                  onChange={(e) => setContractFile(e.target.files?.[0] ?? null)}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => contractInputRef.current?.click()}
-                  className="text-sm text-[#10B981] hover:underline"
-                >
-                  {contractFile ? contractFile.name : contractKey ? "Replace contract file" : "Choose file (PDF or image)"}
-                </button>
+
+              {/* Contract / lease fields */}
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="edit-contract-start-date" className="block text-sm font-medium text-[#0F172A] mb-1">
+                    Contract start date (optional)
+                  </label>
+                  <input
+                    id="edit-contract-start-date"
+                    type="date"
+                    value={contractStartDate}
+                    onChange={(e) => setContractStartDate(e.target.value)}
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="edit-lease-duration" className="block text-sm font-medium text-[#0F172A] mb-1">
+                    Lease Duration (months)
+                  </label>
+                  <input
+                    id="edit-lease-duration"
+                    type="number"
+                    min={1}
+                    value={leaseDurationMonths}
+                    onChange={(e) => setLeaseDurationMonths(e.target.value)}
+                    placeholder="e.g. 12"
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-500 mb-1">Contract file (optional)</label>
+                  <input
+                    ref={contractInputRef}
+                    type="file"
+                    accept=".pdf,image/*"
+                    onChange={(e) => setContractFile(e.target.files?.[0] ?? null)}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => contractInputRef.current?.click()}
+                    className="text-sm text-[#10B981] hover:underline"
+                  >
+                    {contractFile ? contractFile.name : contractKey ? "Replace contract file" : "Choose file (PDF or image)"}
+                  </button>
+                </div>
               </div>
             </section>
           )}

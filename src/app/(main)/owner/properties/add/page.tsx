@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   ImagePlus,
@@ -51,6 +52,7 @@ const inputError = "border-red-500 focus:border-red-500";
 
 export default function AddPropertyPage() {
   const router = useRouter();
+  const t = useTranslations("propertyDetail");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
@@ -627,75 +629,86 @@ export default function AddPropertyPage() {
           </section>
 
           {status === "Occupied" && (
-            <section className="space-y-4">
+            <section className="space-y-6">
               <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
                 Resident Details
               </h2>
-              <div>
-                <label htmlFor="tenant" className="block text-sm font-medium text-[#0F172A] mb-1">
-                  Tenant Name
-                </label>
-                <input
-                  id="tenant"
-                  type="text"
-                  value={tenantName}
-                  onChange={(e) => setTenantName(e.target.value)}
-                  placeholder="Enter tenant name..."
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
+
+              {/* Tenant section */}
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-4">
+                <h3 className="text-sm font-medium text-[#0F172A]">{t("tenantSection")}</h3>
+                <div>
+                  <label htmlFor="tenant" className="block text-sm font-medium text-[#0F172A] mb-1">
+                    Tenant Name
+                  </label>
+                  <input
+                    id="tenant"
+                    type="text"
+                    value={tenantName}
+                    onChange={(e) => setTenantName(e.target.value)}
+                    placeholder="Enter tenant name..."
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="tenant-line-id" className="block text-sm text-slate-500 mb-1">
+                    LINE ID (Optional)
+                  </label>
+                  <input
+                    id="tenant-line-id"
+                    type="text"
+                    value={tenantLineId}
+                    onChange={(e) => setTenantLineId(e.target.value)}
+                    placeholder="Paste tenant LINE user ID"
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
               </div>
-              <div>
-                <label htmlFor="tenant-line-id" className="block text-sm text-slate-500 mb-1">
-                  LINE ID (Optional)
-                </label>
-                <input
-                  id="tenant-line-id"
-                  type="text"
-                  value={tenantLineId}
-                  onChange={(e) => setTenantLineId(e.target.value)}
-                  placeholder="Paste tenant LINE user ID"
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
+
+              {/* Agent section */}
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-4">
+                <h3 className="text-sm font-medium text-[#0F172A]">{t("agentSection")}</h3>
+                <div>
+                  <label htmlFor="agent" className="block text-sm text-slate-500 mb-1">
+                    Agent Name (optional)
+                  </label>
+                  <input
+                    id="agent"
+                    type="text"
+                    value={agentName}
+                    onChange={(e) => setAgentName(e.target.value)}
+                    placeholder={t("agentPlaceholder")}
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="agent-line-id" className="block text-sm text-slate-500 mb-1">
+                    LINE ID (Optional)
+                  </label>
+                  <input
+                    id="agent-line-id"
+                    type="text"
+                    value={agentLineId}
+                    onChange={(e) => setAgentLineId(e.target.value)}
+                    placeholder="Paste agent LINE user ID"
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="line-group" className="block text-sm text-slate-500 mb-1">
+                    LINE Group (Optional)
+                  </label>
+                  <input
+                    id="line-group"
+                    type="text"
+                    value={lineGroup}
+                    onChange={(e) => setLineGroup(e.target.value)}
+                    placeholder="Name or invite link of LINE group for this property"
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
               </div>
-              <div>
-                <label htmlFor="agent" className="block text-sm text-slate-500 mb-1">
-                  Agent Name (optional)
-                </label>
-                <input
-                  id="agent"
-                  type="text"
-                  value={agentName}
-                  onChange={(e) => setAgentName(e.target.value)}
-                  placeholder="Enter agent name (leave blank if none)"
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
-              </div>
-              <div>
-                <label htmlFor="agent-line-id" className="block text-sm text-slate-500 mb-1">
-                  LINE ID (Optional)
-                </label>
-                <input
-                  id="agent-line-id"
-                  type="text"
-                  value={agentLineId}
-                  onChange={(e) => setAgentLineId(e.target.value)}
-                  placeholder="Paste agent LINE user ID"
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
-              </div>
-              <div>
-                <label htmlFor="line-group" className="block text-sm text-slate-500 mb-1">
-                  LINE Group (Optional)
-                </label>
-                <input
-                  id="line-group"
-                  type="text"
-                  value={lineGroup}
-                  onChange={(e) => setLineGroup(e.target.value)}
-                  placeholder="Name or invite link of LINE group for this property"
-                  className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-                />
-              </div>
+
               <div>
                 <label htmlFor="contract-start-date" className="block text-sm font-medium text-[#0F172A] mb-1">
                   Contract start date (optional)

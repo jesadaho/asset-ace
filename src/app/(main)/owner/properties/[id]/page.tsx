@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, ImageIcon, Pencil, MessageCircle, Copy, Users, Layers, UserPlus } from "lucide-react";
+import { ArrowLeft, ImageIcon, Pencil, MessageCircle, Copy, Users, Layers, UserPlus, Check } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 
@@ -103,6 +103,8 @@ export default function PropertyDetailPage() {
   const [reserveName, setReserveName] = useState("");
   const [reserveContact, setReserveContact] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [removeAgentModalOpen, setRemoveAgentModalOpen] = useState(false);
+  const [removeAgentLoading, setRemoveAgentLoading] = useState(false);
 
   const copyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -304,6 +306,41 @@ export default function PropertyDetailPage() {
       setInviteLoading(false);
     }
   }, [id, tInvite]);
+
+  const handleRemoveAgent = useCallback(async () => {
+    if (!id) return;
+    setRemoveAgentLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setRemoveAgentLoading(false);
+        return;
+      }
+      const res = await fetch(`/api/owner/properties/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ agentLineId: "", agentName: "" }),
+      });
+      if (!res.ok) {
+        setRemoveAgentLoading(false);
+        return;
+      }
+      setRemoveAgentModalOpen(false);
+      const refetchRes = await fetch(`/api/owner/properties/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (refetchRes.ok) {
+        const data = await refetchRes.json();
+        setProperty(data.property ?? null);
+      }
+    } finally {
+      setRemoveAgentLoading(false);
+    }
+  }, [id]);
 
   const handleClearReservation = useCallback(async () => {
     if (!id) return;
@@ -860,30 +897,83 @@ export default function PropertyDetailPage() {
             )}
 
             {property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.contractStartDate) && (
-              <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                <h3 className="text-sm font-semibold text-[#0F172A] mb-3 flex items-center gap-2 flex-wrap">
+              <section className="space-y-4">
+                <h3 className="text-sm font-semibold text-[#0F172A] flex items-center gap-2 flex-wrap">
                   {t("residentAgent")}
                   {property.status === "Occupied" && property.contractStartDate && property.leaseDurationMonths != null && isContractEnded(property.contractStartDate, property.leaseDurationMonths) && (
                     <Badge variant="default">{t("contractEnded")}</Badge>
                   )}
                 </h3>
-                <div className="space-y-1 text-sm text-slate-600">
-                  {(property.tenantName || property.tenantLineId) && (
-                    <p>
-                      {t("tenant")}: {property.tenantName ?? t("noValue")}
+
+                {/* Tenant section */}
+                {(property.tenantName || property.tenantLineId) && (
+                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                    <h4 className="text-sm font-medium text-[#0F172A] mb-1">{t("tenantSection")}</h4>
+                    <p className="text-sm text-slate-600">
+                      {property.tenantName ?? t("noValue")}
                       {property.tenantLineId && (
                         <span className="text-slate-500"> (LINE: {property.tenantLineId})</span>
                       )}
                     </p>
-                  )}
-                  {(property.agentName || property.agentLineId) && (
-                    <p>
-                      {t("agent")}: {property.agentName ?? t("noValue")}
-                      {property.agentLineId && (
-                        <span className="text-slate-500"> (LINE: {property.agentLineId})</span>
-                      )}
-                    </p>
-                  )}
+                  </div>
+                )}
+
+                {/* Agent: Connected Card or plain + Invite */}
+                {(property.agentName || property.agentLineId) && (
+                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                    <h4 className="text-sm font-medium text-[#0F172A] mb-3">{t("agentSection")}</h4>
+                    {property.agentLineId?.trim() ? (
+                      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-12 rounded-full bg-slate-200 flex items-center justify-center text-sm font-semibold text-slate-600 shrink-0">
+                            {(property.agentName || "A").trim().slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-[#0F172A] truncate">{property.agentName?.trim() || t("agent")}</p>
+                            <p className="flex items-center gap-1 text-xs text-emerald-600">
+                              <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                              {t("connected")}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <a
+                            href={`https://line.me/ti/p/~${property.agentLineId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/10 tap-target min-h-[44px]"
+                          >
+                            <MessageCircle className="h-4 w-4" aria-hidden />
+                            {t("chat")}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setRemoveAgentModalOpen(true)}
+                            className="text-sm text-red-600 hover:underline"
+                          >
+                            {t("removeAgent")}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm text-slate-600">{property.agentName ?? t("noValue")}</p>
+                        <button
+                          type="button"
+                          onClick={handleInviteAgent}
+                          disabled={inviteLoading}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-[#06C755] bg-transparent text-[#06C755] font-medium hover:bg-[#06C755]/10 text-sm disabled:opacity-50"
+                          aria-label={tInvite("inviteAgentAria")}
+                        >
+                          <UserPlus className="h-4 w-4" aria-hidden />
+                          {tInvite("inviteAgent")}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="text-sm text-slate-600 space-y-1">
                   {property.lineGroup && (
                     <p>{t("lineGroup")}: {property.lineGroup}</p>
                   )}
@@ -904,35 +994,25 @@ export default function PropertyDetailPage() {
                     </a>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                    <button
-                      type="button"
-                      onClick={handleInviteAgent}
-                      disabled={inviteLoading}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-[#06C755]/30 bg-[#06C755]/10 text-[#06C755] font-medium hover:bg-[#06C755]/20 text-sm disabled:opacity-50"
-                      aria-label={tInvite("inviteAgentAria")}
-                    >
-                      <UserPlus className="h-4 w-4" aria-hidden />
-                      {tInvite("inviteAgent")}
-                    </button>
-                    {property.status === "Occupied" && (
-                      <>
-                        <Link
-                          href={`/owner/properties/${id}/edit`}
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-[#0F172A] font-medium hover:bg-slate-50 text-sm"
-                        >
-                          {t("edit")}
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => setCheckoutModalOpen(true)}
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100 text-sm"
-                        >
-                          {t("checkout")}
-                        </button>
-                      </>
-                    )}
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  {property.status === "Occupied" && (
+                    <>
+                      <Link
+                        href={`/owner/properties/${id}/edit`}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-[#0F172A] font-medium hover:bg-slate-50 text-sm"
+                      >
+                        {t("edit")}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutModalOpen(true)}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100 text-sm"
+                      >
+                        {t("checkout")}
+                      </button>
+                    </>
+                  )}
+                </div>
               </section>
             )}
 
@@ -957,6 +1037,32 @@ export default function PropertyDetailPage() {
                       disabled={checkoutLoading}
                     >
                       {checkoutLoading ? t("loading") : t("checkout")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {removeAgentModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="remove-agent-title">
+                <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
+                  <h2 id="remove-agent-title" className="text-lg font-semibold text-[#0F172A]">{t("removeAgent")}</h2>
+                  <p className="text-sm text-slate-600">{t("removeAgentConfirm")}</p>
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => { if (!removeAgentLoading) setRemoveAgentModalOpen(false); }}
+                      className="px-4 py-2 rounded-lg text-slate-600 font-medium hover:bg-slate-100 disabled:opacity-50"
+                      disabled={removeAgentLoading}
+                    >
+                      {t("cloneCancel")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRemoveAgent}
+                      className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50"
+                      disabled={removeAgentLoading}
+                    >
+                      {removeAgentLoading ? t("loading") : t("removeAgent")}
                     </button>
                   </div>
                 </div>
@@ -990,27 +1096,7 @@ export default function PropertyDetailPage() {
                       </button>
                     </div>
                   )}
-                  {property.agentLineId && (
-                    <div className="flex flex-col sm:flex-row gap-2 w-full">
-                      <a
-                        href={`https://line.me/ti/p/~${property.agentLineId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 min-w-0 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white font-medium bg-gradient-to-r from-[#06C755] to-[#00B900] hover:opacity-90 active:opacity-95 tap-target min-h-[44px]"
-                      >
-                        <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
-                        <span>{t("contactAgent")}</span>
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(property.agentLineId!)}
-                        className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-slate-200 bg-white text-[#0F172A] font-medium hover:bg-slate-50 tap-target min-h-[44px] shrink-0 sm:w-auto w-full"
-                      >
-                        <Copy className="h-4 w-4 shrink-0" aria-hidden />
-                        <span>{t("copyId")}</span>
-                      </button>
-                    </div>
-                  )}
+                  {/* Agent Chat is on Connected Agent Card when agentLineId is set; no duplicate here */}
                   {property.lineGroup && (
                     <a
                       href={property.lineGroup.startsWith("http") ? property.lineGroup : `https://line.me/ti/g/${property.lineGroup}`}
