@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, ImageIcon, MessageCircle, Copy } from "lucide-react";
+import { ArrowLeft, ImageIcon, MessageCircle, Copy, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
 type PropertyDetail = {
@@ -21,6 +21,7 @@ type PropertyDetail = {
   amenities?: string[];
   imageUrls?: string[];
   openForAgent?: boolean;
+  isManagingAgent?: boolean;
   contractStartDate?: string;
   leaseDurationMonths?: number;
 };
@@ -117,6 +118,7 @@ export default function AgentPropertyDetailPage() {
           amenities: data.amenities ?? [],
           imageUrls: data.imageUrls ?? [],
           openForAgent: data.openForAgent,
+          isManagingAgent: data.isManagingAgent === true,
           contractStartDate: data.contractStartDate,
           leaseDurationMonths: data.leaseDurationMonths,
         });
@@ -384,7 +386,16 @@ export default function AgentPropertyDetailPage() {
           </section>
         )}
 
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
+          {property.isManagingAgent && (
+            <Link
+              href={`/agent/property/${id}/edit`}
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#003366] text-white font-medium hover:bg-[#002244] active:bg-[#001a33] tap-target min-h-[48px] shadow-lg"
+            >
+              <Pencil className="h-5 w-5" aria-hidden />
+              {t("editResidentialDetail")}
+            </Link>
+          )}
           {requestSent && (ownerContact || lineChatUrl) ? (
             <div className="rounded-xl border-2 border-[#10B981]/30 bg-[#10B981]/10 p-4 space-y-4">
               <p className="text-sm font-medium text-[#0D9668] text-center">

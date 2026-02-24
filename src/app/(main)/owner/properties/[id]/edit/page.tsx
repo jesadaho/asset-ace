@@ -13,6 +13,7 @@ import {
   Copy,
   Download,
   ExternalLink,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -136,6 +137,7 @@ export default function EditPropertyPage() {
   const t = useTranslations("propertyDetail");
   const tProps = useTranslations("properties");
   const tAuth = useTranslations("auth");
+  const tInvite = useTranslations("invite");
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -191,6 +193,7 @@ export default function EditPropertyPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   const setFormFromProperty = (p: PropertyData) => {
     setName(p.name ?? "");
@@ -574,6 +577,37 @@ export default function EditPropertyPage() {
       toast.show(t("checkoutFailed"));
     } finally {
       setCheckoutLoading(false);
+    }
+  };
+
+  const handleInviteAgent = async () => {
+    if (!id) return;
+    setInviteLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        toast.show(tAuth("pleaseLogin"));
+        setInviteLoading(false);
+        return;
+      }
+      const res = await fetch(`/api/owner/properties/${id}/invite-link`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        setInviteLoading(false);
+        return;
+      }
+      const data = await res.json().catch(() => ({})) as { inviteUrl?: string };
+      const inviteUrl = data.inviteUrl;
+      if (!inviteUrl || typeof inviteUrl !== "string") {
+        setInviteLoading(false);
+        return;
+      }
+      const shareText = tInvite("shareMessage").replace("{url}", inviteUrl);
+      window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
+    } finally {
+      setInviteLoading(false);
     }
   };
 
@@ -1480,6 +1514,18 @@ export default function EditPropertyPage() {
                   placeholder="Name or invite link of LINE group for this property"
                   className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 />
+              </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={handleInviteAgent}
+                  disabled={inviteLoading}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#06C755]/30 bg-[#06C755]/10 text-[#06C755] font-medium hover:bg-[#06C755]/20 text-sm tap-target min-h-[44px] disabled:opacity-50"
+                  aria-label={tInvite("inviteAgentAria")}
+                >
+                  <UserPlus className="h-4 w-4" aria-hidden />
+                  {tInvite("inviteAgent")}
+                </button>
               </div>
               <div>
                 <label
