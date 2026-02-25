@@ -71,7 +71,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!canRedirect) {
-      setChecked(true);
+      if (pathname !== INVITE_PATH) setChecked(true);
       return;
     }
     if (isLoggedIn !== true && !isInviteAcceptJob && pathname !== INVITE_PATH) {
