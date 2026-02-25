@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, ImageIcon, MessageCircle, Copy, Pencil } from "lucide-react";
+import { ArrowLeft, ImageIcon, MessageCircle, Copy, Pencil, Bell, BellOff } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
 type PropertyDetail = {
@@ -24,6 +24,7 @@ type PropertyDetail = {
   isManagingAgent?: boolean;
   contractStartDate?: string;
   leaseDurationMonths?: number;
+  isFollowing?: boolean;
 };
 
 function isContractEnded(
@@ -59,6 +60,7 @@ export default function AgentPropertyDetailPage() {
   const [lineChatUrl, setLineChatUrl] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [requestLoading, setRequestLoading] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   const handleCarouselScroll = useCallback(() => {
     const el = carouselRef.current;
@@ -121,6 +123,7 @@ export default function AgentPropertyDetailPage() {
           isManagingAgent: data.isManagingAgent === true,
           contractStartDate: data.contractStartDate,
           leaseDurationMonths: data.leaseDurationMonths,
+          isFollowing: data.isFollowing === true,
         });
         if (data.ownerContact) setOwnerContact(data.ownerContact);
         if (data.lineChatUrl) setLineChatUrl(data.lineChatUrl);
@@ -170,6 +173,33 @@ export default function AgentPropertyDetailPage() {
       setRequestError(err instanceof Error ? err.message : t("failedToLoad"));
     } finally {
       setRequestLoading(false);
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    if (!id || followLoading) return;
+    setFollowLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) return;
+      const res = await fetch(`/api/agent/property/${id}/follow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setRequestError(data.message ?? t("failedToLoad"));
+        return;
+      }
+      setProperty((prev) =>
+        prev ? { ...prev, isFollowing: data.following === true } : null
+      );
+      setRequestError(null);
+    } catch (err) {
+      setRequestError(err instanceof Error ? err.message : t("failedToLoad"));
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -389,6 +419,31 @@ export default function AgentPropertyDetailPage() {
         )}
 
         <div className="mt-6 space-y-4">
+          {property.status === "Occupied" && (
+            <button
+              type="button"
+              onClick={handleFollowToggle}
+              disabled={followLoading}
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border-2 border-[#10B981] bg-[#10B981]/10 text-[#10B981] font-medium hover:bg-[#10B981]/20 active:bg-[#10B981]/30 tap-target min-h-[48px] disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {followLoading ? (
+                <>
+                  <span className="h-5 w-5 shrink-0 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin" aria-hidden />
+                  {t("loading")}
+                </>
+              ) : property.isFollowing ? (
+                <>
+                  <BellOff className="h-5 w-5" aria-hidden />
+                  {t("unfollowVacancy")}
+                </>
+              ) : (
+                <>
+                  <Bell className="h-5 w-5" aria-hidden />
+                  {t("followVacancy")}
+                </>
+              )}
+            </button>
+          )}
           {property.isManagingAgent && (
             <Link
               href={`/agent/property/${id}/edit`}

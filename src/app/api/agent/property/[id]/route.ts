@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
+import { PropertyFollow } from "@/lib/db/models/propertyFollow";
 import { User } from "@/lib/db/models/user";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { getPresignedGetUrl } from "@/lib/s3";
@@ -59,6 +60,11 @@ export async function GET(
       ...(contractStartDate != null && { contractStartDate: contractStartDate.toISOString() }),
       ...(leaseDurationMonths != null && { leaseDurationMonths }),
     };
+    const followDoc = await PropertyFollow.findOne({
+      propertyId: (doc as { _id: mongoose.Types.ObjectId })._id,
+      agentId: userId,
+    });
+    payload.isFollowing = !!followDoc;
     if (isManagingAgent) {
       const d = doc as {
         tenantName?: string;

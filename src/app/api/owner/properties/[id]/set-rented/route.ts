@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
+import { PropertyFollow } from "@/lib/db/models/propertyFollow";
 import { RentalHistory } from "@/lib/db/models/rentalHistory";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
+import { pushMessage } from "@/lib/line/push";
 
 export async function POST(
   request: NextRequest,
@@ -110,7 +112,21 @@ export async function POST(
     property.reservedAt = undefined;
     property.reservedByName = undefined;
     property.reservedByContact = undefined;
+    (property as { vacancyNotified30DayAt?: Date }).vacancyNotified30DayAt = undefined;
     await property.save();
+
+    const propertyName = property.name ?? "ห้อง";
+    const text = `ห้อง ${propertyName} ที่คุณติดตาม มีผู้เช่าแล้ว ไม่ต้องหาต่อ`;
+    const followers = await PropertyFollow.find({ propertyId: property._id }).lean();
+    Promise.allSettled(
+      followers.map((f) => pushMessage((f as { agentId: string }).agentId, text))
+    ).then((results) => {
+      results.forEach((r, i) => {
+        if (r.status === "rejected") console.error("[set-rented notify]", r.reason);
+        if (r.status === "fulfilled" && !r.value.sent)
+          console.error("[set-rented notify]", followers[i], r.value.message);
+      });
+    });
 
     return NextResponse.json({ success: true, propertyId });
   } catch (err) {

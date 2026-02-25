@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property, type IProperty } from "@/lib/db/models/property";
+import { PropertyFollow } from "@/lib/db/models/propertyFollow";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { pushMessage } from "@/lib/line/push";
 import { getPresignedGetUrl } from "@/lib/s3";
@@ -84,6 +85,9 @@ export async function GET(
     const contractUrl = docTyped.contractKey
       ? await getPresignedGetUrl(docTyped.contractKey)
       : undefined;
+    const followerCount = await PropertyFollow.countDocuments({
+      propertyId: (doc as { _id: mongoose.Types.ObjectId })._id,
+    });
     const property = toResponse(doc as unknown as PropertyDoc);
     return NextResponse.json({
       property: {
@@ -91,6 +95,7 @@ export async function GET(
         imageUrl: imageUrls[0] ?? undefined,
         imageUrls,
         contractUrl: contractUrl ?? undefined,
+        followerCount,
       },
     });
   } catch (err) {

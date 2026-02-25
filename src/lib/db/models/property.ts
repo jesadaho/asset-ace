@@ -36,6 +36,8 @@ export interface IProperty {
   reservedAt?: Date;
   reservedByName?: string;
   reservedByContact?: string;
+  /** Set when 30-day vacancy notification was sent for this lease; cleared on set-rented */
+  vacancyNotified30DayAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -71,6 +73,7 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     reservedAt: Date,
     reservedByName: String,
     reservedByContact: String,
+    vacancyNotified30DayAt: Date,
   },
   { timestamps: true }
 );

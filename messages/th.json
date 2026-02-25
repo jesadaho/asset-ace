@@ -307,7 +307,9 @@
     "loading": "กำลังโหลด...",
     "notFound": "ไม่พบทรัพย์สิน",
     "failedToLoad": "โหลดไม่สำเร็จ",
-    "requestSent": "ส่งคำขอแล้ว เจ้าของจะติดต่อกลับ"
+    "requestSent": "ส่งคำขอแล้ว เจ้าของจะติดต่อกลับ",
+    "followVacancy": "ติดตามเมื่อห้องว่าง",
+    "unfollowVacancy": "ยกเลิกติดตาม"
   },
   "agentWork": {
     "title": "งานของฉัน",

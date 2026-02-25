@@ -307,7 +307,9 @@
     "loading": "Loading...",
     "notFound": "Property not found",
     "failedToLoad": "Failed to load",
-    "requestSent": "Request sent. The owner will get back to you."
+    "requestSent": "Request sent. The owner will get back to you.",
+    "followVacancy": "Follow when vacant",
+    "unfollowVacancy": "Unfollow"
   },
   "agentWork": {
     "title": "My work",
