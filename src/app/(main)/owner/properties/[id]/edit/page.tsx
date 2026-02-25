@@ -608,7 +608,9 @@ export default function EditPropertyPage() {
         setInviteLoading(false);
         return;
       }
-      const shareText = tInvite("shareMessage").replace("{url}", inviteUrl);
+      const shareText = tInvite("shareMessage")
+        .replace("{propertyName}", name.trim() || "—")
+        .replace("{url}", inviteUrl);
       window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
     } finally {
       setInviteLoading(false);

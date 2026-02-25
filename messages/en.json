@@ -300,7 +300,7 @@
     "requestSent": "Request sent. The owner will get back to you."
   },
   "invite": {
-    "shareMessage": "Join us! Help list this property – commission 1 month. {url}",
+    "shareMessage": "📢 Property Management Invitation\n\nYou have been assigned to manage: {propertyName}\nConfirm your access here:\n👉 {url}",
     "inviteAgent": "Invite Agent",
     "inviteAgentAria": "Invite an agent via LINE",
     "copyLink": "Copy link",
