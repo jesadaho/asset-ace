@@ -112,7 +112,11 @@ export default function OnboardingPage() {
         phone: phone.trim(),
         propId: isAgentFlow && propId ? propId : undefined,
       });
-      router.push(getRoleDashboardPath(submitRole));
+      if (submitRole === "agent" && propId?.trim()) {
+        router.push(`/invite?propId=${encodeURIComponent(propId.trim())}`);
+      } else {
+        router.push(getRoleDashboardPath(submitRole));
+      }
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : t("submitErrorGeneric"));
     } finally {
