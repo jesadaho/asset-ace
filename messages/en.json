@@ -328,7 +328,9 @@
     "propertyYouWillManage": "Property you will manage",
     "loading": "Loading...",
     "propertyNotFound": "Property not found",
-    "failedToLoad": "Failed to load"
+    "failedToLoad": "Failed to load",
+    "alreadyAccepted": "You have already accepted this job",
+    "goToMyWork": "Go to My Work"
   },
   "inviteNotify": {
     "agentAccepted": "Agent {agentName} accepted your invite!"

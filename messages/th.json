@@ -328,7 +328,9 @@
     "propertyYouWillManage": "ทรัพย์สินที่คุณจะจัดการ",
     "loading": "กำลังโหลด...",
     "propertyNotFound": "ไม่พบทรัพย์สิน",
-    "failedToLoad": "โหลดไม่สำเร็จ"
+    "failedToLoad": "โหลดไม่สำเร็จ",
+    "alreadyAccepted": "คุณรับงานนี้แล้ว",
+    "goToMyWork": "ไปงานของฉัน"
   },
   "inviteNotify": {
     "agentAccepted": "ตัวแทน {agentName} รับงานของคุณแล้ว!"

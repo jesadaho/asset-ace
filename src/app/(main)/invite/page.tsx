@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Building2 } from "lucide-react";
+import { Building2, Briefcase } from "lucide-react";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   Condo: "Condo",
@@ -22,6 +22,8 @@ export default function InviteLandingPage() {
   const [property, setProperty] = useState<PropertyInvite | null>(null);
   const [loading, setLoading] = useState(!!propId);
   const [error, setError] = useState<string | null>(null);
+  const [alreadyAccepted, setAlreadyAccepted] = useState(false);
+  const [checkingAlreadyAccepted, setCheckingAlreadyAccepted] = useState(false);
 
   useEffect(() => {
     if (!propId?.trim()) {
@@ -60,7 +62,34 @@ export default function InviteLandingPage() {
     };
   }, [propId, t]);
 
-  if (loading) {
+  useEffect(() => {
+    if (!propId?.trim() || !property) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const liff = (await import("@line/liff")).default;
+        if (!liff.isLoggedIn()) return;
+        const token = liff.getAccessToken();
+        if (!token) return;
+        if (!cancelled) setCheckingAlreadyAccepted(true);
+        const res = await fetch(`/api/agent/property/${propId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (cancelled) return;
+        if (res.ok) {
+          const data = (await res.json()) as { isManagingAgent?: boolean };
+          if (data.isManagingAgent && !cancelled) setAlreadyAccepted(true);
+        }
+      } finally {
+        if (!cancelled) setCheckingAlreadyAccepted(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [propId, property]);
+
+  if (loading || checkingAlreadyAccepted) {
     return (
       <div className="min-h-dvh bg-slate-50 text-[#0F172A] safe-area-top">
         <div className="max-w-lg mx-auto px-4 py-12 text-center">
@@ -77,6 +106,30 @@ export default function InviteLandingPage() {
           <p className="text-red-600" role="alert">
             {error ?? t("propertyNotFound")}
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (alreadyAccepted) {
+    return (
+      <div className="min-h-dvh bg-slate-50 text-[#0F172A] safe-area-top">
+        <div className="max-w-lg mx-auto px-4 py-8">
+          <header className="text-center mb-8">
+            <h1 className="text-xl font-bold text-[#0F172A] mb-2">
+              {t("alreadyAccepted")}
+            </h1>
+            <p className="text-slate-600 text-sm">{property.name}</p>
+          </header>
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/agents"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#10B981] text-white font-medium hover:bg-[#10B981]/90 tap-target min-h-[48px]"
+            >
+              <Briefcase className="h-5 w-5" aria-hidden />
+              {t("goToMyWork")}
+            </Link>
+          </div>
         </div>
       </div>
     );
