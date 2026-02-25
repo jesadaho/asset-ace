@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property, type IProperty } from "@/lib/db/models/property";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
+import { pushMessage } from "@/lib/line/push";
 import { getPresignedGetUrl } from "@/lib/s3";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
@@ -161,6 +162,8 @@ export async function PATCH(
     }
     if (typeof body.tenantName === "string") property.tenantName = body.tenantName;
     if (typeof body.tenantLineId === "string") property.tenantLineId = body.tenantLineId || undefined;
+    const previousAgentLineId = (property as { agentLineId?: string }).agentLineId?.trim() || undefined;
+    const propertyNameForNotify = (property as { name?: string }).name?.trim() || "ห้อง";
     if (typeof body.agentName === "string") property.agentName = body.agentName.trim() || undefined;
     if (typeof body.agentLineId === "string") property.agentLineId = body.agentLineId || undefined;
     if (typeof body.lineGroup === "string") property.lineGroup = body.lineGroup || undefined;
@@ -184,6 +187,17 @@ export async function PATCH(
     if (typeof body.contractKey === "string") property.contractKey = body.contractKey || undefined;
 
     await property.save();
+
+    const isRemovingAgent =
+      typeof body.agentLineId === "string" &&
+      body.agentLineId.trim() === "" &&
+      previousAgentLineId != null;
+    if (isRemovingAgent) {
+      const notifyText = `เจ้าของได้ยกเลิกการมอบหมายคุณจากห้อง「${propertyNameForNotify}」แล้ว`;
+      pushMessage(previousAgentLineId, notifyText).catch((err) =>
+        console.error("[PATCH owner/properties] Notify agent on remove:", err)
+      );
+    }
 
     const doc = property.toObject();
     const response = toResponse(doc as unknown as PropertyDoc);
