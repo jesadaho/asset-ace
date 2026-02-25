@@ -19,6 +19,7 @@ function isValidPhone(phone: string): boolean {
 type ProfileState = {
   name: string;
   phone: string;
+  lineId: string;
   paymentInfo: string;
   notificationsEnabled: boolean;
 };
@@ -63,6 +64,7 @@ export default function OwnerSettingsPage() {
     setData({
       name: body.name ?? "",
       phone: body.phone ?? "",
+      lineId: body.lineId ?? "",
       paymentInfo: body.paymentInfo ?? "",
       notificationsEnabled: body.notificationsEnabled ?? true,
     });
@@ -105,6 +107,7 @@ export default function OwnerSettingsPage() {
               ...prev,
               name: body.name ?? prev.name,
               phone: body.phone ?? prev.phone,
+              lineId: body.lineId ?? prev.lineId,
               paymentInfo: body.paymentInfo ?? prev.paymentInfo,
               notificationsEnabled: body.notificationsEnabled ?? prev.notificationsEnabled,
             }
@@ -136,6 +139,7 @@ export default function OwnerSettingsPage() {
       const ok = await patchProfile({
         name: data.name.trim(),
         phone: data.phone.trim(),
+        lineId: data.lineId.trim(),
         paymentInfo: data.paymentInfo,
       });
       if (ok) setError(null);
@@ -256,7 +260,7 @@ export default function OwnerSettingsPage() {
               autoComplete="name"
             />
           </div>
-          <div>
+          <div className="mb-4">
             <label htmlFor="settings-phone" className="block text-sm font-medium text-[#0F172A] mb-1">
               {t("contactPhone")}
             </label>
@@ -275,6 +279,24 @@ export default function OwnerSettingsPage() {
             {phoneError && (
               <p className="mt-1.5 text-sm text-red-500">{phoneError}</p>
             )}
+          </div>
+          <div>
+            <label htmlFor="settings-line-id" className="block text-sm font-medium text-[#0F172A] mb-1">
+              {t("lineIdOptional")}
+            </label>
+            <Input
+              id="settings-line-id"
+              type="text"
+              value={data?.lineId ?? ""}
+              onChange={(e) =>
+                setData((prev) => (prev ? { ...prev, lineId: e.target.value } : null))
+              }
+              placeholder={t("lineIdPlaceholder")}
+              autoComplete="off"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              {t("lineIdOptionalDescription")}
+            </p>
           </div>
         </section>
 

@@ -35,12 +35,14 @@ export async function GET(request: NextRequest) {
     const u = user as {
       name: string;
       phone: string;
+      lineId?: string;
       paymentInfo?: string;
       notificationsEnabled?: boolean;
     };
     return NextResponse.json({
       name: u.name,
       phone: u.phone,
+      lineId: u.lineId ?? "",
       paymentInfo: u.paymentInfo ?? "",
       notificationsEnabled: u.notificationsEnabled ?? true,
     });
@@ -104,6 +106,8 @@ export async function PATCH(request: NextRequest) {
     typeof body.notificationsEnabled === "boolean"
       ? body.notificationsEnabled
       : undefined;
+  const lineId =
+    typeof body.lineId === "string" ? body.lineId.trim() || undefined : undefined;
 
   try {
     await connectDB();
@@ -124,11 +128,13 @@ export async function PATCH(request: NextRequest) {
     if (paymentInfo !== undefined) user.paymentInfo = paymentInfo;
     if (notificationsEnabled !== undefined)
       user.notificationsEnabled = notificationsEnabled;
+    if (lineId !== undefined) (user as { lineId?: string }).lineId = lineId;
     await user.save();
 
     return NextResponse.json({
       name: user.name,
       phone: user.phone,
+      lineId: (user as { lineId?: string }).lineId ?? "",
       paymentInfo: user.paymentInfo ?? "",
       notificationsEnabled: user.notificationsEnabled ?? true,
     });

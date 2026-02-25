@@ -71,6 +71,7 @@ export async function POST(
     const ownerName = (owner as { name: string }).name ?? "";
     const ownerPhone = (owner as { phone: string }).phone ?? "";
     const ownerLineUserId = (owner as { lineUserId: string }).lineUserId;
+    const ownerLineId = (owner as { lineId?: string }).lineId?.trim();
 
     return NextResponse.json({
       success: true,
@@ -79,7 +80,11 @@ export async function POST(
         phone: ownerPhone,
         lineUserId: ownerLineUserId,
       },
-      lineChatUrl: `https://line.me/R/ti/p/${encodeURIComponent(ownerLineUserId)}`,
+      ...(ownerLineId
+        ? {
+            lineChatUrl: `https://line.me/ti/p/~${encodeURIComponent(ownerLineId)}`,
+          }
+        : {}),
     });
   } catch (err) {
     console.error("[POST /api/agent/property/[id]/request-contact]", err);

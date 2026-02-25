@@ -93,12 +93,15 @@ export async function GET(
           const ownerName = (owner as { name?: string }).name ?? "";
           const ownerPhone = (owner as { phone?: string }).phone ?? "";
           const ownerLineUserId = (owner as { lineUserId: string }).lineUserId;
+          const ownerLineId = (owner as { lineId?: string }).lineId?.trim();
           payload.ownerContact = {
             name: ownerName,
             phone: ownerPhone,
             lineUserId: ownerLineUserId,
           };
-          payload.lineChatUrl = `https://line.me/R/ti/p/${encodeURIComponent(ownerLineUserId)}`;
+          if (ownerLineId) {
+            payload.lineChatUrl = `https://line.me/ti/p/~${encodeURIComponent(ownerLineId)}`;
+          }
         }
       }
     }
