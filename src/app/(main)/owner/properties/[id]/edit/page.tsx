@@ -216,6 +216,23 @@ export default function EditPropertyPage() {
     setTenantLineId(p.tenantLineId ?? "");
     setAgentName(p.agentName ?? "");
     setAgentLineId(p.agentLineId ?? "");
+    // #region debug chat button
+    fetch("http://127.0.0.1:7803/ingest/908fb44a-2012-43fd-b36e-e7f74cb458a6", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
+      body: JSON.stringify({
+        sessionId: "d6e810",
+        hypothesisId: "H1",
+        location: "owner/properties/[id]/edit/page.tsx:setPropertyState",
+        message: "Property state set; agentLineId from API",
+        data: {
+          hasAgentLineId: !!(p.agentLineId ?? "").trim(),
+          agentLineIdLength: (p.agentLineId ?? "").length,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     setContractStartDate(p.contractStartDate ?? "");
     setLineGroup(p.lineGroup ?? "");
     setOpenForAgent((p as { openForAgent?: boolean }).openForAgent ?? false);
@@ -1564,6 +1581,25 @@ export default function EditPropertyPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/10 tap-target min-h-[44px]"
+                        onClick={() => {
+                          // #region debug chat button
+                          fetch("http://127.0.0.1:7803/ingest/908fb44a-2012-43fd-b36e-e7f74cb458a6", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
+                            body: JSON.stringify({
+                              sessionId: "d6e810",
+                              hypothesisId: "H2",
+                              location: "owner/properties/[id]/edit/page.tsx:chat-link-click",
+                              message: "Chat link clicked",
+                              data: {
+                                agentLineIdLength: (agentLineId ?? "").length,
+                                hrefPrefix: "https://line.me/ti/p/~",
+                              },
+                              timestamp: Date.now(),
+                            }),
+                          }).catch(() => {});
+                          // #endregion
+                        }}
                       >
                         <MessageCircle className="h-4 w-4" aria-hidden />
                         {t("chat")}
