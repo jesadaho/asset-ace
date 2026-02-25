@@ -17,8 +17,8 @@ export default function AddFriendRequiredPage() {
     <div className="min-h-dvh bg-[#F8FAFC]">
       <div className="flex flex-col items-center pt-12 px-6 pb-6 max-w-lg mx-auto">
         <div className="w-full rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-5">
-          <div className="bg-gradient-to-br from-[#06C755] to-[#00B900] px-6 pt-6 pb-4 text-center">
-            <div className="relative w-40 h-40 mx-auto mb-4">
+          <div className="bg-gradient-to-br from-[#06C755] to-[#00B900] px-6 pt-6 pb-3 text-center">
+            <div className="relative w-40 h-40 mx-auto mb-3">
               <Image
                 src="/hero-add-friend.png"
                 alt=""
@@ -32,7 +32,7 @@ export default function AddFriendRequiredPage() {
               {t("title")}
             </h1>
           </div>
-          <div className="px-6 py-6">
+          <div className="px-6 pt-3 pb-6">
             <p className="text-[#0F172A] text-center text-base leading-relaxed">
               {t("copy")}
             </p>
