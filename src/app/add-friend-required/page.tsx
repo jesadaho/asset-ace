@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { UserPlus } from "lucide-react";
 
@@ -16,9 +17,16 @@ export default function AddFriendRequiredPage() {
     <div className="min-h-dvh flex flex-col bg-[#F8FAFC]">
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 max-w-lg mx-auto">
         <div className="w-full rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-8">
-          <div className="bg-gradient-to-br from-[#06C755] to-[#00B900] px-6 py-10 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 mb-4">
-              <UserPlus className="h-9 w-9 text-white" aria-hidden />
+          <div className="bg-gradient-to-br from-[#06C755] to-[#00B900] px-6 pt-6 pb-4 text-center">
+            <div className="relative w-40 h-40 mx-auto mb-4">
+              <Image
+                src="/hero-add-friend.png"
+                alt=""
+                width={160}
+                height={160}
+                className="object-contain"
+                priority
+              />
             </div>
             <h1 className="text-xl font-bold text-white drop-shadow-sm">
               {t("title")}
