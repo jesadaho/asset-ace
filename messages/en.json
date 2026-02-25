@@ -299,6 +299,16 @@
     "failedToLoad": "Failed to load",
     "requestSent": "Request sent. The owner will get back to you."
   },
+  "agentWork": {
+    "title": "My work",
+    "emptyTitle": "No assignments yet",
+    "emptyMessage": "Find work from the marketplace.",
+    "browseMarketplace": "Browse marketplace",
+    "loading": "Loading...",
+    "error": "Failed to load list",
+    "retry": "Retry",
+    "viewDetails": "View details"
+  },
   "invite": {
     "shareMessage": "📢 Property Management Invitation\n\nYou have been assigned to manage: {propertyName}\nConfirm your access here:\n👉 {url}",
     "inviteAgent": "Invite Agent",
@@ -306,7 +316,7 @@
     "copyLink": "Copy link",
     "headline": "You're invited to list this property",
     "benefits": "Commission: 1 month rent. Complete your profile and start managing.",
-    "ctaAccept": "Accept & set up profile",
+    "ctaAccept": "Accept job",
     "propertyYouWillManage": "Property you will manage",
     "loading": "Loading...",
     "propertyNotFound": "Property not found",
