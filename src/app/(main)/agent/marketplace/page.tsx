@@ -240,7 +240,11 @@ export default function AgentMarketplacePage() {
 
   return (
     <div className="min-h-full bg-slate-50 p-4 pb-24">
-      <header ref={titleCardRef} className="mb-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-teal-600 p-5 text-white shadow-lg overflow-hidden">
+      <header
+        ref={titleCardRef}
+        className="mb-4 rounded-2xl p-5 text-white shadow-lg overflow-hidden"
+        style={{ background: "linear-gradient(to bottom right, #0F172A, #0d9488)" }}
+      >
         <p className="text-sm text-white/80 mb-1">
           {t("welcome")}
           {profile?.displayName ? `, ${profile.displayName}` : ""}
