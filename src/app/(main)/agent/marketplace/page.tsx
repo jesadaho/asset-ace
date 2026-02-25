@@ -137,6 +137,7 @@ export default function AgentMarketplacePage() {
   }, []);
 
   const searchRowRef = useRef<HTMLDivElement | null>(null);
+  const titleCardRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     // #region agent log
     if (searchRowRef.current && !loading) {
@@ -158,6 +159,28 @@ export default function AgentMarketplacePage() {
     }
     // #endregion
   }, [loading]);
+  useEffect(() => {
+    // #region agent log
+    if (titleCardRef.current && typeof window !== "undefined") {
+      const el = titleCardRef.current;
+      const cs = window.getComputedStyle(el);
+      const bg = cs.backgroundColor;
+      const bgImage = cs.backgroundImage;
+      fetch("http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
+        body: JSON.stringify({
+          sessionId: "d6e810",
+          hypothesisId: "H4",
+          location: "agent/marketplace/page.tsx:titleCard",
+          message: "Card at ตลาดตัวแทน (title header)",
+          data: { titleCardClassName: el.className, computedBg: bg, computedBgImage: bgImage },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+    }
+    // #endregion
+  }, []);
 
   const applyFilters = () => {
     setSearchQuery(locationFilter);
@@ -217,7 +240,7 @@ export default function AgentMarketplacePage() {
 
   return (
     <div className="min-h-full bg-slate-50 p-4 pb-24">
-      <header className="mb-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-teal-600 p-5 text-white shadow-lg overflow-hidden">
+      <header ref={titleCardRef} className="mb-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-teal-600 p-5 text-white shadow-lg overflow-hidden">
         <p className="text-sm text-white/80 mb-1">
           {t("welcome")}
           {profile?.displayName ? `, ${profile.displayName}` : ""}
