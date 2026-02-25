@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLiff } from "@/providers/LiffProvider";
 import {
   checkOnboardingStatus,
@@ -10,6 +10,7 @@ import {
 
 const ONBOARDING_PATH = "/onboarding";
 const ADD_FRIEND_REQUIRED_PATH = "/add-friend-required";
+const INVITE_PATH = "/invite";
 
 const ALLOWED_PATHS = [
   "/",
@@ -48,8 +49,13 @@ function getIntendedPathFromQuery(): string | null {
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isReady, isLoggedIn, profile, liffId, error, isFriend } = useLiff();
   const [checked, setChecked] = useState(false);
+
+  const invitePropId = pathname === INVITE_PATH ? searchParams.get("propId") : null;
+  /** รับงาน flow: on /invite?propId=xxx — wait for run() before showing invite page so we can redirect to onboarding without flashing invite. */
+  const isInviteAcceptJob = Boolean(invitePropId?.trim());
 
   const canRedirect = isReady && (!liffId || isLoggedIn === false || profile !== null || error !== null);
 
@@ -68,7 +74,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       setChecked(true);
       return;
     }
-    if (isLoggedIn !== true) {
+    if (isLoggedIn !== true && !isInviteAcceptJob) {
       setChecked(true);
       return;
     }
@@ -87,6 +93,28 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     async function run() {
       if (pathname.startsWith("/admin")) {
         setChecked(true);
+        return;
+      }
+
+      if (pathname === INVITE_PATH && invitePropId?.trim()) {
+        if (isLoggedIn !== true) {
+          setChecked(true);
+          // #region agent log
+          fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'H_invite',location:'OnboardingGuard.tsx',message:'Invite accept-job: not logged in, show invite page',data:{invitePropId},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+          return;
+        }
+        const status = await checkOnboardingStatus();
+        if (cancelled) return;
+        if (!status.onboarded) {
+          const onboardingUrl = `${ONBOARDING_PATH}?role=agent&propId=${encodeURIComponent(invitePropId.trim())}`;
+          // #region agent log
+          fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'H_invite',location:'OnboardingGuard.tsx',message:'Invite accept-job: redirect to onboarding',data:{onboardingUrl,invitePropId},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+          router.replace(onboardingUrl);
+        } else {
+          setChecked(true);
+        }
         return;
       }
 
@@ -121,9 +149,10 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [canRedirect, isLoggedIn, isFriend, pathname, router]);
+  }, [canRedirect, isLoggedIn, isFriend, pathname, router, invitePropId, isInviteAcceptJob]);
 
-  if (!canRedirect || (!checked && isLoggedIn === true)) {
+  const showLoading = !canRedirect || (!checked && (isLoggedIn === true || isInviteAcceptJob));
+  if (showLoading) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-white">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#10B981] border-t-transparent" />
