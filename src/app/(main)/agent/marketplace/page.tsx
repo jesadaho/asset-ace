@@ -416,7 +416,7 @@ export default function AgentMarketplacePage() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-emerald-50/80 rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+              className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
             >
               <div className="aspect-[4/3] bg-slate-200 animate-pulse" />
               <div className="p-4 space-y-2">
@@ -449,7 +449,7 @@ export default function AgentMarketplacePage() {
             <li key={property.id}>
               <Link
                 href={`/agent/property/${property.id}`}
-                className="block bg-emerald-50/80 rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md hover:border-[#10B981]/30 transition-all"
+                className="block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md hover:border-[#10B981]/30 transition-all"
               >
                 <div className="relative aspect-[4/3] bg-slate-200">
                   {property.imageUrl ? (
