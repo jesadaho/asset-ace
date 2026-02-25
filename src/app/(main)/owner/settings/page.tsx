@@ -118,6 +118,10 @@ export default function OwnerSettingsPage() {
 
   const handleSave = async () => {
     if (!data) return;
+    if (!data.name.trim()) {
+      setError(t("nameRequired"));
+      return;
+    }
     if (!data.phone.trim()) {
       setPhoneError(t("invalidPhone"));
       return;
@@ -130,6 +134,7 @@ export default function OwnerSettingsPage() {
     setSaveLoading(true);
     try {
       const ok = await patchProfile({
+        name: data.name.trim(),
         phone: data.phone.trim(),
         paymentInfo: data.paymentInfo,
       });
@@ -230,11 +235,26 @@ export default function OwnerSettingsPage() {
               </div>
             )}
             <div className="min-w-0 flex-1">
+              <p className="text-sm text-slate-500 mb-0.5">{t("lineNameReadOnly")}</p>
               <p className="text-base font-medium text-[#0F172A] truncate">
-                {profile?.displayName ?? data?.name ?? "—"}
+                {profile?.displayName ?? "—"}
               </p>
-              <p className="text-sm text-slate-500">LINE</p>
             </div>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="settings-display-name" className="block text-sm font-medium text-[#0F172A] mb-1">
+              {t("displayNameInApp")}
+            </label>
+            <Input
+              id="settings-display-name"
+              type="text"
+              value={data?.name ?? ""}
+              onChange={(e) =>
+                setData((prev) => (prev ? { ...prev, name: e.target.value } : null))
+              }
+              placeholder={t("displayNameInAppPlaceholder")}
+              autoComplete="name"
+            />
           </div>
           <div>
             <label htmlFor="settings-phone" className="block text-sm font-medium text-[#0F172A] mb-1">

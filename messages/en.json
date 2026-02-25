@@ -213,6 +213,9 @@
   "settings": {
     "title": "Settings",
     "myProfile": "My Profile",
+    "lineNameReadOnly": "LINE name (for identity verification)",
+    "displayNameInApp": "Display name in app",
+    "displayNameInAppPlaceholder": "Name to show in the app",
     "management": "Management",
     "system": "System",
     "contactPhone": "Contact phone number",
@@ -228,6 +231,7 @@
     "saveSuccess": "Saved.",
     "failedToLoad": "Failed to load settings.",
     "failedToSave": "Failed to save.",
+    "nameRequired": "Display name is required.",
     "invalidPhone": "Enter a valid phone number.",
     "accessDenied": "Access denied. Owner only.",
     "cancel": "Cancel"

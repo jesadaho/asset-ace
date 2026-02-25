@@ -89,6 +89,15 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
+  const name =
+    typeof body.name === "string" ? body.name.trim() : undefined;
+  if (name !== undefined && !name) {
+    return NextResponse.json(
+      { message: "Display name is required" },
+      { status: 400 }
+    );
+  }
+
   const paymentInfo =
     typeof body.paymentInfo === "string" ? body.paymentInfo : undefined;
   const notificationsEnabled =
@@ -110,6 +119,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    if (name !== undefined) user.name = name;
     if (phone !== undefined) user.phone = phone;
     if (paymentInfo !== undefined) user.paymentInfo = paymentInfo;
     if (notificationsEnabled !== undefined)
