@@ -209,5 +209,27 @@
   },
   "inviteNotify": {
     "agentAccepted": "ตัวแทน {agentName} รับงานของคุณแล้ว!"
+  },
+  "settings": {
+    "title": "ตั้งค่า",
+    "myProfile": "โปรไฟล์ของฉัน",
+    "management": "การจัดการ",
+    "system": "ระบบ",
+    "contactPhone": "เบอร์โทรศัพท์ติดต่อ",
+    "contactPhonePlaceholder": "เช่น +66 123 456 789",
+    "paymentInfo": "ข้อมูลรับเงิน (Manual)",
+    "paymentInfoPlaceholder": "ธนาคาร - เลขบัญชี - ชื่อบัญชี",
+    "notifications": "การแจ้งเตือน",
+    "notificationsDescription": "แจ้งเตือนผ่าน LINE (เช่น เมื่อมีคนแจ้งซ่อม)",
+    "unlinkAccount": "ยกเลิกการเชื่อมต่อ",
+    "unlinkConfirm": "ยกเลิกการเชื่อมต่อใช่หรือไม่? คุณจะต้องเข้าสู่ระบบอีกครั้ง",
+    "save": "บันทึก",
+    "saving": "กำลังบันทึก...",
+    "saveSuccess": "บันทึกแล้ว",
+    "failedToLoad": "โหลดตั้งค่าไม่สำเร็จ",
+    "failedToSave": "บันทึกไม่สำเร็จ",
+    "invalidPhone": "กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง",
+    "accessDenied": "ไม่มีสิทธิ์ เฉพาะเจ้าของเท่านั้น",
+    "cancel": "ยกเลิก"
   }
 }

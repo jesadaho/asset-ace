@@ -209,5 +209,27 @@
   },
   "inviteNotify": {
     "agentAccepted": "Agent {agentName} accepted your invite!"
+  },
+  "settings": {
+    "title": "Settings",
+    "myProfile": "My Profile",
+    "management": "Management",
+    "system": "System",
+    "contactPhone": "Contact phone number",
+    "contactPhonePlaceholder": "e.g. +66 123 456 789",
+    "paymentInfo": "Payment info (Manual)",
+    "paymentInfoPlaceholder": "Bank - Account number - Account name",
+    "notifications": "Notifications",
+    "notificationsDescription": "LINE notifications (e.g. when someone reports a repair)",
+    "unlinkAccount": "Unlink Account",
+    "unlinkConfirm": "Unlink this account? You will need to log in again.",
+    "save": "Save",
+    "saving": "Saving...",
+    "saveSuccess": "Saved.",
+    "failedToLoad": "Failed to load settings.",
+    "failedToSave": "Failed to save.",
+    "invalidPhone": "Enter a valid phone number.",
+    "accessDenied": "Access denied. Owner only.",
+    "cancel": "Cancel"
   }
 }

@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { ChevronRight, Plus, ImageIcon, Eye, EyeOff } from "lucide-react";
+import { ChevronRight, Plus, ImageIcon, Eye, EyeOff, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { useLiff } from "@/providers/LiffProvider";
 
@@ -38,6 +38,7 @@ export default function OwnerDashboardPage() {
   const tAuth = useTranslations("auth");
   const tCommon = useTranslations("common");
   const tProps = useTranslations("properties");
+  const tSettings = useTranslations("settings");
   const { profile } = useLiff();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,6 +141,16 @@ export default function OwnerDashboardPage() {
 
   return (
     <div className="min-h-full bg-slate-50 p-4">
+      <div className="flex justify-end mb-2">
+        <Link
+          href="/owner/settings"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 tap-target min-h-[44px]"
+          aria-label={tSettings("title")}
+        >
+          <Settings className="h-5 w-5" aria-hidden />
+          <span className="text-sm font-medium">{tSettings("title")}</span>
+        </Link>
+      </div>
       <div className="mb-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-teal-600 p-5 text-white shadow-lg overflow-hidden">
         <p className="text-sm text-white/80 mb-1">
           {t("welcome")}{profile?.displayName ? `, ${profile.displayName}` : ""}

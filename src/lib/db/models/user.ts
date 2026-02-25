@@ -9,6 +9,8 @@ export interface IUser {
   name: string;
   phone: string;
   role: UserRole;
+  paymentInfo?: string;
+  notificationsEnabled?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -19,6 +21,8 @@ const UserSchema = new mongoose.Schema<IUser>(
     name: { type: String, required: true },
     phone: { type: String, required: true },
     role: { type: String, required: true, enum: ROLES },
+    paymentInfo: { type: String, required: false },
+    notificationsEnabled: { type: Boolean, required: false },
   },
   { timestamps: true }
 );
