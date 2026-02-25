@@ -350,6 +350,7 @@
     "lineIdOptional": "LINE ID (Optional)",
     "lineIdPlaceholder": "@username or username",
     "lineIdOptionalDescription": "Set this so agents can tap to message you on LINE",
+    "lineIdOptionalDescriptionAgent": "Set this so owners can tap to message you on LINE",
     "paymentInfo": "Payment info (Manual)",
     "paymentInfoPlaceholder": "Bank - Account number - Account name",
     "notifications": "Notifications",
@@ -364,6 +365,7 @@
     "nameRequired": "Display name is required.",
     "invalidPhone": "Enter a valid phone number.",
     "accessDenied": "Access denied. Owner only.",
+    "accessDeniedAgent": "Access denied. Agent only.",
     "cancel": "Cancel"
   }
 }

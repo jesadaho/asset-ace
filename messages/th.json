@@ -350,6 +350,7 @@
     "lineIdOptional": "LINE ID (ไม่บังคับ)",
     "lineIdPlaceholder": "@username หรือ username",
     "lineIdOptionalDescription": "ตั้งค่าเพื่อให้ตัวแทนสามารถกดส่งข้อความทาง LINE ถึงคุณได้",
+    "lineIdOptionalDescriptionAgent": "ตั้งค่าเพื่อให้เจ้าของสามารถกดส่งข้อความทาง LINE ถึงคุณได้",
     "paymentInfo": "ข้อมูลรับเงิน (Manual)",
     "paymentInfoPlaceholder": "ธนาคาร - เลขบัญชี - ชื่อบัญชี",
     "notifications": "การแจ้งเตือน",
@@ -364,6 +365,7 @@
     "nameRequired": "กรุณากรอกชื่อที่ต้องการให้แสดงในแอป",
     "invalidPhone": "กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง",
     "accessDenied": "ไม่มีสิทธิ์ เฉพาะเจ้าของเท่านั้น",
+    "accessDeniedAgent": "ไม่มีสิทธิ์ เฉพาะตัวแทนเท่านั้น",
     "cancel": "ยกเลิก"
   }
 }
