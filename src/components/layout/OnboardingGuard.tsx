@@ -74,7 +74,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       setChecked(true);
       return;
     }
-    if (isLoggedIn !== true && !isInviteAcceptJob) {
+    if (isLoggedIn !== true && !isInviteAcceptJob && pathname !== INVITE_PATH) {
       setChecked(true);
       return;
     }
@@ -96,7 +96,11 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (pathname === INVITE_PATH && invitePropId?.trim()) {
+      if (pathname === INVITE_PATH) {
+        if (!invitePropId?.trim()) {
+          setChecked(true);
+          return;
+        }
         if (isLoggedIn !== true) {
           setChecked(true);
           // #region agent log
@@ -151,7 +155,10 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     };
   }, [canRedirect, isLoggedIn, isFriend, pathname, router, invitePropId, isInviteAcceptJob]);
 
-  const showLoading = !canRedirect || (!checked && (isLoggedIn === true || isInviteAcceptJob));
+  /** On /invite always show loading until run() has decided (avoids flash when searchParams not ready on first paint). */
+  const showLoading =
+    !canRedirect ||
+    (!checked && (isLoggedIn === true || isInviteAcceptJob || pathname === INVITE_PATH));
   if (showLoading) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-white">
