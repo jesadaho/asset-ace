@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import {
@@ -136,6 +136,29 @@ export default function AgentMarketplacePage() {
     fetchProperties();
   }, []);
 
+  const searchRowRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    // #region agent log
+    if (searchRowRef.current && !loading) {
+      const el = searchRowRef.current;
+      const input = el.querySelector('input[type="search"]');
+      const inputBg = input && typeof window !== "undefined" ? window.getComputedStyle(input as Element).backgroundColor : "";
+      fetch("http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
+        body: JSON.stringify({
+          sessionId: "d6e810",
+          hypothesisId: "H2",
+          location: "agent/marketplace/page.tsx:searchRow",
+          message: "Marketplace search row",
+          data: { searchInputComputedBg: inputBg },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+    }
+    // #endregion
+  }, [loading]);
+
   const applyFilters = () => {
     setSearchQuery(locationFilter);
     setFilterOpen(false);
@@ -202,7 +225,7 @@ export default function AgentMarketplacePage() {
         <h1 className="text-xl font-bold tracking-tight">{t("title")}</h1>
       </header>
 
-      <div className="flex gap-2 mb-4">
+      <div ref={searchRowRef} className="flex gap-2 mb-4">
         <div className="relative flex-1">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
