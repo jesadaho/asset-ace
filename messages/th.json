@@ -152,7 +152,9 @@
     "lineGroupPlaceholder": "ชื่อกลุ่ม LINE หรือลิงก์เชิญ",
     "addAmenityPlaceholder": "เพิ่มสิ่งอำนวยความสะดวก",
     "add": "เพิ่ม",
-    "removeAmenity": "ลบ {name}"
+    "removeAmenity": "ลบ {name}",
+    "invitedStatus": "รอตัวแทนรับงาน",
+    "invitedToName": "ส่งคำเชิญไปให้ {name}"
   },
   "propertyEdit": {
     "listingTypeRent": "ปล่อยเช่า",

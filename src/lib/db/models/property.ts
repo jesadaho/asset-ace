@@ -25,6 +25,8 @@ export interface IProperty {
   tenantLineId?: string;
   agentName?: string;
   agentLineId?: string;
+  agentInviteSentAt?: Date;
+  invitedAgentName?: string;
   lineGroup?: string;
   contractStartDate?: Date;
   openForAgent?: boolean;
@@ -58,6 +60,8 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     tenantLineId: String,
     agentName: String,
     agentLineId: String,
+    agentInviteSentAt: Date,
+    invitedAgentName: String,
     lineGroup: String,
     contractStartDate: Date,
     openForAgent: Boolean,

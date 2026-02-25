@@ -31,6 +31,10 @@ function toResponse(doc: PropertyDoc) {
     tenantLineId: doc.tenantLineId,
     agentName: doc.agentName,
     agentLineId: doc.agentLineId,
+    agentInviteSentAt: doc.agentInviteSentAt
+      ? (doc.agentInviteSentAt as Date).toISOString()
+      : undefined,
+    invitedAgentName: doc.invitedAgentName,
     lineGroup: doc.lineGroup,
     contractStartDate: doc.contractStartDate
       ? (doc.contractStartDate as Date).toISOString().slice(0, 10)

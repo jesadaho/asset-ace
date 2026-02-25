@@ -87,6 +87,8 @@ type PropertyData = {
   tenantLineId?: string;
   agentName?: string;
   agentLineId?: string;
+  agentInviteSentAt?: string;
+  invitedAgentName?: string;
   lineGroup?: string;
   contractStartDate?: string;
   openForAgent?: boolean;
@@ -160,6 +162,8 @@ export default function EditPropertyPage() {
   const [tenantLineId, setTenantLineId] = useState("");
   const [agentName, setAgentName] = useState("");
   const [agentLineId, setAgentLineId] = useState("");
+  const [agentInviteSentAt, setAgentInviteSentAt] = useState<string | undefined>(undefined);
+  const [invitedAgentName, setInvitedAgentName] = useState("");
   const [contractStartDate, setContractStartDate] = useState("");
   const [lineGroup, setLineGroup] = useState("");
   const [openForAgent, setOpenForAgent] = useState(false);
@@ -216,6 +220,8 @@ export default function EditPropertyPage() {
     setTenantLineId(p.tenantLineId ?? "");
     setAgentName(p.agentName ?? "");
     setAgentLineId(p.agentLineId ?? "");
+    setAgentInviteSentAt((p as { agentInviteSentAt?: string }).agentInviteSentAt ?? undefined);
+    setInvitedAgentName((p as { invitedAgentName?: string }).invitedAgentName ?? "");
     // #region debug chat button
     fetch("http://127.0.0.1:7803/ingest/908fb44a-2012-43fd-b36e-e7f74cb458a6", {
       method: "POST",
@@ -613,7 +619,14 @@ export default function EditPropertyPage() {
         return;
       }
       const res = await fetch(`/api/owner/properties/${id}/invite-link`, {
-        headers: { Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          invitedAgentName: agentName.trim() || undefined,
+        }),
       });
       if (!res.ok) {
         setInviteLoading(false);
@@ -625,6 +638,8 @@ export default function EditPropertyPage() {
         setInviteLoading(false);
         return;
       }
+      setAgentInviteSentAt(new Date().toISOString());
+      setInvitedAgentName(agentName.trim() || "");
       const shareText = tInvite("shareMessage")
         .replace("{propertyName}", name.trim() || "—")
         .replace("{url}", inviteUrl);
@@ -1610,6 +1625,39 @@ export default function EditPropertyPage() {
                         className="text-sm text-red-600 hover:underline"
                       >
                         {t("removeAgent")}
+                      </button>
+                    </div>
+                  </div>
+                ) : agentInviteSentAt ? (
+                  /* Invited (waiting for agent to accept) */
+                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-2">
+                    <p className="flex items-center gap-2 text-sm font-medium text-amber-700">
+                      <UserPlus className="h-4 w-4 shrink-0" aria-hidden />
+                      {t("invitedStatus")}
+                    </p>
+                    {invitedAgentName && (
+                      <p className="text-sm text-slate-600">
+                        {t("invitedToName", { name: invitedAgentName })}
+                      </p>
+                    )}
+                    <div className="flex gap-0 rounded-lg border border-slate-200 bg-white overflow-hidden">
+                      <input
+                        id="edit-agent"
+                        type="text"
+                        value={agentName}
+                        onChange={(e) => setAgentName(e.target.value)}
+                        placeholder={t("agentPlaceholder")}
+                        className={`${inputBase} border-0 rounded-none flex-1 min-w-0 px-3`}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleInviteAgent}
+                        disabled={inviteLoading}
+                        className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 border-l border-slate-200 border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/5 tap-target min-h-[44px] disabled:opacity-50"
+                        aria-label={tInvite("inviteAgentAria")}
+                      >
+                        <UserPlus className="h-4 w-4" aria-hidden />
+                        {tInvite("inviteAgent")}
                       </button>
                     </div>
                   </div>

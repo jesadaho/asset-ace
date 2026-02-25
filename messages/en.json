@@ -152,7 +152,9 @@
     "lineGroupPlaceholder": "LINE group name or invite link",
     "addAmenityPlaceholder": "Add amenity",
     "add": "Add",
-    "removeAmenity": "Remove {name}"
+    "removeAmenity": "Remove {name}",
+    "invitedStatus": "Invited",
+    "invitedToName": "Sent invite to {name}"
   },
   "propertyEdit": {
     "listingTypeRent": "For rent",

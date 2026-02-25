@@ -87,7 +87,10 @@ export async function POST(request: NextRequest) {
       try {
         const updated = await Property.findOneAndUpdate(
           { _id: propId },
-          { $set: { agentLineId: lineUserId, agentName: name.trim() } },
+          {
+            $set: { agentLineId: lineUserId, agentName: name.trim() },
+            $unset: { agentInviteSentAt: "", invitedAgentName: "" },
+          },
           { new: true, select: "ownerId" }
         ).lean();
         if (updated?.ownerId) {
