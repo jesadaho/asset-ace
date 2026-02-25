@@ -9,10 +9,12 @@ import {
 } from "@/lib/api/onboarding";
 
 const ONBOARDING_PATH = "/onboarding";
+const ADD_FRIEND_REQUIRED_PATH = "/add-friend-required";
 
 const ALLOWED_PATHS = [
   "/",
   ONBOARDING_PATH,
+  ADD_FRIEND_REQUIRED_PATH,
   "/owners",
   "/agents",
   "/tenants",
@@ -46,19 +48,20 @@ function getIntendedPathFromQuery(): string | null {
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isReady, isLoggedIn, profile, liffId, error } = useLiff();
+  const { isReady, isLoggedIn, profile, liffId, error, isFriend } = useLiff();
   const [checked, setChecked] = useState(false);
 
   const canRedirect = isReady && (!liffId || isLoggedIn === false || profile !== null || error !== null);
 
-  // Redirect based on liff.state/path/redirect only after LIFF state is resolved
+  // Redirect based on liff.state/path/redirect only after LIFF state is resolved (skip when user must add friend first)
   useEffect(() => {
     if (!canRedirect) return;
+    if (isLoggedIn === true && isFriend === false && pathname !== ADD_FRIEND_REQUIRED_PATH) return;
     const queryPath = getIntendedPathFromQuery();
     if (queryPath && pathname !== queryPath) {
       router.replace(queryPath);
     }
-  }, [canRedirect, pathname, router]);
+  }, [canRedirect, isLoggedIn, isFriend, pathname, router]);
 
   useEffect(() => {
     if (!canRedirect) {
@@ -66,6 +69,15 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
     if (isLoggedIn !== true) {
+      setChecked(true);
+      return;
+    }
+    if (pathname === ADD_FRIEND_REQUIRED_PATH) {
+      setChecked(true);
+      return;
+    }
+    if (isFriend === false) {
+      router.replace(ADD_FRIEND_REQUIRED_PATH);
       setChecked(true);
       return;
     }
@@ -109,7 +121,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [canRedirect, isLoggedIn, pathname, router]);
+  }, [canRedirect, isLoggedIn, isFriend, pathname, router]);
 
   if (!canRedirect || (!checked && isLoggedIn === true)) {
     return (

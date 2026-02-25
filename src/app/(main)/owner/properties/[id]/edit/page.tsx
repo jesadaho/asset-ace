@@ -25,29 +25,29 @@ import { useTranslations } from "next-intl";
 const MAX_PHOTOS = 10;
 
 const LISTING_TYPES = [
-  { value: "rent", label: "For rent" },
-  { value: "sale", label: "For sale" },
+  { value: "rent", labelKey: "listingTypeRent" as const },
+  { value: "sale", labelKey: "listingTypeSale" as const },
 ];
 
 const PROPERTY_TYPES = [
-  { value: "Condo", label: "Condo" },
-  { value: "House", label: "House" },
-  { value: "Apartment", label: "Apartment" },
+  { value: "Condo", labelKey: "propertyTypeCondo" as const },
+  { value: "House", labelKey: "propertyTypeHouse" as const },
+  { value: "Apartment", labelKey: "propertyTypeApartment" as const },
 ];
 
 const AMENITY_OPTIONS = [
-  { id: "balcony", label: "Balcony" },
-  { id: "basement", label: "Basement" },
-  { id: "bike-parking", label: "Bike Parking" },
-  { id: "cable-tv", label: "Cable TV" },
-  { id: "pool", label: "Pool" },
-  { id: "gym", label: "Gym" },
-  { id: "parking", label: "Parking" },
-  { id: "garden", label: "Garden" },
-  { id: "security", label: "Security" },
-  { id: "elevator", label: "Elevator" },
-  { id: "wifi", label: "WiFi" },
-  { id: "air-conditioning", label: "Air Conditioning" },
+  { id: "balcony", labelKey: "amenityBalcony" as const },
+  { id: "basement", labelKey: "amenityBasement" as const },
+  { id: "bike-parking", labelKey: "amenityBikeParking" as const },
+  { id: "cable-tv", labelKey: "amenityCableTv" as const },
+  { id: "pool", labelKey: "amenityPool" as const },
+  { id: "gym", labelKey: "amenityGym" as const },
+  { id: "parking", labelKey: "amenityParking" as const },
+  { id: "garden", labelKey: "amenityGarden" as const },
+  { id: "security", labelKey: "amenitySecurity" as const },
+  { id: "elevator", labelKey: "amenityElevator" as const },
+  { id: "wifi", labelKey: "amenityWifi" as const },
+  { id: "air-conditioning", labelKey: "amenityAirConditioning" as const },
 ];
 
 const STATUS_OPTIONS = ["Available", "Occupied", "Draft"] as const;
@@ -120,12 +120,12 @@ function isContractEnded(contractStartDate: string, leaseDurationMonths: number)
   return today >= end;
 }
 
-const LISTING_PLATFORMS = [
-  "Facebook Marketplace",
-  "DDproperty",
-  "Livinginsider",
-  "DotProperty",
-] as const;
+const LISTING_PLATFORMS: { apiValue: string; labelKey: "platformFb" | "platformDDproperty" | "platformLivinginsider" | "platformDotProperty" }[] = [
+  { apiValue: "Facebook Marketplace", labelKey: "platformFb" },
+  { apiValue: "DDproperty", labelKey: "platformDDproperty" },
+  { apiValue: "Livinginsider", labelKey: "platformLivinginsider" },
+  { apiValue: "DotProperty", labelKey: "platformDotProperty" },
+];
 
 export default function EditPropertyPage() {
   const router = useRouter();
@@ -136,6 +136,7 @@ export default function EditPropertyPage() {
   const modalContractInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const t = useTranslations("propertyDetail");
+  const tEdit = useTranslations("propertyEdit");
   const tProps = useTranslations("properties");
   const tAuth = useTranslations("auth");
   const tInvite = useTranslations("invite");
@@ -258,7 +259,7 @@ export default function EditPropertyPage() {
   useEffect(() => {
     if (!id) {
       setLoading(false);
-      setLoadError("Invalid property");
+      setLoadError(t("invalidProperty"));
       return;
     }
     let cancelled = false;
@@ -267,7 +268,7 @@ export default function EditPropertyPage() {
         const liff = (await import("@line/liff")).default;
         const token = liff.getAccessToken();
         if (!token) {
-          if (!cancelled) setLoadError("Please log in with LINE.");
+          if (!cancelled) setLoadError(tAuth("pleaseLogin"));
           setLoading(false);
           return;
         }
@@ -276,12 +277,12 @@ export default function EditPropertyPage() {
         });
         if (cancelled) return;
         if (res.status === 401) {
-          setLoadError("Please log in with LINE.");
+          setLoadError(tAuth("pleaseLogin"));
           setLoading(false);
           return;
         }
         if (res.status === 404) {
-          setLoadError("Property not found.");
+          setLoadError(t("notFound"));
           setLoading(false);
           return;
         }
@@ -294,7 +295,7 @@ export default function EditPropertyPage() {
         const data = await res.json();
         const p: PropertyData = data.property;
         if (!p) {
-          setLoadError("Invalid response.");
+          setLoadError(tEdit("invalidResponse"));
           setLoading(false);
           return;
         }
@@ -302,7 +303,7 @@ export default function EditPropertyPage() {
         setLoadError(null);
       } catch (err) {
         if (!cancelled) {
-          setLoadError(err instanceof Error ? err.message : "Failed to load property");
+          setLoadError(err instanceof Error ? err.message : t("failedToLoad"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -320,7 +321,7 @@ export default function EditPropertyPage() {
     );
   };
   const filteredAmenityOptions = AMENITY_OPTIONS.filter((opt) =>
-    opt.label.toLowerCase().includes(amenitySearch.toLowerCase().trim())
+    tEdit(opt.labelKey).toLowerCase().includes(amenitySearch.toLowerCase().trim())
   );
 
   const maxNewPhotos = Math.max(0, MAX_PHOTOS - existingImageKeys.length);
@@ -371,14 +372,14 @@ export default function EditPropertyPage() {
           const uploadedKeys = uploadData.uploads ?? [];
           newKeys = uploadedKeys.map((u) => u.key);
           if (uploadedKeys.length !== imageFiles.length) {
-            setUploadError("Invalid upload response");
+            setUploadError(tEdit("uploadInvalidResponse"));
             setSaving(false);
             return;
           }
         } catch (uploadErr) {
           setUploadProgress(null);
           setUploadError(
-            uploadErr instanceof Error ? uploadErr.message : "Upload failed"
+            uploadErr instanceof Error ? uploadErr.message : tEdit("uploadFailed")
           );
           setSaving(false);
           return;
@@ -388,7 +389,7 @@ export default function EditPropertyPage() {
       const liff = (await import("@line/liff")).default;
       const token = liff.getAccessToken();
       if (!token) {
-        setUploadError("Please log in with LINE to save.");
+        setUploadError(tEdit("pleaseLoginToSave"));
         setSaving(false);
         return;
       }
@@ -404,7 +405,7 @@ export default function EditPropertyPage() {
           if (keys.length > 0) finalContractKey = keys[0];
         } catch (contractErr) {
           setUploadProgress(null);
-          setUploadError(contractErr instanceof Error ? contractErr.message : "Contract upload failed");
+          setUploadError(contractErr instanceof Error ? contractErr.message : tEdit("contractUploadFailed"));
           setSaving(false);
           return;
         }
@@ -457,7 +458,7 @@ export default function EditPropertyPage() {
       router.push(`/owner/properties/${id}`);
     } catch (err) {
       console.error("[Edit Property]", err);
-      setUploadError(err instanceof Error ? err.message : "Something went wrong");
+      setUploadError(err instanceof Error ? err.message : tEdit("saveFailedGeneric"));
     } finally {
       setSaving(false);
     }
@@ -465,21 +466,21 @@ export default function EditPropertyPage() {
 
   const handleSetRentedSubmit = async () => {
     if (!modalTenantName.trim()) {
-      setSetRentedError("Tenant name is required");
+      setSetRentedError(tEdit("tenantNameRequiredError"));
       return;
     }
     if (!modalContractStartDate.trim()) {
-      setSetRentedError("Lease start date is required");
+      setSetRentedError(tEdit("leaseStartRequiredError"));
       return;
     }
     const startDate = new Date(modalContractStartDate);
     if (Number.isNaN(startDate.getTime())) {
-      setSetRentedError("Invalid lease start date");
+      setSetRentedError(tEdit("invalidLeaseStartError"));
       return;
     }
     const duration = parseInt(modalLeaseDurationMonths, 10);
     if (!Number.isInteger(duration) || duration < 1) {
-      setSetRentedError("Lease duration (months) is required");
+      setSetRentedError(tEdit("leaseDurationRequiredError"));
       return;
     }
     setSetRentedLoading(true);
@@ -488,7 +489,7 @@ export default function EditPropertyPage() {
       const liff = (await import("@line/liff")).default;
       const token = liff.getAccessToken();
       if (!token) {
-        setSetRentedError("Please log in with LINE.");
+        setSetRentedError(tAuth("pleaseLogin"));
         setSetRentedLoading(false);
         return;
       }
@@ -517,7 +518,7 @@ export default function EditPropertyPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setSetRentedError(data.message ?? "Failed to set as rented");
+        setSetRentedError(data.message ?? tEdit("setRentedFailed"));
         setSetRentedLoading(false);
         return;
       }
@@ -536,7 +537,7 @@ export default function EditPropertyPage() {
       setModalLeaseDurationMonths("");
       setModalContractFile(null);
     } catch (err) {
-      setSetRentedError(err instanceof Error ? err.message : "Something went wrong");
+      setSetRentedError(err instanceof Error ? err.message : tEdit("saveFailedGeneric"));
     } finally {
       setSetRentedLoading(false);
     }
@@ -712,7 +713,7 @@ export default function EditPropertyPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-slate-500 text-sm">Loading property...</p>
+        <p className="text-slate-500 text-sm">{t("loading")}</p>
       </div>
     );
   }
@@ -740,12 +741,12 @@ export default function EditPropertyPage() {
           <Link
             href={`/owner/properties/${id}`}
             className="flex items-center justify-center p-2 -m-2 text-[#0F172A] hover:text-[#003366] tap-target min-h-[44px] min-w-[44px]"
-            aria-label="Back"
+            aria-label={tEdit("backAria")}
           >
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </Link>
           <h1 className="flex-1 text-lg font-semibold text-[#0F172A] text-center -ml-12">
-            Edit Property
+            {tEdit("editPageTitle")}
           </h1>
           <span className="w-10" aria-hidden />
         </div>
@@ -754,28 +755,28 @@ export default function EditPropertyPage() {
       {setRentedModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="set-rented-title">
           <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-slate-200 p-4 max-h-[90vh] overflow-y-auto space-y-4">
-            <h2 id="set-rented-title" className="text-lg font-semibold text-[#0F172A]">Set as Rented</h2>
-            <p className="text-sm text-slate-600">Enter tenant and lease details.</p>
+            <h2 id="set-rented-title" className="text-lg font-semibold text-[#0F172A]">{tEdit("setRentedTitle")}</h2>
+            <p className="text-sm text-slate-600">{tEdit("setRentedDescription")}</p>
             <div>
-              <label htmlFor="modal-tenant-name" className="block text-sm font-medium text-[#0F172A] mb-1">Tenant Name *</label>
+              <label htmlFor="modal-tenant-name" className="block text-sm font-medium text-[#0F172A] mb-1">{tEdit("tenantNameRequired")}</label>
               <input
                 id="modal-tenant-name"
                 type="text"
                 value={modalTenantName}
                 onChange={(e) => setModalTenantName(e.target.value)}
-                placeholder="Enter tenant name"
+                placeholder={tEdit("tenantNamePlaceholder")}
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 disabled={setRentedLoading}
               />
             </div>
             <div>
-              <label htmlFor="modal-tenant-contact" className="block text-sm text-slate-500 mb-1">Tenant Contact (LINE ID or phone, optional)</label>
+              <label htmlFor="modal-tenant-contact" className="block text-sm text-slate-500 mb-1">{tEdit("tenantContactLabel")}</label>
               <input
                 id="modal-tenant-contact"
                 type="text"
                 value={modalTenantContact}
                 onChange={(e) => setModalTenantContact(e.target.value)}
-                placeholder="Leave blank if none"
+                placeholder={tEdit("tenantContactPlaceholder")}
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 disabled={setRentedLoading}
               />
@@ -805,7 +806,7 @@ export default function EditPropertyPage() {
               </div>
             </div>
             <div>
-              <label htmlFor="modal-contract-start" className="block text-sm font-medium text-[#0F172A] mb-1">Lease Start Date *</label>
+              <label htmlFor="modal-contract-start" className="block text-sm font-medium text-[#0F172A] mb-1">{tEdit("leaseStartDate")}</label>
               <input
                 id="modal-contract-start"
                 type="date"
@@ -816,20 +817,20 @@ export default function EditPropertyPage() {
               />
             </div>
             <div>
-              <label htmlFor="modal-lease-duration" className="block text-sm font-medium text-[#0F172A] mb-1">Lease Duration (months) *</label>
+              <label htmlFor="modal-lease-duration" className="block text-sm font-medium text-[#0F172A] mb-1">{tEdit("leaseDurationMonths")}</label>
               <input
                 id="modal-lease-duration"
                 type="number"
                 min={1}
                 value={modalLeaseDurationMonths}
                 onChange={(e) => setModalLeaseDurationMonths(e.target.value)}
-                placeholder="e.g. 12"
+                placeholder={tEdit("leaseDurationPlaceholder")}
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                 disabled={setRentedLoading}
               />
             </div>
             <div>
-              <label className="block text-sm text-slate-500 mb-1">Contract file (optional)</label>
+              <label className="block text-sm text-slate-500 mb-1">{tEdit("contractFileOptional")}</label>
               <input
                 ref={modalContractInputRef}
                 type="file"
@@ -843,7 +844,7 @@ export default function EditPropertyPage() {
                 className="text-sm text-[#10B981] hover:underline"
                 disabled={setRentedLoading}
               >
-                {modalContractFile ? modalContractFile.name : "Choose file (PDF or image)"}
+                {modalContractFile ? modalContractFile.name : tEdit("chooseFilePdf")}
               </button>
             </div>
             {setRentedError && <p className="text-sm text-red-600" role="alert">{setRentedError}</p>}
@@ -854,7 +855,7 @@ export default function EditPropertyPage() {
                 className="px-4 py-2 rounded-lg text-slate-600 font-medium hover:bg-slate-100 disabled:opacity-50"
                 disabled={setRentedLoading}
               >
-                Cancel
+                {t("cloneCancel")}
               </button>
               <button
                 type="button"
@@ -862,7 +863,7 @@ export default function EditPropertyPage() {
                 className="px-4 py-2 rounded-lg bg-[#10B981] text-white font-medium hover:bg-[#10B981]/90 disabled:opacity-50"
                 disabled={setRentedLoading}
               >
-                {setRentedLoading ? "Saving..." : "Save"}
+                {setRentedLoading ? tEdit("saving") : tEdit("save")}
               </button>
             </div>
           </div>
@@ -881,7 +882,7 @@ export default function EditPropertyPage() {
             </label>
             {uploadProgress != null && (
               <div className="mb-3">
-                <p className="text-sm text-slate-600 mb-1.5">Uploading photos…</p>
+                <p className="text-sm text-slate-600 mb-1.5">{tEdit("uploadingPhotos")}</p>
                 <div
                   className="w-full h-2 bg-slate-200 rounded-full overflow-hidden"
                   role="progressbar"
@@ -945,8 +946,8 @@ export default function EditPropertyPage() {
                 {imageFiles.length >= maxNewPhotos
                   ? `Maximum ${maxNewPhotos} more photo(s)`
                   : imageFiles.length > 0
-                    ? "Add more photos"
-                    : "Add more photos"}
+                    ? tEdit("addMorePhotos")
+                    : tEdit("addMorePhotos")}
               </span>
             </button>
             <input
@@ -956,7 +957,7 @@ export default function EditPropertyPage() {
               multiple
               onChange={handleImageChange}
               className="sr-only"
-              aria-label="Choose property photos"
+              aria-label={tEdit("choosePropertyPhotosAria")}
             />
             {imageFiles.length > 0 && (
               <ul className="mt-3 space-y-2">
@@ -990,7 +991,7 @@ export default function EditPropertyPage() {
               htmlFor="edit-listing-type"
               className="block text-sm font-medium text-[#0F172A] mb-1"
             >
-              Homes for sale or rent
+              {tEdit("homesSaleOrRent")}
             </label>
             <select
               id="edit-listing-type"
@@ -1002,7 +1003,7 @@ export default function EditPropertyPage() {
             >
               {LISTING_TYPES.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {tEdit(opt.labelKey)}
                 </option>
               ))}
             </select>
@@ -1010,14 +1011,14 @@ export default function EditPropertyPage() {
 
           <section className="space-y-4">
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-              Basic Info
+              {tEdit("basicInfo")}
             </h2>
             <div>
               <label
                 htmlFor="edit-name"
                 className="block text-sm font-medium text-[#0F172A] mb-1"
               >
-                Property Name
+                {tEdit("propertyName")}
               </label>
               <input
                 id="edit-name"
@@ -1027,7 +1028,7 @@ export default function EditPropertyPage() {
                   setName(e.target.value);
                   setNameError(false);
                 }}
-                placeholder="Enter property name"
+                placeholder={tEdit("propertyNamePlaceholder")}
                 className={`${inputBase} ${nameError ? inputError : ""}`}
                 aria-invalid={nameError}
                 aria-describedby={nameError ? "edit-name-error" : undefined}
@@ -1038,7 +1039,7 @@ export default function EditPropertyPage() {
                   className="mt-1 text-sm text-red-500"
                   role="alert"
                 >
-                  Property name is required
+                  {tEdit("propertyNameRequired")}
                 </p>
               )}
             </div>
@@ -1047,7 +1048,7 @@ export default function EditPropertyPage() {
                 htmlFor="edit-type"
                 className="block text-sm font-medium text-[#0F172A] mb-1"
               >
-                Property Type
+                {tEdit("propertyType")}
               </label>
               <select
                 id="edit-type"
@@ -1057,7 +1058,7 @@ export default function EditPropertyPage() {
               >
                 {PROPERTY_TYPES.map((opt) => (
                   <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {tEdit(opt.labelKey)}
                   </option>
                 ))}
               </select>
@@ -1067,7 +1068,7 @@ export default function EditPropertyPage() {
                 htmlFor="edit-rent"
                 className="block text-sm font-medium text-[#0F172A] mb-1"
               >
-                Monthly Rent
+                {tEdit("monthlyRent")}
               </label>
               <div className="flex items-center border-b border-slate-200 focus-within:border-[#003366]">
                 <span className="text-base text-slate-500 mr-2">฿</span>
@@ -1092,7 +1093,7 @@ export default function EditPropertyPage() {
                   className="mt-1 text-sm text-red-500"
                   role="alert"
                 >
-                  Monthly rent is required
+                  {tEdit("monthlyRentRequired")}
                 </p>
               )}
             </div>
@@ -1101,13 +1102,13 @@ export default function EditPropertyPage() {
                 htmlFor="edit-address"
                 className="block text-sm font-medium text-[#0F172A] mb-1"
               >
-                Address
+                {tEdit("address")}
               </label>
               <textarea
                 id="edit-address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="Enter full address"
+                placeholder={tEdit("addressPlaceholder")}
                 rows={3}
                 className={`${inputBase} resize-none border border-slate-200 rounded-lg px-3 focus:border-[#003366]`}
               />
@@ -1116,14 +1117,14 @@ export default function EditPropertyPage() {
 
           <section className="space-y-4">
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-              Details
+              {tEdit("details")}
             </h2>
             <div>
               <label
                 htmlFor="edit-bedrooms"
                 className="block text-sm font-medium text-[#0F172A] mb-1"
               >
-                Bedrooms
+                {t("bedrooms")}
               </label>
               <input
                 id="edit-bedrooms"
@@ -1133,7 +1134,7 @@ export default function EditPropertyPage() {
                 onChange={(e) =>
                   setBedrooms(e.target.value.replace(/\D/g, ""))
                 }
-                placeholder="e.g. 2"
+                placeholder={tEdit("bedroomsPlaceholder")}
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
               />
             </div>
@@ -1142,7 +1143,7 @@ export default function EditPropertyPage() {
                 htmlFor="edit-bathrooms"
                 className="block text-sm font-medium text-[#0F172A] mb-1"
               >
-                Bathrooms
+                {t("bathrooms")}
               </label>
               <input
                 id="edit-bathrooms"
@@ -1152,7 +1153,7 @@ export default function EditPropertyPage() {
                 onChange={(e) =>
                   setBathrooms(e.target.value.replace(/\D/g, ""))
                 }
-                placeholder="e.g. 1"
+                placeholder={tEdit("bathroomsPlaceholder")}
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
               />
             </div>
@@ -1164,7 +1165,7 @@ export default function EditPropertyPage() {
                 htmlFor="edit-address-private"
                 className="text-sm font-medium text-[#0F172A]"
               >
-                Keep property address private
+                {tEdit("keepAddressPrivate")}
               </label>
               <button
                 id="edit-address-private"
@@ -1186,8 +1187,7 @@ export default function EditPropertyPage() {
               </button>
             </div>
             <p className="mt-1.5 text-sm text-slate-500">
-              We won&apos;t show the exact address. The exact address helps us
-              verify and list your property.
+              {tEdit("addressPrivateDescription")}
             </p>
           </section>
 
@@ -1196,13 +1196,13 @@ export default function EditPropertyPage() {
               htmlFor="edit-description"
               className="block text-sm font-medium text-[#0F172A] mb-1"
             >
-              Property description
+              {tEdit("propertyDescription")}
             </label>
             <textarea
               id="edit-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your property..."
+              placeholder={tEdit("propertyDescriptionPlaceholder")}
               rows={4}
               className={`${inputBase} resize-none border border-slate-200 rounded-lg px-3 focus:border-[#003366]`}
             />
@@ -1233,13 +1233,13 @@ export default function EditPropertyPage() {
                 placeholder="e.g. 85"
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
               />
-              <p className="mt-1 text-xs text-slate-500">Optional</p>
+              <p className="mt-1 text-xs text-slate-500">{tEdit("optional")}</p>
             </div>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-              Amenities
+              {t("amenities")}
             </h2>
             <div className="relative">
               <Search
@@ -1250,9 +1250,9 @@ export default function EditPropertyPage() {
                 type="search"
                 value={amenitySearch}
                 onChange={(e) => setAmenitySearch(e.target.value)}
-                placeholder="Search amenities..."
+                placeholder={tEdit("searchAmenities")}
                 className={`${inputBase} pl-9 border border-slate-200 rounded-lg focus:border-[#003366]`}
-                aria-label="Search amenities"
+                aria-label={tEdit("searchAmenitiesAria")}
               />
             </div>
             <div className="flex flex-wrap gap-2">
@@ -1274,7 +1274,7 @@ export default function EditPropertyPage() {
                     ) : (
                       <Plus className="h-4 w-4 shrink-0" aria-hidden />
                     )}
-                    <span>{opt.label}</span>
+                    <span>{tEdit(opt.labelKey)}</span>
                   </button>
                 );
               })}
@@ -1435,7 +1435,7 @@ export default function EditPropertyPage() {
           {status === "Available" && (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-                Listing options
+                {tEdit("listingOptions")}
               </h2>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -1444,7 +1444,7 @@ export default function EditPropertyPage() {
                   onChange={(e) => setOpenForAgent(e.target.checked)}
                   className="rounded border-slate-300"
                 />
-                <span className="text-sm text-[#0F172A]">Open for Agent</span>
+                <span className="text-sm text-[#0F172A]">{tEdit("openForAgent")}</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -1453,7 +1453,7 @@ export default function EditPropertyPage() {
                   onChange={(e) => setPublicListing(e.target.checked)}
                   className="rounded border-slate-300"
                 />
-                <span className="text-sm text-[#0F172A]">Public Listing</span>
+                <span className="text-sm text-[#0F172A]">{tEdit("publicListing")}</span>
               </label>
               {publicListing && (
                 <div className="flex flex-wrap gap-2 pt-2">
@@ -1467,12 +1467,12 @@ export default function EditPropertyPage() {
                         address.trim(),
                         description.trim(),
                       ].filter(Boolean).join("\n");
-                      navigator.clipboard.writeText(text).then(() => toast.show("Copied to clipboard"));
+                      navigator.clipboard.writeText(text).then(() => toast.show(tEdit("copiedToClipboard")));
                     }}
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
                   >
                     <Copy className="h-4 w-4" />
-                    Copy Text for Facebook
+                    {tEdit("copyTextFb")}
                   </button>
                   <button
                     type="button"
@@ -1485,13 +1485,13 @@ export default function EditPropertyPage() {
                         a.rel = "noopener";
                         a.click();
                       });
-                      if (existingImageUrls.length === 0) toast.show("No photos to download");
-                      else toast.show("Downloading photos...");
+                      if (existingImageUrls.length === 0) toast.show(tEdit("noPhotosToDownload"));
+                      else toast.show(tEdit("downloadingPhotos"));
                     }}
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
                   >
                     <Download className="h-4 w-4" />
-                    Download Photos for DDproperty
+                    {tEdit("downloadPhotosDDproperty")}
                   </button>
                 </div>
               )}
@@ -1501,7 +1501,7 @@ export default function EditPropertyPage() {
           {status === "Occupied" && (
             <section className="space-y-6">
               <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide flex items-center gap-2 flex-wrap">
-                Resident Details
+                {tEdit("residentDetails")}
                 {contractStartDate.trim() && !Number.isNaN(parseInt(leaseDurationMonths, 10)) && isContractEnded(contractStartDate, parseInt(leaseDurationMonths, 10)) && (
                   <Badge variant="default">{t("contractEnded")}</Badge>
                 )}
@@ -1512,27 +1512,27 @@ export default function EditPropertyPage() {
                 <h3 className="text-sm font-medium text-[#0F172A]">{t("tenantSection")}</h3>
                 <div>
                   <label htmlFor="edit-tenant" className="block text-sm font-medium text-[#0F172A] mb-1">
-                    Tenant Name
+                    {tEdit("tenantName")}
                   </label>
                   <input
                     id="edit-tenant"
                     type="text"
                     value={tenantName}
                     onChange={(e) => setTenantName(e.target.value)}
-                    placeholder="Enter tenant name..."
+                    placeholder={tEdit("tenantNamePlaceholder2")}
                     className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                   />
                 </div>
                 <div>
                   <label htmlFor="edit-tenant-line-id" className="block text-sm text-slate-500 mb-1">
-                    LINE ID (Optional)
+                    {tEdit("lineIdOptional")}
                   </label>
                   <input
                     id="edit-tenant-line-id"
                     type="text"
                     value={tenantLineId}
                     onChange={(e) => setTenantLineId(e.target.value)}
-                    placeholder="Paste tenant LINE user ID"
+                    placeholder={tEdit("pasteTenantLineId")}
                     className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                   />
                 </div>
@@ -1601,14 +1601,14 @@ export default function EditPropertyPage() {
 
                 <div>
                   <label htmlFor="edit-line-group" className="block text-sm text-slate-500 mb-1">
-                    LINE Group (Optional)
+                    {tEdit("lineGroupOptional")}
                   </label>
                   <input
                     id="edit-line-group"
                     type="text"
                     value={lineGroup}
                     onChange={(e) => setLineGroup(e.target.value)}
-                    placeholder="Name or invite link of LINE group for this property"
+                    placeholder={tEdit("lineGroupPlaceholder")}
                     className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                   />
                 </div>
@@ -1618,7 +1618,7 @@ export default function EditPropertyPage() {
               <div className="space-y-4">
                 <div>
                   <label htmlFor="edit-contract-start-date" className="block text-sm font-medium text-[#0F172A] mb-1">
-                    Contract start date (optional)
+                    {tEdit("contractStartOptional")}
                   </label>
                   <input
                     id="edit-contract-start-date"
@@ -1638,12 +1638,12 @@ export default function EditPropertyPage() {
                     min={1}
                     value={leaseDurationMonths}
                     onChange={(e) => setLeaseDurationMonths(e.target.value)}
-                    placeholder="e.g. 12"
+                    placeholder={tEdit("leaseDurationPlaceholder")}
                     className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-500 mb-1">Contract file (optional)</label>
+                  <label className="block text-sm text-slate-500 mb-1">{tEdit("contractFileOptional")}</label>
                   <input
                     ref={contractInputRef}
                     type="file"
@@ -1656,7 +1656,7 @@ export default function EditPropertyPage() {
                     onClick={() => contractInputRef.current?.click()}
                     className="text-sm text-[#10B981] hover:underline"
                   >
-                    {contractFile ? contractFile.name : contractKey ? "Replace contract file" : "Choose file (PDF or image)"}
+                    {contractFile ? contractFile.name : contractKey ? tEdit("replaceContractFile") : tEdit("chooseFilePdf")}
                   </button>
                 </div>
               </div>
@@ -1697,20 +1697,20 @@ export default function EditPropertyPage() {
           {status === "Available" && (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-                Publish to Listing Sites
+                {tEdit("publishToListingSites")}
               </h2>
-              <p className="text-sm text-slate-600">Public listing page</p>
+              <p className="text-sm text-slate-600">{tEdit("publicListingPage")}</p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     const url = typeof window !== "undefined" ? `${window.location.origin}/listings/${id}` : "";
-                    navigator.clipboard.writeText(url).then(() => toast.show("Link copied to clipboard"));
+                    navigator.clipboard.writeText(url).then(() => toast.show(tEdit("copiedToClipboard")));
                   }}
                   className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
                 >
                   <Copy className="h-4 w-4" />
-                  Copy Link
+                  {tEdit("copyLink")}
                 </button>
                 <a
                   href={`/listings/${id}`}
@@ -1719,29 +1719,29 @@ export default function EditPropertyPage() {
                   className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Preview
+                  {tEdit("preview")}
                 </a>
               </div>
-              <p className="text-xs text-slate-500">Enable &quot;Public Listing&quot; above for the page to be visible.</p>
+              <p className="text-xs text-slate-500">{tEdit("enablePublicListingHint")}</p>
               <div className="pt-2">
-                <p className="text-sm font-medium text-[#0F172A] mb-2">Listing platforms (coming soon)</p>
+                <p className="text-sm font-medium text-[#0F172A] mb-2">{tEdit("listingPlatformsComingSoon")}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {LISTING_PLATFORMS.map((platform) => (
                     <button
-                      key={platform}
+                      key={platform.apiValue}
                       type="button"
                       onClick={() => {
-                        toast.show(`ฟีเจอร์นี้กำลังพัฒนา! คุณอยากให้เราเชื่อมต่อกับ ${platform} ก่อนใครหรือไม่?`);
+                        toast.show(`ฟีเจอร์นี้กำลังพัฒนา! คุณอยากให้เราเชื่อมต่อกับ ${tEdit(platform.labelKey)} ก่อนใครหรือไม่?`);
                         fetch("/api/log/listing-interest", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ platform }),
+                          body: JSON.stringify({ platform: platform.apiValue }),
                         }).catch(() => {});
                       }}
                       className="flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 relative grayscale opacity-90"
                     >
-                      <span className="text-xs font-medium text-center">{platform}</span>
-                      <span className="text-[10px] text-amber-600 font-medium">Coming Soon</span>
+                      <span className="text-xs font-medium text-center">{tEdit(platform.labelKey)}</span>
+                      <span className="text-[10px] text-amber-600 font-medium">{tEdit("comingSoon")}</span>
                     </button>
                   ))}
                 </div>
@@ -1791,7 +1791,7 @@ export default function EditPropertyPage() {
           disabled={saving}
           isLoading={saving}
         >
-          Save
+          {tEdit("save")}
         </Button>
       </div>
     </div>

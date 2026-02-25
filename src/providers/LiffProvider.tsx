@@ -23,6 +23,8 @@ interface LiffContextValue {
   profile: LiffProfile | null;
   scope: string[] | null;
   error: string | null;
+  /** True = friend, false = not friend, null = unknown / not available */
+  isFriend: boolean | null;
   liffId: string;
   login: () => void;
   logout: () => void;
@@ -50,6 +52,7 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
   const [profile, setProfile] = useState<LiffProfile | null>(null);
   const [scope, setScope] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isFriend, setIsFriend] = useState<boolean | null>(null);
 
   const initLiff = useCallback(async () => {
     if (!liffId) {
@@ -79,6 +82,12 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
         } catch (profileErr) {
           const msg = profileErr instanceof Error ? profileErr.message : String(profileErr);
           setError(`Profile: ${msg}. Unlink this app in LINE Settings > Linked apps, then open again.`);
+        }
+        try {
+          const friendship = await liff.getFriendship();
+          setIsFriend((friendship as { friendFlag?: boolean }).friendFlag ?? false);
+        } catch {
+          setIsFriend(null);
         }
       }
     } catch (err) {
@@ -112,6 +121,7 @@ export function LiffProvider({ children, liffId }: LiffProviderProps) {
     profile,
     scope,
     error,
+    isFriend,
     liffId,
     login,
     logout,
