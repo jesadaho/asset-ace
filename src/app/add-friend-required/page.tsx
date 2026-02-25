@@ -15,8 +15,8 @@ export default function AddFriendRequiredPage() {
 
   return (
     <div className="min-h-dvh flex flex-col bg-[#F8FAFC]">
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 max-w-lg mx-auto">
-        <div className="w-full rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-8">
+      <div className="flex-1 flex flex-col items-center justify-start pt-12 px-6 pb-8 max-w-lg mx-auto">
+        <div className="w-full rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden mb-5">
           <div className="bg-gradient-to-br from-[#06C755] to-[#00B900] px-6 pt-6 pb-4 text-center">
             <div className="relative w-40 h-40 mx-auto mb-4">
               <Image
