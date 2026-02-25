@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Building2, Briefcase } from "lucide-react";
+import { checkOnboardingStatus } from "@/lib/api/onboarding";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   Condo: "Condo",
@@ -16,6 +17,7 @@ type PropertyInvite = { name: string; address: string; type?: string };
 
 export default function InviteLandingPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const propId = searchParams.get("propId");
   const t = useTranslations("invite");
 
@@ -24,6 +26,9 @@ export default function InviteLandingPage() {
   const [error, setError] = useState<string | null>(null);
   const [alreadyAccepted, setAlreadyAccepted] = useState(false);
   const [checkingAlreadyAccepted, setCheckingAlreadyAccepted] = useState(false);
+  const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
+  const [acceptLoading, setAcceptLoading] = useState(false);
+  const [acceptError, setAcceptError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!propId?.trim()) {
@@ -89,6 +94,51 @@ export default function InviteLandingPage() {
     };
   }, [propId, property]);
 
+  useEffect(() => {
+    if (!propId?.trim() || !property || alreadyAccepted) return;
+    let cancelled = false;
+    checkOnboardingStatus().then((status) => {
+      if (!cancelled) setIsOnboarded(status.onboarded);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [propId, property, alreadyAccepted]);
+
+  const handleAcceptInvite = async () => {
+    if (!propId?.trim() || acceptLoading) return;
+    setAcceptLoading(true);
+    setAcceptError(null);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setAcceptError(t("propertyNotFound"));
+        setAcceptLoading(false);
+        return;
+      }
+      const res = await fetch("/api/agent/accept-invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ propId: propId.trim() }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { message?: string };
+      if (!res.ok) {
+        setAcceptError(data.message ?? t("failedToLoad"));
+        setAcceptLoading(false);
+        return;
+      }
+      router.push("/agents");
+    } catch {
+      setAcceptError(t("failedToLoad"));
+    } finally {
+      setAcceptLoading(false);
+    }
+  };
+
   if (loading || checkingAlreadyAccepted) {
     return (
       <div className="min-h-dvh bg-slate-50 text-[#0F172A] safe-area-top">
@@ -137,6 +187,8 @@ export default function InviteLandingPage() {
 
   const onboardingUrl = `/onboarding?role=agent&propId=${encodeURIComponent(propId ?? "")}`;
 
+  const showAcceptButton = isOnboarded !== null;
+
   return (
     <div className="min-h-dvh bg-slate-50 text-[#0F172A] safe-area-top">
       <div className="max-w-lg mx-auto px-4 py-8">
@@ -162,12 +214,34 @@ export default function InviteLandingPage() {
         </section>
 
         <div className="flex flex-col gap-3">
-          <Link
-            href={onboardingUrl}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#10B981] text-white font-medium hover:bg-[#10B981]/90 tap-target min-h-[48px]"
-          >
-            {t("ctaAccept")}
-          </Link>
+          {acceptError && (
+            <p className="text-red-600 text-sm" role="alert">
+              {acceptError}
+            </p>
+          )}
+          {showAcceptButton ? (
+            isOnboarded ? (
+              <button
+                type="button"
+                onClick={handleAcceptInvite}
+                disabled={acceptLoading}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#10B981] text-white font-medium hover:bg-[#10B981]/90 tap-target min-h-[48px] disabled:opacity-60"
+              >
+                {acceptLoading ? t("loading") : t("ctaAccept")}
+              </button>
+            ) : (
+              <Link
+                href={onboardingUrl}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#10B981] text-white font-medium hover:bg-[#10B981]/90 tap-target min-h-[48px]"
+              >
+                {t("ctaAccept")}
+              </Link>
+            )
+          ) : (
+            <div className="w-full flex items-center justify-center py-3 px-4 min-h-[48px] text-slate-500 text-sm">
+              {t("loading")}
+            </div>
+          )}
         </div>
       </div>
     </div>
