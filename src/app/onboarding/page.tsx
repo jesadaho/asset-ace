@@ -47,9 +47,15 @@ export default function OnboardingPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [propertySummary, setPropertySummary] = useState<PropertySummary | null>(null);
   const [propertySummaryError, setPropertySummaryError] = useState(false);
+  /** When true, invite API has completed for agent flow; we can show onboarding UI. */
+  const [agentInviteLoaded, setAgentInviteLoaded] = useState(false);
 
   useEffect(() => {
     if (!isAgentFlow || !propId) return;
+    setAgentInviteLoaded(false);
+    // #region agent log
+    fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'H2',location:'onboarding/page.tsx',message:'Agent invite load started',data:{propId},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     let cancelled = false;
     fetch(`/api/properties/${encodeURIComponent(propId)}/invite`)
       .then((res) => {
@@ -66,9 +72,20 @@ export default function OnboardingPage() {
       })
       .catch(() => {
         if (!cancelled) setPropertySummaryError(true);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setAgentInviteLoaded(true);
+          // #region agent log
+          fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'H1',location:'onboarding/page.tsx',message:'Agent invite fetch completed',data:{propId},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+        }
       });
     return () => { cancelled = true; };
   }, [isAgentFlow, propId]);
+
+  /** For agent invite flow: show full-page loading until invite API has completed. */
+  const isAgentInviteLoading = Boolean(isAgentFlow && propId && !agentInviteLoaded);
 
   const validateStep2 = (): boolean => {
     const next: { name?: string; phone?: string } = {};
@@ -102,6 +119,14 @@ export default function OnboardingPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (isAgentInviteLoading) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center bg-white">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#10B981] border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh bg-slate-50 text-[#0F172A] safe-area-top">
