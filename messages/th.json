@@ -144,7 +144,15 @@
     "removeAgentConfirm": "ลบตัวแทนคนนี้หรือไม่? พวกเขาจะเข้าถึงไม่ได้อีก",
     "tenantSection": "ผู้เช่า",
     "agentSection": "ตัวแทน",
-    "chat": "แชท"
+    "chat": "แชท",
+    "residentDetails": "รายละเอียดผู้เช่า",
+    "lineIdOptional": "LINE ID (ไม่บังคับ)",
+    "lineUserIdPlaceholder": "รหัสผู้ใช้ LINE",
+    "agentProfileReadOnly": "โปรไฟล์ของคุณ",
+    "lineGroupPlaceholder": "ชื่อกลุ่ม LINE หรือลิงก์เชิญ",
+    "addAmenityPlaceholder": "เพิ่มสิ่งอำนวยความสะดวก",
+    "add": "เพิ่ม",
+    "removeAmenity": "ลบ {name}"
   },
   "propertyEdit": {
     "listingTypeRent": "ปล่อยเช่า",

@@ -67,6 +67,7 @@ export async function GET(
         lineGroup?: string;
         contractStartDate?: Date;
         leaseDurationMonths?: number;
+        contractKey?: string;
       };
       if (d.tenantName != null) payload.tenantName = d.tenantName;
       if (d.tenantLineId != null) payload.tenantLineId = d.tenantLineId;
@@ -75,6 +76,15 @@ export async function GET(
       if (d.lineGroup != null) payload.lineGroup = d.lineGroup;
       if (d.contractStartDate != null) payload.contractStartDate = d.contractStartDate instanceof Date ? d.contractStartDate.toISOString().slice(0, 10) : String(d.contractStartDate).slice(0, 10);
       if (d.leaseDurationMonths != null) payload.leaseDurationMonths = d.leaseDurationMonths;
+      if (d.contractKey != null && d.contractKey.trim() !== "") {
+        payload.contractKey = d.contractKey;
+        try {
+          const contractUrl = await getPresignedGetUrl(d.contractKey);
+          if (contractUrl) payload.contractUrl = contractUrl;
+        } catch {
+          // omit contractUrl on presign error
+        }
+      }
     }
     return NextResponse.json(payload);
   } catch (err) {
@@ -157,6 +167,9 @@ export async function PATCH(
           : undefined;
     if (leaseDurationMonths !== undefined && !Number.isNaN(leaseDurationMonths) && leaseDurationMonths >= 0) {
       (property as { leaseDurationMonths?: number }).leaseDurationMonths = leaseDurationMonths;
+    }
+    if (typeof body.contractKey === "string") {
+      (property as { contractKey?: string }).contractKey = body.contractKey.trim() || undefined;
     }
 
     await property.save();

@@ -144,7 +144,15 @@
     "removeAgentConfirm": "Remove this agent? They will lose access.",
     "tenantSection": "Tenant",
     "agentSection": "Agent",
-    "chat": "Chat"
+    "chat": "Chat",
+    "residentDetails": "Resident Details",
+    "lineIdOptional": "LINE ID (Optional)",
+    "lineUserIdPlaceholder": "LINE user ID",
+    "agentProfileReadOnly": "Your profile",
+    "lineGroupPlaceholder": "LINE group name or invite link",
+    "addAmenityPlaceholder": "Add amenity",
+    "add": "Add",
+    "removeAmenity": "Remove {name}"
   },
   "propertyEdit": {
     "listingTypeRent": "For rent",

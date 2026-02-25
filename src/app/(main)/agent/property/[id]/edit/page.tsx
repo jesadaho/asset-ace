@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowLeft } from "lucide-react";
+import { uploadFilesWithProgress } from "@/lib/uploadWithProgress";
 
 const inputBase =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-base text-[#0F172A] placeholder:text-slate-400 focus:border-[#003366] focus:outline-none focus:ring-2 focus:ring-[#003366]/20 tap-target min-h-[44px]";
@@ -20,7 +21,8 @@ type PropertyEditData = {
   lineGroup?: string;
   contractStartDate?: string;
   leaseDurationMonths?: number;
-  description?: string;
+  contractKey?: string;
+  contractUrl?: string;
   amenities?: string[];
 };
 
@@ -30,6 +32,7 @@ export default function AgentPropertyEditPage() {
   const id = typeof params.id === "string" ? params.id : "";
   const t = useTranslations("agentProperty");
   const tDetail = useTranslations("propertyDetail");
+  const tEdit = useTranslations("propertyEdit");
   const tAuth = useTranslations("auth");
 
   const [loading, setLoading] = useState(true);
@@ -41,11 +44,17 @@ export default function AgentPropertyEditPage() {
   const [tenantName, setTenantName] = useState("");
   const [tenantLineId, setTenantLineId] = useState("");
   const [agentName, setAgentName] = useState("");
-  const [agentLineId, setAgentLineId] = useState("");
+  const [agentProfile, setAgentProfile] = useState<{
+    displayName: string;
+    pictureUrl?: string;
+  } | null>(null);
   const [lineGroup, setLineGroup] = useState("");
   const [contractStartDate, setContractStartDate] = useState("");
   const [leaseDurationMonths, setLeaseDurationMonths] = useState("");
-  const [description, setDescription] = useState("");
+  const [contractKey, setContractKey] = useState<string | undefined>(undefined);
+  const [contractFile, setContractFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const contractInputRef = useRef<HTMLInputElement>(null);
   const [amenities, setAmenities] = useState<string[]>([]);
   const [amenityInput, setAmenityInput] = useState("");
 
@@ -94,7 +103,6 @@ export default function AgentPropertyEditPage() {
           setTenantName(data.tenantName ?? "");
           setTenantLineId(data.tenantLineId ?? "");
           setAgentName(data.agentName ?? "");
-          setAgentLineId(data.agentLineId ?? "");
           setLineGroup(data.lineGroup ?? "");
           setContractStartDate(
             data.contractStartDate != null
@@ -106,9 +114,17 @@ export default function AgentPropertyEditPage() {
               ? String(data.leaseDurationMonths)
               : ""
           );
-          setDescription(data.description ?? "");
+          setContractKey((data as { contractKey?: string }).contractKey ?? undefined);
           setAmenities(data.amenities ?? []);
           setError(null);
+          liff.getProfile().then(
+            (p) => {
+              if (!cancelled) setAgentProfile({ displayName: p.displayName, pictureUrl: p.pictureUrl });
+            },
+            () => {
+              if (!cancelled) setAgentProfile(null);
+            }
+          );
         }
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : t("failedToLoad"));
@@ -135,6 +151,22 @@ export default function AgentPropertyEditPage() {
         setSaving(false);
         return;
       }
+      let finalContractKey: string | undefined = contractKey;
+      if (contractFile) {
+        setUploadProgress(0);
+        try {
+          const contractUpload = await uploadFilesWithProgress(
+            [contractFile],
+            setUploadProgress
+          );
+          const keys = (contractUpload.uploads ?? []).map((u) => u.key);
+          if (keys.length > 0) finalContractKey = keys[0];
+        } catch (uploadErr) {
+          setSaveError(uploadErr instanceof Error ? uploadErr.message : t("saveFailed"));
+          setSaving(false);
+          return;
+        }
+      }
       const leaseNum =
         leaseDurationMonths.trim() === ""
           ? undefined
@@ -149,12 +181,11 @@ export default function AgentPropertyEditPage() {
           tenantName: tenantName.trim() || undefined,
           tenantLineId: tenantLineId.trim() || undefined,
           agentName: agentName.trim() || undefined,
-          agentLineId: agentLineId.trim() || undefined,
           lineGroup: lineGroup.trim() || undefined,
           contractStartDate: contractStartDate.trim() || undefined,
           leaseDurationMonths:
             leaseNum !== undefined && !Number.isNaN(leaseNum) ? leaseNum : undefined,
-          description: description.trim() || undefined,
+          contractKey: finalContractKey,
           amenities: amenities.length > 0 ? amenities : undefined,
         }),
       });
@@ -240,7 +271,7 @@ export default function AgentPropertyEditPage() {
         <form id="agent-edit-form" onSubmit={handleSubmit} className="space-y-6">
           <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-4">
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-              Resident Details
+              {tDetail("residentDetails")}
             </h2>
             <div>
               <label htmlFor="agent-edit-tenant" className="block text-sm font-medium text-[#0F172A] mb-1">
@@ -257,14 +288,14 @@ export default function AgentPropertyEditPage() {
             </div>
             <div>
               <label htmlFor="agent-edit-tenant-line" className="block text-sm text-slate-500 mb-1">
-                LINE ID (Optional)
+                {tDetail("lineIdOptional")}
               </label>
               <input
                 id="agent-edit-tenant-line"
                 type="text"
                 value={tenantLineId}
                 onChange={(e) => setTenantLineId(e.target.value)}
-                placeholder="LINE user ID"
+                placeholder={tDetail("lineUserIdPlaceholder")}
                 className={inputBase}
               />
             </div>
@@ -281,19 +312,25 @@ export default function AgentPropertyEditPage() {
                 className={inputBase}
               />
             </div>
-            <div>
-              <label htmlFor="agent-edit-agent-line" className="block text-sm text-slate-500 mb-1">
-                Agent LINE ID (Optional)
-              </label>
-              <input
-                id="agent-edit-agent-line"
-                type="text"
-                value={agentLineId}
-                onChange={(e) => setAgentLineId(e.target.value)}
-                placeholder="LINE user ID"
-                className={inputBase}
-              />
-            </div>
+            {agentProfile && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+                  {tDetail("agentProfileReadOnly")}
+                </p>
+                <div className="flex items-center gap-3">
+                  {agentProfile.pictureUrl && (
+                    <img
+                      src={agentProfile.pictureUrl}
+                      alt=""
+                      className="h-10 w-10 rounded-full bg-slate-200 object-cover"
+                    />
+                  )}
+                  <p className="font-medium text-[#0F172A] truncate">
+                    {agentProfile.displayName}
+                  </p>
+                </div>
+              </div>
+            )}
             <div>
               <label htmlFor="agent-edit-line-group" className="block text-sm text-slate-500 mb-1">
                 {tDetail("lineGroup")}
@@ -303,7 +340,7 @@ export default function AgentPropertyEditPage() {
                 type="text"
                 value={lineGroup}
                 onChange={(e) => setLineGroup(e.target.value)}
-                placeholder="LINE group name or invite link"
+                placeholder={tDetail("lineGroupPlaceholder")}
                 className={inputBase}
               />
             </div>
@@ -329,9 +366,35 @@ export default function AgentPropertyEditPage() {
                 min={0}
                 value={leaseDurationMonths}
                 onChange={(e) => setLeaseDurationMonths(e.target.value)}
-                placeholder="e.g. 12"
+                placeholder={tEdit("leaseDurationPlaceholder")}
                 className={inputBase}
               />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-500 mb-1">
+                {tEdit("contractFileOptional")}
+              </label>
+              <input
+                ref={contractInputRef}
+                type="file"
+                accept=".pdf,image/*"
+                onChange={(e) => setContractFile(e.target.files?.[0] ?? null)}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => contractInputRef.current?.click()}
+                className="text-sm text-[#10B981] hover:underline"
+              >
+                {contractFile
+                  ? contractFile.name
+                  : contractKey
+                    ? tEdit("replaceContractFile")
+                    : tEdit("chooseFilePdf")}
+              </button>
+              {uploadProgress > 0 && uploadProgress < 100 && (
+                <p className="text-sm text-slate-500 mt-1">{t("saving")}…</p>
+              )}
             </div>
           </section>
 
@@ -339,19 +402,6 @@ export default function AgentPropertyEditPage() {
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
               {tDetail("details")}
             </h2>
-            <div>
-              <label htmlFor="agent-edit-description" className="block text-sm font-medium text-[#0F172A] mb-1">
-                Description
-              </label>
-              <textarea
-                id="agent-edit-description"
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g. แถมฟรีล้างแอร์ก่อนเข้าอยู่"
-                className={`${inputBase} min-h-[100px] resize-y`}
-              />
-            </div>
             <div>
               <label className="block text-sm font-medium text-[#0F172A] mb-1">
                 {tDetail("amenities")}
@@ -367,7 +417,7 @@ export default function AgentPropertyEditPage() {
                       type="button"
                       onClick={() => removeAmenity(a)}
                       className="text-slate-500 hover:text-red-600"
-                      aria-label={`Remove ${a}`}
+                      aria-label={tDetail("removeAmenity", { name: a })}
                     >
                       ×
                     </button>
@@ -380,7 +430,7 @@ export default function AgentPropertyEditPage() {
                   value={amenityInput}
                   onChange={(e) => setAmenityInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addAmenity())}
-                  placeholder="Add amenity"
+                  placeholder={tDetail("addAmenityPlaceholder")}
                   className={inputBase}
                 />
                 <button
@@ -388,7 +438,7 @@ export default function AgentPropertyEditPage() {
                   onClick={addAmenity}
                   className="shrink-0 px-4 py-3 rounded-lg border border-slate-200 bg-white text-[#0F172A] font-medium hover:bg-slate-50"
                 >
-                  Add
+                  {tDetail("add")}
                 </button>
               </div>
             </div>
