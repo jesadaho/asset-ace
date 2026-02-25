@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Store, ChevronRight, ImageIcon, Settings } from "lucide-react";
+import { Store, ChevronRight, ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
 type Property = {
@@ -20,7 +20,6 @@ export default function AgentsPage() {
   const t = useTranslations("agentWork");
   const tAuth = useTranslations("auth");
   const tProps = useTranslations("properties");
-  const tSettings = useTranslations("settings");
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,16 +86,6 @@ export default function AgentsPage() {
 
   return (
     <div className="min-h-full bg-slate-50 p-4 pb-24">
-      <div className="flex justify-end mb-2">
-        <Link
-          href="/agent/settings"
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 tap-target min-h-[44px]"
-          aria-label={tSettings("title")}
-        >
-          <Settings className="h-5 w-5" aria-hidden />
-          <span className="text-sm font-medium">{tSettings("title")}</span>
-        </Link>
-      </div>
       <header className="mb-4">
         <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">
           {t("title")}
