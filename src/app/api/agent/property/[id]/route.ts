@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
+import { User } from "@/lib/db/models/user";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { getPresignedGetUrl } from "@/lib/s3";
 
@@ -83,6 +84,21 @@ export async function GET(
           if (contractUrl) payload.contractUrl = contractUrl;
         } catch {
           // omit contractUrl on presign error
+        }
+      }
+      const ownerId = (doc as { ownerId?: string }).ownerId;
+      if (ownerId) {
+        const owner = await User.findOne({ lineUserId: ownerId }).lean();
+        if (owner) {
+          const ownerName = (owner as { name?: string }).name ?? "";
+          const ownerPhone = (owner as { phone?: string }).phone ?? "";
+          const ownerLineUserId = (owner as { lineUserId: string }).lineUserId;
+          payload.ownerContact = {
+            name: ownerName,
+            phone: ownerPhone,
+            lineUserId: ownerLineUserId,
+          };
+          payload.lineChatUrl = `https://line.me/R/ti/p/${encodeURIComponent(ownerLineUserId)}`;
         }
       }
     }

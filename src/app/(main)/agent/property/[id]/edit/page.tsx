@@ -23,7 +23,6 @@ type PropertyEditData = {
   leaseDurationMonths?: number;
   contractKey?: string;
   contractUrl?: string;
-  amenities?: string[];
 };
 
 export default function AgentPropertyEditPage() {
@@ -55,8 +54,6 @@ export default function AgentPropertyEditPage() {
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const contractInputRef = useRef<HTMLInputElement>(null);
-  const [amenities, setAmenities] = useState<string[]>([]);
-  const [amenityInput, setAmenityInput] = useState("");
 
   useEffect(() => {
     if (!id) {
@@ -115,7 +112,6 @@ export default function AgentPropertyEditPage() {
               : ""
           );
           setContractKey((data as { contractKey?: string }).contractKey ?? undefined);
-          setAmenities(data.amenities ?? []);
           setError(null);
           liff.getProfile().then(
             (p) => {
@@ -186,7 +182,6 @@ export default function AgentPropertyEditPage() {
           leaseDurationMonths:
             leaseNum !== undefined && !Number.isNaN(leaseNum) ? leaseNum : undefined,
           contractKey: finalContractKey,
-          amenities: amenities.length > 0 ? amenities : undefined,
         }),
       });
       if (res.status === 403) {
@@ -206,18 +201,6 @@ export default function AgentPropertyEditPage() {
     } finally {
       setSaving(false);
     }
-  };
-
-  const addAmenity = () => {
-    const v = amenityInput.trim();
-    if (v && !amenities.includes(v)) {
-      setAmenities((prev) => [...prev, v]);
-      setAmenityInput("");
-    }
-  };
-
-  const removeAmenity = (a: string) => {
-    setAmenities((prev) => prev.filter((x) => x !== a));
   };
 
   if (loading) {
@@ -395,52 +378,6 @@ export default function AgentPropertyEditPage() {
               {uploadProgress > 0 && uploadProgress < 100 && (
                 <p className="text-sm text-slate-500 mt-1">{t("saving")}…</p>
               )}
-            </div>
-          </section>
-
-          <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-4">
-            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-              {tDetail("details")}
-            </h2>
-            <div>
-              <label className="block text-sm font-medium text-[#0F172A] mb-1">
-                {tDetail("amenities")}
-              </label>
-              <div className="flex gap-2 flex-wrap mb-2">
-                {amenities.map((a) => (
-                  <span
-                    key={a}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-sm text-[#0F172A]"
-                  >
-                    {a}
-                    <button
-                      type="button"
-                      onClick={() => removeAmenity(a)}
-                      className="text-slate-500 hover:text-red-600"
-                      aria-label={tDetail("removeAmenity", { name: a })}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={amenityInput}
-                  onChange={(e) => setAmenityInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addAmenity())}
-                  placeholder={tDetail("addAmenityPlaceholder")}
-                  className={inputBase}
-                />
-                <button
-                  type="button"
-                  onClick={addAmenity}
-                  className="shrink-0 px-4 py-3 rounded-lg border border-slate-200 bg-white text-[#0F172A] font-medium hover:bg-slate-50"
-                >
-                  {tDetail("add")}
-                </button>
-              </div>
             </div>
           </section>
 

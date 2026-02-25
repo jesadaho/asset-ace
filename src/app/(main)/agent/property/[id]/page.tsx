@@ -122,6 +122,8 @@ export default function AgentPropertyDetailPage() {
           contractStartDate: data.contractStartDate,
           leaseDurationMonths: data.leaseDurationMonths,
         });
+        if (data.ownerContact) setOwnerContact(data.ownerContact);
+        if (data.lineChatUrl) setLineChatUrl(data.lineChatUrl);
         setError(null);
       } catch (err) {
         if (!cancelled) {
@@ -396,11 +398,13 @@ export default function AgentPropertyDetailPage() {
               {t("editResidentialDetail")}
             </Link>
           )}
-          {requestSent && (ownerContact || lineChatUrl) ? (
+          {(ownerContact || lineChatUrl) ? (
             <div className="rounded-xl border-2 border-[#10B981]/30 bg-[#10B981]/10 p-4 space-y-4">
-              <p className="text-sm font-medium text-[#0D9668] text-center">
-                {t("requestSent")}
-              </p>
+              {requestSent && (
+                <p className="text-sm font-medium text-[#0D9668] text-center">
+                  {t("requestSent")}
+                </p>
+              )}
               {ownerContact && (
                 <div className="bg-white/60 rounded-lg p-3 text-left space-y-2">
                   <p className="text-xs font-semibold text-[#0F172A] uppercase tracking-wide">
@@ -427,12 +431,6 @@ export default function AgentPropertyDetailPage() {
                   {t("messageOnLine")}
                 </a>
               )}
-            </div>
-          ) : requestSent ? (
-            <div className="rounded-xl border-2 border-[#10B981]/30 bg-[#10B981]/10 p-4 text-center">
-              <p className="text-sm font-medium text-[#0D9668]">
-                {t("requestSent")}
-              </p>
             </div>
           ) : requestError ? (
             <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4 text-center space-y-3">
