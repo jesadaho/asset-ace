@@ -248,7 +248,7 @@ export function AssetHubLandingPage() {
                 </div>
                 <div className="p-6">
                   <h3 className="font-semibold text-slate-900">
-                    ติดตามค่าเช่าอัตโนมัติ... ลดภาระงานทวง
+                    ติดตามค่าเช่าอัตโนมัติ... แม่นยำทุกรายการ
                   </h3>
                   <p className="mt-2 text-sm text-slate-600">
                     ระบบแจ้งเตือนและติดตามการชำระเงินให้อัตโนมัติ
