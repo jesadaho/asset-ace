@@ -200,7 +200,7 @@ export function AssetHubLandingPage() {
           </h2>
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
             <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="relative aspect-[4/3] w-full bg-slate-50">
+              <div className="relative aspect-[4/3] w-full bg-white">
                 <Image
                   src="/painpoint-1.png"
                   alt=""
@@ -209,7 +209,7 @@ export function AssetHubLandingPage() {
                   sizes="(max-width: 640px) 100vw, 33vw"
                 />
               </div>
-              <div className="p-6">
+              <div className="bg-slate-50 p-6">
                 <h3 className="font-semibold text-slate-900">
                   คอนโดหลักล้าน แต่ทำไมบริหารวุ่นวายเหมือนแผงลอย?
                 </h3>
@@ -219,7 +219,7 @@ export function AssetHubLandingPage() {
               </div>
             </article>
             <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="relative aspect-[4/3] w-full bg-slate-50">
+              <div className="relative aspect-[4/3] w-full bg-white">
                 <Image
                   src="/painpoint-2.png"
                   alt=""
@@ -228,7 +228,7 @@ export function AssetHubLandingPage() {
                   sizes="(max-width: 640px) 100vw, 33vw"
                 />
               </div>
-              <div className="p-6">
+              <div className="bg-slate-50 p-6">
                 <h3 className="font-semibold text-slate-900">
                   ห้องว่าง 1 วัน คือเงินที่หายไป... คุณเรียกคืนไม่ได้
                 </h3>
@@ -238,7 +238,7 @@ export function AssetHubLandingPage() {
               </div>
             </article>
             <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="relative aspect-[4/3] w-full bg-slate-50">
+              <div className="relative aspect-[4/3] w-full bg-white">
                 <Image
                   src="/painpoint-3.png"
                   alt=""
@@ -247,7 +247,7 @@ export function AssetHubLandingPage() {
                   sizes="(max-width: 640px) 100vw, 33vw"
                 />
               </div>
-              <div className="p-6">
+              <div className="bg-slate-50 p-6">
                 <h3 className="font-semibold text-slate-900">
                   รับสายจนสายไหม้ แต่ปิดดีลไม่ได้
                 </h3>
