@@ -35,7 +35,7 @@ const reveal = {
   transition: { duration: 0.4, ease: "easeOut" },
 };
 
-const ACCENT = "#10B981";
+const TEAL = "#0d9488";
 const TRUST_IMAGE =
   "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80";
 
@@ -51,7 +51,7 @@ export function AssetHubLandingPage() {
             href="/"
             className="flex items-center gap-2 text-lg font-bold tracking-tight text-[#0F172A]"
           >
-            <Bird className="h-6 w-6" style={{ color: ACCENT }} aria-hidden />
+            <Bird className="h-6 w-6" style={{ color: TEAL }} aria-hidden />
             Porjai by AssetHub
           </Link>
           <div className="hidden items-center gap-6 md:flex">
@@ -77,7 +77,8 @@ export function AssetHubLandingPage() {
             </Link>
             <Link
               href="#line-cta"
-              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg px-4 text-sm font-medium text-white bg-[#10B981] hover:bg-[#0D9668]"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg px-4 text-sm font-medium text-white hover:opacity-90"
+              style={{ backgroundColor: TEAL }}
             >
               เริ่มฝากห้องฟรี
             </Link>
@@ -95,13 +96,16 @@ export function AssetHubLandingPage() {
         >
           <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
             <div>
-              <span className="inline-block rounded-full px-4 py-1.5 text-sm font-medium text-white bg-[#10B981]">
+              <span
+                className="inline-block rounded-full px-4 py-1.5 text-sm font-medium text-white"
+                style={{ backgroundColor: TEAL }}
+              >
                 • Porjai x AssetHub
               </span>
               <h1 className="mt-6 text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
                 จัดการคอนโดและบ้านให้เช่า
                 <br />
-                <span className="text-[#10B981]">ไม่ต้องปวดหัว</span>
+                <span style={{ color: TEAL }}>ไม่ต้องปวดหัว</span>
               </h1>
               <p className="mt-4 max-w-lg text-slate-600">
                 พอใจคือผู้ช่วยส่วนตัวที่ดูแลคอนโดและบ้านให้เช่าของคุณบน AssetHub
@@ -110,7 +114,8 @@ export function AssetHubLandingPage() {
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link
                   href="#line-cta"
-                  className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium text-white bg-[#10B981] hover:bg-[#0D9668]"
+                  className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
+                  style={{ backgroundColor: TEAL }}
                 >
                   เริ่มฝากห้องฟรี →
                 </Link>
@@ -125,7 +130,7 @@ export function AssetHubLandingPage() {
                 </a>
               </div>
               <div className="mt-8 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <Bird className="h-8 w-8 shrink-0" style={{ color: ACCENT }} />
+                <Bird className="h-8 w-8 shrink-0" style={{ color: TEAL }} />
                 <div>
                   <p className="font-medium text-slate-900">สวัสดีครับ! ผมชื่อพอใจ</p>
                   <p className="mt-0.5 text-sm text-slate-600">
@@ -165,7 +170,7 @@ export function AssetHubLandingPage() {
                           className="w-6 rounded-t"
                           style={{
                             height: `${h}%`,
-                            backgroundColor: ACCENT,
+                            backgroundColor: TEAL,
                           }}
                         />
                       ))}
@@ -205,7 +210,7 @@ export function AssetHubLandingPage() {
           className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
           {...reveal}
         >
-          <p className="text-center text-sm font-semibold text-[#10B981]">
+          <p className="text-center text-sm font-semibold" style={{ color: TEAL }}>
             ปัญหาที่คุณต้องเจอ
           </p>
           <h2 className="mt-2 text-center text-2xl font-bold text-slate-900 sm:text-3xl">
@@ -250,8 +255,8 @@ export function AssetHubLandingPage() {
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-2">
-              <Bird className="h-5 w-5 text-[#10B981]" />
-              <span className="text-sm font-semibold uppercase tracking-wide text-[#10B981]">
+              <Bird className="h-5 w-5" style={{ color: TEAL }} />
+              <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: TEAL }}>
                 PORJAI SOLUTION
               </span>
             </div>
@@ -361,7 +366,10 @@ export function AssetHubLandingPage() {
                     className="object-cover"
                     sizes="(max-width: 1024px) 100vw, 50vw"
                   />
-                  <span className="absolute left-3 top-3 rounded-lg px-3 py-1.5 text-xs font-semibold text-white bg-[#10B981]">
+                  <span
+                    className="absolute left-3 top-3 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
+                    style={{ backgroundColor: TEAL }}
+                  >
                     Verified by Porjai
                   </span>
                 </div>
@@ -385,19 +393,20 @@ export function AssetHubLandingPage() {
                   <p className="mt-1 text-sm text-slate-600">ดูแลโดย Porjai Team • ตอบกลับภายใน 5 นาที</p>
                   <button
                     type="button"
-                    className="mt-4 w-full rounded-xl py-2.5 text-sm font-medium text-white bg-[#10B981] hover:bg-[#0D9668]"
+                    className="mt-4 w-full rounded-xl py-2.5 text-sm font-medium text-white"
+                    style={{ backgroundColor: TEAL }}
                   >
                     ติดต่อ
                   </button>
                 </div>
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#10B981]">
+                <p className="text-sm font-semibold" style={{ color: TEAL }}>
                   Trust & Visibility
                 </p>
                 <h2 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
                   ทรัพย์สินของคุณจะถูก{" "}
-                  <span className="text-[#10B981]">Verified</span> บน AssetHub.in.th
+                  <span style={{ color: TEAL }}>Verified</span> บน AssetHub.in.th
                 </h2>
                 <p className="mt-4 text-slate-600">
                   ประกาศที่ผ่านการตรวจสอบจาก Porjai จะได้ความน่าเชื่อถือสูง ปิดดีลได้เร็วขึ้น 2 เท่า
@@ -419,7 +428,8 @@ export function AssetHubLandingPage() {
                 </ul>
                 <Link
                   href="#"
-                  className="mt-8 inline-flex items-center gap-1 text-sm font-medium text-[#10B981] hover:text-[#0D9668]"
+                  className="mt-8 inline-flex items-center gap-1 text-sm font-medium"
+                  style={{ color: TEAL }}
                 >
                   ดูตัวอย่างประกาศบน AssetHub →
                 </Link>
@@ -435,7 +445,7 @@ export function AssetHubLandingPage() {
           {...reveal}
         >
           <div className="mx-auto max-w-2xl px-4 text-center sm:px-6 lg:px-8">
-            <Bird className="mx-auto h-12 w-12 text-[#10B981]" />
+            <Bird className="mx-auto h-12 w-12" style={{ color: TEAL }} />
             <h2 className="mt-6 text-2xl font-bold sm:text-3xl">
               กดเพิ่มเพื่อนกับ &apos;พอใจ&apos; ได้ง่ายๆ
             </h2>
@@ -518,7 +528,7 @@ export function AssetHubLandingPage() {
             <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <Bird className="h-6 w-6 text-[#10B981]" />
+                  <Bird className="h-6 w-6" style={{ color: TEAL }} />
                   <span className="font-bold text-slate-900">Porjai.</span>
                 </div>
                 <p className="mt-3 text-sm text-slate-600">
