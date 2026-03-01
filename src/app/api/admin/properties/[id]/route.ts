@@ -38,6 +38,20 @@ export async function GET(
     );
     const imageUrls = urlResults.filter((u): u is string => u != null);
 
+    const start = doc.contractStartDate as Date | undefined;
+    const months = (doc as { leaseDurationMonths?: number }).leaseDurationMonths;
+    let contractEndDate: string | undefined;
+    let contractPeriod: string | undefined;
+    const startStr = start ? (start as Date).toISOString().slice(0, 10) : undefined;
+    if (startStr && months != null && months > 0) {
+      const end = new Date(start as Date);
+      end.setMonth(end.getMonth() + months);
+      contractEndDate = end.toISOString().slice(0, 10);
+      contractPeriod = `${startStr} – ${contractEndDate}`;
+    } else if (startStr) {
+      contractPeriod = startStr;
+    }
+
     const property = {
       id: doc._id.toString(),
       name: doc.name,
@@ -56,9 +70,10 @@ export async function GET(
       bathrooms: doc.bathrooms,
       description: doc.description,
       tenantName: doc.tenantName,
-      contractStartDate: doc.contractStartDate
-        ? (doc.contractStartDate as Date).toISOString().slice(0, 10)
-        : undefined,
+      contractStartDate: startStr,
+      contractEndDate,
+      leaseDurationMonths: (doc as { leaseDurationMonths?: number }).leaseDurationMonths,
+      contractPeriod,
       createdAt: doc.createdAt,
     };
 

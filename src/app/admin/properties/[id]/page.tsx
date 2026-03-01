@@ -21,6 +21,9 @@ type PropertyDetail = {
   description?: string;
   tenantName?: string;
   contractStartDate?: string;
+  contractEndDate?: string;
+  leaseDurationMonths?: number;
+  contractPeriod?: string;
 };
 
 export default function AdminPropertyDetailPage() {
@@ -139,6 +142,17 @@ export default function AdminPropertyDetailPage() {
           <p className="text-slate-600 mt-1">{property.type} · ฿{property.price?.toLocaleString()}</p>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
+          {(property.contractPeriod || property.contractStartDate) && (
+            <div>
+              <p className="text-sm font-medium text-slate-500">Contract period</p>
+              <p className="text-slate-800">
+                {property.contractPeriod ?? property.contractStartDate}
+                {property.leaseDurationMonths != null && (
+                  <span className="text-slate-600 ml-1">({property.leaseDurationMonths} months)</span>
+                )}
+              </p>
+            </div>
+          )}
           <div className="flex items-start gap-3">
             <User className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
             <div>
@@ -166,11 +180,6 @@ export default function AdminPropertyDetailPage() {
             <div>
               <p className="text-sm font-medium text-slate-500">Tenant</p>
               <p className="text-slate-800">{property.tenantName}</p>
-              {property.contractStartDate && (
-                <p className="text-sm text-slate-600 mt-0.5">
-                  Contract from {property.contractStartDate}
-                </p>
-              )}
             </div>
           )}
           {property.description && (

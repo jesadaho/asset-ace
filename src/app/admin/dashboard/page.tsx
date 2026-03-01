@@ -29,6 +29,7 @@ type PropertyRow = {
   assignedAgent: string;
   location: string;
   status: string;
+  contractPeriod?: string;
 };
 
 type OwnerRow = {
@@ -37,6 +38,15 @@ type OwnerRow = {
   phone: string;
   createdAt?: string;
   propertyCount?: number;
+};
+
+type AgentRow = {
+  lineUserId: string;
+  name: string;
+  phone: string;
+  lineId?: string;
+  createdAt?: string;
+  assignedPropertyCount?: number;
 };
 
 const STATUS_OPTIONS = [
@@ -55,9 +65,11 @@ const AGENT_OPTIONS = [
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [owners, setOwners] = useState<OwnerRow[]>([]);
+  const [agents, setAgents] = useState<AgentRow[]>([]);
   const [properties, setProperties] = useState<PropertyRow[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const [ownersLoading, setOwnersLoading] = useState(true);
+  const [agentsLoading, setAgentsLoading] = useState(true);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,8 +78,8 @@ export default function AdminDashboardPage() {
   const [agentFilter, setAgentFilter] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
 
-  /** Show only overview, only owners table, or only properties table based on card click */
-  const [visibleSection, setVisibleSection] = useState<"overview" | "owners" | "properties">("properties");
+  /** Show only overview, only owners table, agents table, or only properties table based on card click */
+  const [visibleSection, setVisibleSection] = useState<"overview" | "owners" | "agents" | "properties">("properties");
 
   // Debounce search input
   useEffect(() => {
@@ -121,6 +133,31 @@ export default function AdminDashboardPage() {
     }
   }, []);
 
+  const fetchAgents = useCallback(async () => {
+    setAgentsLoading(true);
+    try {
+      const liff = (await import("@line/liff")).default;
+      const token = liff.getAccessToken();
+      const headers: HeadersInit = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch("/api/admin/agents", { headers });
+      if (!res.ok) {
+        setError("Failed to load agents.");
+        setAgents([]);
+        setAgentsLoading(false);
+        return;
+      }
+      const data = await res.json();
+      setAgents(data.agents ?? []);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load agents.");
+      setAgents([]);
+    } finally {
+      setAgentsLoading(false);
+    }
+  }, []);
+
   const fetchProperties = useCallback(async () => {
     setPropertiesLoading(true);
     try {
@@ -159,6 +196,10 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     fetchOwners();
   }, [fetchOwners]);
+
+  useEffect(() => {
+    fetchAgents();
+  }, [fetchAgents]);
 
   useEffect(() => {
     fetchProperties();
@@ -253,7 +294,17 @@ export default function AdminDashboardPage() {
             )}
           </CardContent>
         </Card>
-        <Card variant="light" className="border-slate-200">
+        <Card
+          variant="light"
+          className={cn(
+            "border-slate-200 cursor-pointer transition-colors",
+            visibleSection === "agents" ? "ring-2 ring-violet-500 border-violet-400" : "hover:border-violet-300"
+          )}
+          onClick={() => setVisibleSection((s) => (s === "agents" ? "overview" : "agents"))}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && setVisibleSection((s) => (s === "agents" ? "overview" : "agents"))}
+        >
           <CardHeader className="pb-1">
             <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
               <UserCog className="h-4 w-4 text-violet-600" />
@@ -339,6 +390,77 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
+      {/* All Agents – show only when Total Agents card is selected */}
+      {visibleSection === "agents" && (
+        <div className="mb-8">
+          <button
+            type="button"
+            onClick={() => setVisibleSection("overview")}
+            className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-800 text-sm font-medium mb-3"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to overview
+          </button>
+          <Card id="agents-section" variant="light" className="border-slate-200 overflow-hidden scroll-mt-4">
+            <CardHeader className="border-b border-slate-200 bg-slate-50/50">
+              <CardTitle className="text-lg text-slate-800">All Agents</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                      <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3">Phone</th>
+                      <th className="px-4 py-3">LINE User ID</th>
+                      <th className="px-4 py-3">LINE ID</th>
+                      <th className="px-4 py-3 text-right">Assigned Properties</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {agentsLoading ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-12 text-center text-slate-500">
+                          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                          Loading agents…
+                        </td>
+                      </tr>
+                    ) : agents.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-12 text-center text-slate-500">
+                          No agents found.
+                        </td>
+                      </tr>
+                    ) : (
+                      agents.map((row) => (
+                        <tr
+                          key={row.lineUserId}
+                          className="hover:bg-slate-50/80 transition-colors"
+                        >
+                          <td className="px-4 py-3 font-medium text-slate-800">
+                            {row.name}
+                          </td>
+                          <td className="px-4 py-3 text-slate-700">{row.phone}</td>
+                          <td className="px-4 py-3 text-slate-600 font-mono text-xs break-all">
+                            {row.lineUserId}
+                          </td>
+                          <td className="px-4 py-3 text-slate-600 font-mono text-xs">
+                            {row.lineId ?? "—"}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-700">
+                            {row.assignedPropertyCount ?? "—"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Master property table – show only when Properties card is selected */}
       {visibleSection === "properties" && (
         <div>
@@ -398,20 +520,21 @@ export default function AdminDashboardPage() {
                   <th className="px-4 py-3">Assigned Agent</th>
                   <th className="px-4 py-3">Location</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Contract Period</th>
                   <th className="px-4 py-3 w-28 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {propertiesLoading ? (
                       <tr>
-                        <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
+                        <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
                           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                           Loading properties…
                         </td>
                       </tr>
                     ) : properties.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
+                        <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
                           No properties match your filters.
                         </td>
                       </tr>
@@ -432,6 +555,9 @@ export default function AdminDashboardPage() {
                             {row.location}
                           </td>
                           <td className="px-4 py-3">{statusBadge(row.status)}</td>
+                          <td className="px-4 py-3 text-slate-600 text-sm whitespace-nowrap">
+                            {row.contractPeriod ?? "—"}
+                          </td>
                           <td className="px-4 py-3 text-right">
                             <Link href={`/admin/properties/${row.id}`}>
                               <Button

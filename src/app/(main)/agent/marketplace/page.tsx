@@ -254,10 +254,9 @@ export default function AgentMarketplacePage() {
 
       <div ref={searchRowRef} className="flex gap-2 mb-4">
         <div className="relative flex-1">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
-            aria-hidden
-          />
+          <span className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none text-slate-400">
+            <Search className="h-4 w-4" aria-hidden />
+          </span>
           <input
             type="search"
             placeholder={t("searchPlaceholder")}

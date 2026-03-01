@@ -70,14 +70,28 @@ export async function GET(request: NextRequest) {
       .lean();
     const ownerMap = new Map(users.map((u) => [u.lineUserId, u.name]));
 
-    const properties = docs.map((doc) => ({
-      id: doc._id.toString(),
-      name: doc.name,
-      ownerName: ownerMap.get(doc.ownerId) ?? "—",
-      assignedAgent: doc.agentName ?? "—",
-      location: doc.address,
-      status: doc.status,
-    }));
+    const properties = docs.map((doc) => {
+      const start = doc.contractStartDate as Date | undefined;
+      const months = (doc as { leaseDurationMonths?: number }).leaseDurationMonths;
+      let contractPeriod: string | undefined;
+      if (start && months != null && months > 0) {
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + months);
+        contractPeriod = `${(start as Date).toISOString().slice(0, 10)} – ${end.toISOString().slice(0, 10)}`;
+      } else if (start) {
+        contractPeriod = (start as Date).toISOString().slice(0, 10);
+      }
+
+      return {
+        id: doc._id.toString(),
+        name: doc.name,
+        ownerName: ownerMap.get(doc.ownerId) ?? "—",
+        assignedAgent: doc.agentName ?? "—",
+        location: doc.address,
+        status: doc.status,
+        contractPeriod: contractPeriod ?? "—",
+      };
+    });
 
     return NextResponse.json({ properties });
   } catch (err) {
