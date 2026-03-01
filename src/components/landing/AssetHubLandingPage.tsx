@@ -6,8 +6,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   MessageCircle,
-  MessageSquare,
-  Clock,
   Phone,
   UserCheck,
   FileCheck,
@@ -155,45 +153,16 @@ export function AssetHubLandingPage() {
             </div>
             <div className="flex justify-center">
               <div className="relative w-full max-w-[280px] rounded-[2.5rem] border-4 border-slate-800 bg-slate-900 p-2 shadow-2xl">
-                <div className="absolute left-1/2 top-4 h-5 w-24 -translate-x-1/2 rounded-full bg-slate-800" />
-                <div className="mt-6 overflow-hidden rounded-[1.5rem] bg-white">
-                  <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-center text-sm font-semibold text-slate-900">
-                      Porjai Dashboard
-                    </p>
-                  </div>
-                  <div className="space-y-3 p-4">
-                    <div className="rounded-xl bg-slate-100 p-3">
-                      <p className="text-xs text-slate-500">รายรับเดือนนี้</p>
-                      <p className="text-lg font-bold text-slate-900">฿45,000</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="flex-1 rounded-lg bg-slate-100 p-2 text-center">
-                        <p className="text-xs text-slate-500">ห้องว่าง</p>
-                        <p className="font-semibold text-slate-900">1/5</p>
-                      </div>
-                      <div className="flex-1 rounded-lg bg-emerald-100 p-2 text-center">
-                        <p className="text-xs text-slate-600">ออนไลน์</p>
-                      </div>
-                    </div>
-                    <div className="h-20 rounded-xl bg-slate-100 flex items-end justify-around gap-1 pb-2">
-                      {[40, 65, 45, 80, 55].map((h, i) => (
-                        <div
-                          key={i}
-                          className="w-6 rounded-t"
-                          style={{
-                            height: `${h}%`,
-                            backgroundColor: TEAL,
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-xs text-slate-500">รายรับ-รายจ่าย</p>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">ผู้เช่า 4 คน</span>
-                      <span className="font-medium text-slate-900">ทรัพย์สินของฉัน</span>
-                    </div>
-                  </div>
+                <div className="absolute left-1/2 top-4 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-slate-800" />
+                <div className="relative mt-6 aspect-[9/19] w-full overflow-hidden rounded-[1.5rem] bg-white">
+                  <Image
+                    src="/hero-dashboard-preview.png"
+                    alt="Asset Ace dashboard preview"
+                    fill
+                    className="object-cover object-top"
+                    sizes="280px"
+                    priority
+                  />
                 </div>
               </div>
             </div>
@@ -230,38 +199,62 @@ export function AssetHubLandingPage() {
             เบื่อไหมกับปัญหาเดิมๆ ของคนมีห้องให้เช่า?
           </h2>
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
-                <MessageSquare className="h-6 w-6" />
+            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="relative aspect-[4/3] w-full bg-slate-50">
+                <Image
+                  src="/painpoint-1.png"
+                  alt=""
+                  fill
+                  className="object-contain p-2"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                />
               </div>
-              <h3 className="mt-4 font-semibold text-slate-900">
-                คอนโดหลักล้าน แต่ทำไมบริหารวุ่นวายเหมือนแผงลอย?
-              </h3>
-              <p className="mt-2 text-sm text-slate-600">
-                ข้อมูลกระจัดกระจายในแชท เอเจนท์ทักถามซ้ำๆ รูปหาย ไฟล์หมดอายุ ต้องส่งใหม่ไม่จบไม่สิ้น
-              </p>
+              <div className="p-6">
+                <h3 className="font-semibold text-slate-900">
+                  คอนโดหลักล้าน แต่ทำไมบริหารวุ่นวายเหมือนแผงลอย?
+                </h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  ข้อมูลกระจัดกระจายในแชท เอเจนท์ทักถามซ้ำๆ รูปหาย ไฟล์หมดอายุ ต้องส่งใหม่ไม่จบไม่สิ้น
+                </p>
+              </div>
             </article>
-            <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-600">
-                <Clock className="h-6 w-6" />
+            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="relative aspect-[4/3] w-full bg-slate-50">
+                <Image
+                  src="/painpoint-2.png"
+                  alt=""
+                  fill
+                  className="object-contain p-2"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                />
               </div>
-              <h3 className="mt-4 font-semibold text-slate-900">
-                ห้องว่าง 1 วัน คือเงินที่หายไป... คุณเรียกคืนไม่ได้
-              </h3>
-              <p className="mt-2 text-sm text-slate-600">
-                กว่าเอเจนท์จะรู้ว่าห้องว่าง หรือกว่าคุณจะประกาศเสร็จ รายได้ก็หายไปหลายวันเพราะความล่าช้าของข้อมูล
-              </p>
+              <div className="p-6">
+                <h3 className="font-semibold text-slate-900">
+                  ห้องว่าง 1 วัน คือเงินที่หายไป... คุณเรียกคืนไม่ได้
+                </h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  กว่าเอเจนท์จะรู้ว่าห้องว่าง หรือกว่าคุณจะประกาศเสร็จ รายได้ก็หายไปหลายวันเพราะความล่าช้าของข้อมูล
+                </p>
+              </div>
             </article>
-            <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-                <Phone className="h-6 w-6" />
+            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="relative aspect-[4/3] w-full bg-slate-50">
+                <Image
+                  src="/painpoint-3.png"
+                  alt=""
+                  fill
+                  className="object-contain p-2"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                />
               </div>
-              <h3 className="mt-4 font-semibold text-slate-900">
-                รับสายจนสายไหม้ แต่ปิดดีลไม่ได้
-              </h3>
-              <p className="mt-2 text-sm text-slate-600">
-                พูดกับ Agent หลายสิบคน ข้อมูลไม่ตรงกัน ต้องไล่ตามสถานะเอง
-              </p>
+              <div className="p-6">
+                <h3 className="font-semibold text-slate-900">
+                  รับสายจนสายไหม้ แต่ปิดดีลไม่ได้
+                </h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  พูดกับ Agent หลายสิบคน ข้อมูลไม่ตรงกัน ต้องไล่ตามสถานะเอง
+                </p>
+              </div>
             </article>
           </div>
         </motion.section>
