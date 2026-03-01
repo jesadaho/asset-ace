@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Search, ChevronRight, Plus, ImageIcon, Eye, EyeOff, LayoutDashboard, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -20,6 +21,7 @@ type Property = {
   image?: string;
   agentName?: string;
   agentLineId?: string;
+  agentInviteSentAt?: string;
 };
 
 const statusBadgeVariant: Record<
@@ -35,6 +37,7 @@ type StatusFilter = "All" | PropertyStatus;
 type SummaryFilter = "all" | "available" | "pending";
 
 export default function OwnerPropertiesPage() {
+  const searchParams = useSearchParams();
   const t = useTranslations("dashboard");
   const tAuth = useTranslations("auth");
   const tCommon = useTranslations("common");
@@ -45,9 +48,20 @@ export default function OwnerPropertiesPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
-  const [summaryFilter, setSummaryFilter] = useState<SummaryFilter>("all");
+  const summaryFromUrl = searchParams.get("summary");
+  const initialSummary: SummaryFilter =
+    summaryFromUrl === "pending" || summaryFromUrl === "available"
+      ? summaryFromUrl
+      : "all";
+  const [summaryFilter, setSummaryFilter] = useState<SummaryFilter>(initialSummary);
   const [isAmountVisible, setIsAmountVisible] = useState(true);
   const [isDashboardVisible, setIsDashboardVisible] = useState(false);
+
+  useEffect(() => {
+    const s = searchParams.get("summary");
+    if (s === "pending" || s === "available") setSummaryFilter(s);
+    else if (s === null || s === "all") setSummaryFilter("all");
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +87,7 @@ export default function OwnerPropertiesPage() {
           return;
         }
         const data = await res.json();
-        const list = (data.properties ?? []).map((p: { id: string; name: string; type: string; status: string; price: number; address: string; imageUrl?: string; agentName?: string; agentLineId?: string }) => ({
+        const list = (data.properties ?? []).map((p: { id: string; name: string; type: string; status: string; price: number; address: string; imageUrl?: string; agentName?: string; agentLineId?: string; agentInviteSentAt?: string }) => ({
           id: p.id,
           name: p.name,
           type: p.type as PropertyType,
@@ -83,6 +97,7 @@ export default function OwnerPropertiesPage() {
           image: p.imageUrl,
           agentName: p.agentName,
           agentLineId: p.agentLineId,
+          agentInviteSentAt: p.agentInviteSentAt,
         }));
         setProperties(list);
         setError(null);
@@ -103,7 +118,9 @@ export default function OwnerPropertiesPage() {
     const potentialIncome = properties.reduce((sum, p) => sum + (p.price ?? 0), 0);
     const total = properties.length;
     const available = properties.filter((p) => p.status === "Available").length;
-    const pending = properties.filter((p) => !(p.agentName || p.agentLineId)).length;
+    const pending = properties.filter(
+      (p) => p.agentInviteSentAt && !(p.agentName || p.agentLineId)
+    ).length;
     return { totalMonthlyIncome, potentialIncome, total, available, pending };
   }, [properties]);
 
@@ -119,7 +136,9 @@ export default function OwnerPropertiesPage() {
       const matchesSummary =
         summaryFilter === "all" ||
         (summaryFilter === "available" && p.status === "Available") ||
-        (summaryFilter === "pending" && !(p.agentName || p.agentLineId));
+        (summaryFilter === "pending" &&
+          !!p.agentInviteSentAt &&
+          !(p.agentName || p.agentLineId));
       return matchesSearch && matchesStatus && matchesSummary;
     });
   }, [properties, searchQuery, statusFilter, summaryFilter]);

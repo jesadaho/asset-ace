@@ -36,6 +36,9 @@ export async function GET(request: NextRequest) {
           imageUrl: imageUrl ?? undefined,
           agentName: doc.agentName ?? undefined,
           agentLineId: doc.agentLineId ?? undefined,
+          agentInviteSentAt: (doc as { agentInviteSentAt?: Date }).agentInviteSentAt
+            ? (doc as { agentInviteSentAt: Date }).agentInviteSentAt.toISOString()
+            : undefined,
         };
       })
     );

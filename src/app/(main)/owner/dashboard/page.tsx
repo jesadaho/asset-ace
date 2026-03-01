@@ -20,6 +20,7 @@ type Property = {
   image?: string;
   agentName?: string;
   agentLineId?: string;
+  agentInviteSentAt?: string;
 };
 
 const statusBadgeVariant: Record<
@@ -79,6 +80,7 @@ export default function OwnerDashboardPage() {
             imageUrl?: string;
             agentName?: string;
             agentLineId?: string;
+            agentInviteSentAt?: string;
           }) => ({
             id: p.id,
             name: p.name,
@@ -89,6 +91,7 @@ export default function OwnerDashboardPage() {
             image: p.imageUrl,
             agentName: p.agentName,
             agentLineId: p.agentLineId,
+            agentInviteSentAt: p.agentInviteSentAt,
           })
         );
         setProperties(list);
@@ -122,7 +125,7 @@ export default function OwnerDashboardPage() {
         (p) => p.status === "Available"
       ).length;
       const pending = properties.filter(
-        (p) => !(p.agentName || p.agentLineId)
+        (p) => p.agentInviteSentAt && !(p.agentName || p.agentLineId)
       ).length;
       return {
         totalMonthlyIncome,
