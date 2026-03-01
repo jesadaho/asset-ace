@@ -6,8 +6,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   MessageCircle,
-  Search,
-  DollarSign,
+  MessageSquare,
+  Clock,
   Phone,
   UserCheck,
   FileCheck,
@@ -23,7 +23,6 @@ import {
   MapPin,
   Mail,
   ChevronDown,
-  Bird,
   Facebook,
   Instagram,
 } from "lucide-react";
@@ -51,7 +50,14 @@ export function AssetHubLandingPage() {
             href="/"
             className="flex items-center gap-2 text-lg font-bold tracking-tight text-[#0F172A]"
           >
-            <Bird className="h-6 w-6" style={{ color: TEAL }} aria-hidden />
+            <Image
+            src="/porjai-logo.png"
+            alt=""
+            width={24}
+            height={24}
+            className="h-6 w-6 shrink-0 object-contain"
+            aria-hidden
+          />
             Porjai by AssetHub
           </Link>
           <div className="hidden items-center gap-6 md:flex">
@@ -130,7 +136,14 @@ export function AssetHubLandingPage() {
                 </a>
               </div>
               <div className="mt-8 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <Bird className="h-8 w-8 shrink-0" style={{ color: TEAL }} />
+                <Image
+                  src="/porjai-logo.png"
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 shrink-0 object-contain"
+                  aria-hidden
+                />
                 <div>
                   <p className="font-medium text-slate-900">สวัสดีครับ! ผมชื่อพอใจ</p>
                   <p className="mt-0.5 text-sm text-slate-600">
@@ -219,27 +232,33 @@ export function AssetHubLandingPage() {
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
             <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
-                <Search className="h-6 w-6" />
+                <MessageSquare className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 font-semibold text-slate-900">หาผู้เช่ายุ่งยาก</h3>
+              <h3 className="mt-4 font-semibold text-slate-900">
+                คอนโดหลักล้าน แต่ทำไมบริหารวุ่นวายเหมือนแผงลอย?
+              </h3>
               <p className="mt-2 text-sm text-slate-600">
-                โพสต์หลายกลุ่มก็ไม่มีคนจริงจัง ตอบแชทไม่ทัน หรือเจอคนไม่ตรงกับที่ต้องการ
+                ข้อมูลกระจัดกระจายในแชท เอเจนท์ทักถามซ้ำๆ รูปหาย ไฟล์หมดอายุ ต้องส่งใหม่ไม่จบไม่สิ้น
               </p>
             </article>
             <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-600">
-                <DollarSign className="h-6 w-6" />
+                <Clock className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 font-semibold text-slate-900">ตามค่าเช่าไม่ได้</h3>
+              <h3 className="mt-4 font-semibold text-slate-900">
+                ห้องว่าง 1 วัน คือเงินที่หายไป... คุณเรียกคืนไม่ได้
+              </h3>
               <p className="mt-2 text-sm text-slate-600">
-                ต้องไล่ตามค่าเช่าเอง ตรวจสลิปโอนทีละรายการ เสียเวลาทุกเดือน
+                กว่าเอเจนท์จะรู้ว่าห้องว่าง หรือกว่าคุณจะประกาศเสร็จ รายได้ก็หายไปหลายวันเพราะความล่าช้าของข้อมูล
               </p>
             </article>
             <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
                 <Phone className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 font-semibold text-slate-900">รับสาย Agent จนสายไหม้</h3>
+              <h3 className="mt-4 font-semibold text-slate-900">
+                รับสายจนสายไหม้ แต่ปิดดีลไม่ได้
+              </h3>
               <p className="mt-2 text-sm text-slate-600">
                 พูดกับ Agent หลายสิบคน ข้อมูลไม่ตรงกัน ต้องไล่ตามสถานะเอง
               </p>
@@ -255,7 +274,14 @@ export function AssetHubLandingPage() {
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-2">
-              <Bird className="h-5 w-5" style={{ color: TEAL }} />
+              <Image
+                src="/porjai-logo.png"
+                alt=""
+                width={20}
+                height={20}
+                className="h-5 w-5 shrink-0 object-contain"
+                aria-hidden
+              />
               <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: TEAL }}>
                 PORJAI SOLUTION
               </span>
@@ -445,7 +471,14 @@ export function AssetHubLandingPage() {
           {...reveal}
         >
           <div className="mx-auto max-w-2xl px-4 text-center sm:px-6 lg:px-8">
-            <Bird className="mx-auto h-12 w-12" style={{ color: TEAL }} />
+            <Image
+            src="/porjai-logo.png"
+            alt=""
+            width={48}
+            height={48}
+            className="mx-auto h-12 w-12 shrink-0 object-contain"
+            aria-hidden
+          />
             <h2 className="mt-6 text-2xl font-bold sm:text-3xl">
               กดเพิ่มเพื่อนกับ &apos;พอใจ&apos; ได้ง่ายๆ
             </h2>
@@ -528,7 +561,14 @@ export function AssetHubLandingPage() {
             <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <Bird className="h-6 w-6" style={{ color: TEAL }} />
+                  <Image
+                    src="/porjai-logo.png"
+                    alt=""
+                    width={24}
+                    height={24}
+                    className="h-6 w-6 shrink-0 object-contain"
+                    aria-hidden
+                  />
                   <span className="font-bold text-slate-900">Porjai.</span>
                 </div>
                 <p className="mt-3 text-sm text-slate-600">
