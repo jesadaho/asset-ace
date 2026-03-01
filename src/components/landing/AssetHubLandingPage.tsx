@@ -7,9 +7,6 @@ import { motion } from "framer-motion";
 import {
   MessageCircle,
   Phone,
-  UserCheck,
-  TrendingUp,
-  Bell,
   Database,
   FileText,
   Users,
@@ -168,24 +165,7 @@ export function AssetHubLandingPage() {
           </div>
         </motion.section>
 
-        {/* 3. Connected Platforms */}
-        <motion.section
-          className="border-y border-slate-200 bg-slate-50 py-10"
-          {...reveal}
-        >
-          <p className="text-center text-sm font-medium text-slate-500">
-            แพลตฟอร์มที่เชื่อมต่อกับเรา
-          </p>
-          <div className="mx-auto mt-6 flex max-w-4xl flex-wrap items-center justify-center gap-8 px-4 sm:gap-10">
-            <span className="flex items-center gap-2 text-slate-500">AssetHub</span>
-            <span className="flex items-center gap-2 text-slate-500">Facebook Marketplace</span>
-            <span className="flex items-center gap-2 text-slate-500">Line OA</span>
-            <span className="flex items-center gap-2 text-slate-500">LivingInsider</span>
-            <span className="flex items-center gap-2 text-slate-500">DDproperty</span>
-          </div>
-        </motion.section>
-
-        {/* 4. Porjai Solution (3 cards) */}
+        {/* 3. Porjai Solution (3 cards) */}
         <motion.section
           id="features"
           className="border-t border-slate-200 bg-slate-50 py-16"
@@ -212,62 +192,71 @@ export function AssetHubLandingPage() {
               เรานำเทคโนโลยีมาช่วยจัดการเรื่องวุ่นวาย ให้คุณมีเวลาไปใช้ชีวิตในแบบที่ต้องการ
             </p>
             <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 text-teal-600">
-                  <UserCheck className="h-5 w-5" />
+              <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="relative aspect-[4/3] w-full bg-white">
+                  <Image
+                    src="/solution-1.png"
+                    alt=""
+                    fill
+                    className="object-contain p-2"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
-                <h3 className="mt-4 font-semibold text-slate-900">
-                  บริหารห้องเช่าง่าย... เหมือนสั่งอาหาร
-                </h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  จัดการข้อมูลห้องว่างให้พร้อมเสิร์ฟเอเจนต์ได้ทันที
-                </p>
-                <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                  <li>
-                    <span className="font-medium text-slate-700">อัปเดตง่ายแค่ปลายนิ้ว:</span> ไม่ต้องพิมพ์บอกซ้ำๆ ในแชท เอเจนต์เห็นสถานะล่าสุดได้ทันที
-                  </li>
-                  <li>
-                    <span className="font-medium text-slate-700">ข้อมูลสดใหม่เสมอ:</span> ลดขั้นตอนการประสานงาน ให้การปล่อยเช่าไหลลื่นและรวดเร็ว
-                  </li>
-                </ul>
+                <div className="p-6">
+                  <h3 className="font-semibold text-slate-900">
+                    บริหารห้องเช่าง่าย... เหมือนสั่งอาหาร
+                  </h3>
+                  <p className="mt-2 text-sm text-slate-600">
+                    อัปเดตสถานะห้องง่ายแค่ปลายนิ้ว เอเจนต์เห็นปุ๊บ จองปั๊บ
+                  </p>
+                  <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                    <li>ลดขั้นตอนประสานงาน ให้การปล่อยเช่าไหลลื่นและรวดเร็ว</li>
+                  </ul>
+                </div>
               </article>
-              <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 text-teal-600">
-                  <TrendingUp className="h-5 w-5" />
+              <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="relative aspect-[4/3] w-full bg-white">
+                  <Image
+                    src="/solution-2.png"
+                    alt=""
+                    fill
+                    className="object-contain p-2"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
-                <h3 className="mt-4 font-semibold text-slate-900">
-                  สรุปภาพรวมการเงิน... ครบถ้วนในหน้าเดียว
-                </h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  จัดการรายรับ-รายจ่ายให้เป็นระบบ ไม่ต้องวุ่นวายกับตัวเลข
-                </p>
-                <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                  <li>
-                    <span className="font-medium text-slate-700">Dashboard เรียลไทม์:</span> เห็นสรุปยอดของทุกทรัพย์สินได้ทันที ช่วยให้คุณวางแผนการเงินได้แม่นยำ
-                  </li>
-                  <li>
-                    <span className="font-medium text-slate-700">จัดเก็บไฟล์เป็นระเบียบ:</span> รูปภาพและเอกสารสำคัญถูกเก็บไว้อย่างดี ค้นหาง่าย ไม่ต้องกลัวไฟล์หมดอายุ
-                  </li>
-                </ul>
+                <div className="p-6">
+                  <h3 className="font-semibold text-slate-900">
+                    สรุปภาพรวมการเงิน... ครบในหน้าเดียว
+                  </h3>
+                  <p className="mt-2 text-sm text-slate-600">
+                    Dashboard เรียลไทม์ เห็นสรุปยอดทุกทรัพย์สินได้ทันที
+                  </p>
+                  <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                    <li>จัดเก็บไฟล์และเอกสารสำคัญเป็นระเบียบ ค้นหาง่าย</li>
+                  </ul>
+                </div>
               </article>
-              <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-600">
-                  <Bell className="h-5 w-5" />
+              <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="relative aspect-[4/3] w-full bg-white">
+                  <Image
+                    src="/solution-3.png"
+                    alt=""
+                    fill
+                    className="object-contain p-2"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
-                <h3 className="mt-4 font-semibold text-slate-900">
-                  ติดตามค่าเช่าอัตโนมัติ... ลดภาระงานทวง
-                </h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  ให้ระบบช่วยดูแลการชำระเงินแทนคุณ ไม่ต้องคอยตามเช็กให้ลำบากใจ
-                </p>
-                <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                  <li>
-                    <span className="font-medium text-slate-700">ระบบแจ้งเตือนอัตโนมัติ:</span> แจ้งเตือนเมื่อถึงกำหนดและติดตามการชำระเงินให้อย่างเป็นระเบียบ
-                  </li>
-                  <li>
-                    <span className="font-medium text-slate-700">ตรวจสอบสถานะได้ทันที:</span> รู้ได้ทันทีว่ารายการไหนเรียบร้อยแล้ว ช่วยให้คุณจัดการเวลาได้ดีขึ้น
-                  </li>
-                </ul>
+                <div className="p-6">
+                  <h3 className="font-semibold text-slate-900">
+                    ติดตามค่าเช่าอัตโนมัติ... ลดภาระงานทวง
+                  </h3>
+                  <p className="mt-2 text-sm text-slate-600">
+                    ระบบแจ้งเตือนและติดตามการชำระเงินให้อัตโนมัติ
+                  </p>
+                  <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                    <li>ตรวจสอบสถานะได้ทันที ไม่ต้องคอยเช็กแชทให้ลำบากใจ</li>
+                  </ul>
+                </div>
               </article>
             </div>
           </div>
@@ -498,7 +487,24 @@ export function AssetHubLandingPage() {
           </div>
         </motion.section>
 
-        {/* 10. Footer (4 columns) */}
+        {/* Connected Platforms */}
+        <motion.section
+          className="border-t border-slate-200 bg-slate-50 py-10"
+          {...reveal}
+        >
+          <p className="text-center text-sm font-medium text-slate-500">
+            แพลตฟอร์มที่เชื่อมต่อกับเรา
+          </p>
+          <div className="mx-auto mt-6 flex max-w-4xl flex-wrap items-center justify-center gap-8 px-4 sm:gap-10">
+            <span className="flex items-center gap-2 text-slate-500">AssetHub</span>
+            <span className="flex items-center gap-2 text-slate-500">Facebook Marketplace</span>
+            <span className="flex items-center gap-2 text-slate-500">Line OA</span>
+            <span className="flex items-center gap-2 text-slate-500">LivingInsider</span>
+            <span className="flex items-center gap-2 text-slate-500">DDproperty</span>
+          </div>
+        </motion.section>
+
+        {/* Footer (4 columns) */}
         <motion.footer
           id="contact"
           className="border-t border-slate-200 bg-slate-100 py-14"
