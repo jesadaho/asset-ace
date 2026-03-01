@@ -8,7 +8,6 @@ import {
   MessageCircle,
   Phone,
   UserCheck,
-  FileCheck,
   TrendingUp,
   Bell,
   Database,
@@ -186,82 +185,9 @@ export function AssetHubLandingPage() {
           </div>
         </motion.section>
 
-        {/* 4. Problem Statement + 3 Cards */}
+        {/* 4. Porjai Solution (3 cards) */}
         <motion.section
           id="features"
-          className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
-          {...reveal}
-        >
-          <p className="text-center text-sm font-semibold" style={{ color: TEAL }}>
-            ปัญหาที่คุณต้องเจอ
-          </p>
-          <h2 className="mt-2 text-center text-2xl font-bold text-slate-900 sm:text-3xl">
-            เบื่อไหมกับปัญหาเดิมๆ ของคนมีห้องให้เช่า?
-          </h2>
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="relative aspect-[4/3] w-full bg-white">
-                <Image
-                  src="/painpoint-1.png"
-                  alt=""
-                  fill
-                  className="object-contain p-2"
-                  sizes="(max-width: 640px) 100vw, 33vw"
-                />
-              </div>
-              <div className="bg-slate-50 p-6">
-                <h3 className="font-semibold text-slate-900">
-                  คอนโดหลักล้าน แต่ทำไมบริหารวุ่นวายเหมือนแผงลอย?
-                </h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  ข้อมูลกระจัดกระจายในแชท เอเจนท์ทักถามซ้ำๆ รูปหาย ไฟล์หมดอายุ ต้องส่งใหม่ไม่จบไม่สิ้น
-                </p>
-              </div>
-            </article>
-            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="relative aspect-[4/3] w-full bg-white">
-                <Image
-                  src="/painpoint-2.png"
-                  alt=""
-                  fill
-                  className="object-contain p-2"
-                  sizes="(max-width: 640px) 100vw, 33vw"
-                />
-              </div>
-              <div className="bg-slate-50 p-6">
-                <h3 className="font-semibold text-slate-900">
-                  ห้องว่าง 1 วัน คือเงินที่หายไป... คุณเรียกคืนไม่ได้
-                </h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  กว่าเอเจนท์จะรู้ว่าห้องว่าง หรือกว่าคุณจะประกาศเสร็จ รายได้ก็หายไปหลายวันเพราะความล่าช้าของข้อมูล
-                </p>
-              </div>
-            </article>
-            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="relative aspect-[4/3] w-full bg-white">
-                <Image
-                  src="/painpoint-3.png"
-                  alt=""
-                  fill
-                  className="object-contain p-2"
-                  sizes="(max-width: 640px) 100vw, 33vw"
-                />
-              </div>
-              <div className="bg-slate-50 p-6">
-                <h3 className="font-semibold text-slate-900">
-                  รับสายจนสายไหม้ แต่ปิดดีลไม่ได้
-                </h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  พูดกับ Agent หลายสิบคน ข้อมูลไม่ตรงกัน ต้องไล่ตามสถานะเอง
-                </p>
-              </div>
-            </article>
-          </div>
-        </motion.section>
-
-        {/* 5. Porjai Solution (4 cards) */}
-        <motion.section
-          id="services"
           className="border-t border-slate-200 bg-slate-50 py-16"
           {...reveal}
         >
@@ -285,43 +211,71 @@ export function AssetHubLandingPage() {
             <p className="mt-2 max-w-2xl text-slate-600">
               เรานำเทคโนโลยีมาช่วยจัดการเรื่องวุ่นวาย ให้คุณมีเวลาไปใช้ชีวิตในแบบที่ต้องการ
             </p>
-            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <UserCheck className="h-10 w-10 text-slate-700" />
-                <h3 className="mt-4 font-semibold text-slate-900">คัดกรองผู้เช่าคุณภาพ</h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  ระบบ Tenant Screening ช่วยกรองผู้สนใจให้เหลือเฉพาะคนที่เหมาะสม
-                </p>
-              </article>
-              <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <FileCheck className="h-10 w-10 text-slate-700" />
-                <h3 className="mt-4 font-semibold text-slate-900">จัดการสัญญามาตรฐาน</h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  สัญญาเช่ามาตรฐาน จัดการเรื่องกฎหมาย เช็คอิน-เช็คเอาท์ให้ครบ
-                </p>
-              </article>
-              <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <TrendingUp className="h-10 w-10 text-slate-700" />
-                <h3 className="mt-4 font-semibold text-slate-900">สรุปภาพรวมการเงิน</h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  Dashboard แสดงรายรับ-รายจ่ายแบบเรียลไทม์ เห็นภาพรวมทุกทรัพย์
-                </p>
-              </article>
-              <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
-                  <Bell className="h-5 w-5 text-orange-600" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 text-teal-600">
+                  <UserCheck className="h-5 w-5" />
                 </div>
-                <h3 className="mt-4 font-semibold text-slate-900">ติดตามค่าเช่าอัตโนมัติ</h3>
+                <h3 className="mt-4 font-semibold text-slate-900">
+                  บริหารห้องเช่าง่าย... เหมือนสั่งอาหาร
+                </h3>
                 <p className="mt-2 text-sm text-slate-600">
-                  แจ้งเตือนเมื่อถึงกำหนดรับค่าเช่า ติดตามการชำระเงินให้ไม่พลาด
+                  จัดการข้อมูลห้องว่างให้พร้อมเสิร์ฟเอเจนต์ได้ทันที
                 </p>
+                <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                  <li>
+                    <span className="font-medium text-slate-700">อัปเดตง่ายแค่ปลายนิ้ว:</span> ไม่ต้องพิมพ์บอกซ้ำๆ ในแชท เอเจนต์เห็นสถานะล่าสุดได้ทันที
+                  </li>
+                  <li>
+                    <span className="font-medium text-slate-700">ข้อมูลสดใหม่เสมอ:</span> ลดขั้นตอนการประสานงาน ให้การปล่อยเช่าไหลลื่นและรวดเร็ว
+                  </li>
+                </ul>
+              </article>
+              <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 text-teal-600">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 font-semibold text-slate-900">
+                  สรุปภาพรวมการเงิน... ครบถ้วนในหน้าเดียว
+                </h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  จัดการรายรับ-รายจ่ายให้เป็นระบบ ไม่ต้องวุ่นวายกับตัวเลข
+                </p>
+                <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                  <li>
+                    <span className="font-medium text-slate-700">Dashboard เรียลไทม์:</span> เห็นสรุปยอดของทุกทรัพย์สินได้ทันที ช่วยให้คุณวางแผนการเงินได้แม่นยำ
+                  </li>
+                  <li>
+                    <span className="font-medium text-slate-700">จัดเก็บไฟล์เป็นระเบียบ:</span> รูปภาพและเอกสารสำคัญถูกเก็บไว้อย่างดี ค้นหาง่าย ไม่ต้องกลัวไฟล์หมดอายุ
+                  </li>
+                </ul>
+              </article>
+              <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                  <Bell className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 font-semibold text-slate-900">
+                  ติดตามค่าเช่าอัตโนมัติ... ลดภาระงานทวง
+                </h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  ให้ระบบช่วยดูแลการชำระเงินแทนคุณ ไม่ต้องคอยตามเช็กให้ลำบากใจ
+                </p>
+                <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                  <li>
+                    <span className="font-medium text-slate-700">ระบบแจ้งเตือนอัตโนมัติ:</span> แจ้งเตือนเมื่อถึงกำหนดและติดตามการชำระเงินให้อย่างเป็นระเบียบ
+                  </li>
+                  <li>
+                    <span className="font-medium text-slate-700">ตรวจสอบสถานะได้ทันที:</span> รู้ได้ทันทีว่ารายการไหนเรียบร้อยแล้ว ช่วยให้คุณจัดการเวลาได้ดีขึ้น
+                  </li>
+                </ul>
               </article>
             </div>
           </div>
         </motion.section>
 
-        {/* 6. What Can Porjai Do (4 cards 2x2) */}
+        {/* 5. What Can Porjai Do (4 cards 2x2) */}
         <motion.section
+          id="services"
           className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
           {...reveal}
         >
