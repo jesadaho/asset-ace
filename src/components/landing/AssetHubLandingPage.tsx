@@ -66,12 +66,6 @@ export function AssetHubLandingPage() {
           </div>
           <div className="flex items-center gap-2">
             <Link
-              href="/enter"
-              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg px-4 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              เข้าสู่ระบบ
-            </Link>
-            <Link
               href="#line-cta"
               className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg px-4 text-sm font-medium text-white hover:opacity-90"
               style={{ backgroundColor: TEAL }}
@@ -147,23 +141,17 @@ export function AssetHubLandingPage() {
               </div>
             </div>
 
-            {/* Right: phone mockup */}
+            {/* Right: hero illustration (owl, buildings, app – replaces phone mockup) */}
             <div className="relative flex justify-center lg:-ml-12 lg:justify-end">
-              <div
-                className="relative w-full max-w-[260px] rounded-[2.25rem] border-4 border-slate-800 bg-slate-900 p-1.5 shadow-2xl lg:-rotate-2"
-                aria-hidden
-              >
-                <div className="absolute left-1/2 top-3 z-10 h-4 w-20 -translate-x-1/2 rounded-full bg-slate-800" />
-                <div className="relative mt-5 aspect-[9/19] w-full overflow-hidden rounded-[1.25rem] bg-white">
-                  <Image
-                    src="/hero-cover.png"
-                    alt="Porjai – บริหารคอนโดและบ้านเช่า"
-                    fill
-                    className="object-cover object-top"
-                    sizes="260px"
-                    priority
-                  />
-                </div>
+              <div className="relative w-full max-w-[380px] aspect-[4/3] lg:max-w-[420px]" aria-hidden>
+                <Image
+                  src="/hero-illustration.png"
+                  alt="พอใจ – บริหารคอนโดและบ้านเช่า"
+                  fill
+                  className="object-contain object-center"
+                  sizes="(max-width: 1024px) 90vw, 420px"
+                  priority
+                />
               </div>
             </div>
           </div>
@@ -341,8 +329,8 @@ export function AssetHubLandingPage() {
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid items-center gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:gap-16">
-              {/* Left: property listing card – narrower column + max-width so card stays smaller */}
-              <div className="mx-auto w-full max-w-[320px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg lg:mx-0">
+              {/* Left: property listing card – max 380px, slight tilt, hover to straighten */}
+              <div className="mx-auto w-full max-w-[380px] -rotate-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg transition-transform duration-300 ease-out hover:rotate-0 lg:mx-0">
                 <div className="relative aspect-[16/9] bg-slate-100">
                   <Image
                     src="/trust-card-image.png"
