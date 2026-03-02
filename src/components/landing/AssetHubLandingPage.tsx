@@ -15,6 +15,9 @@ import {
   ChevronDown,
   Facebook,
   Instagram,
+  Home,
+  CircleDollarSign,
+  CheckCircle,
 } from "lucide-react";
 
 const reveal = {
@@ -83,12 +86,28 @@ export function AssetHubLandingPage() {
       <main>
         {/* 2. Hero (cover hero – two columns) */}
         <motion.section
-          className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20"
+          className="relative mx-auto max-w-7xl overflow-hidden px-4 py-12 sm:px-6 lg:px-8 lg:py-20"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+          {/* Subtle background: geometric shapes */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
+            <div
+              className="absolute -right-20 top-1/4 h-72 w-72 rounded-full opacity-[0.06]"
+              style={{ backgroundColor: TEAL }}
+            />
+            <div
+              className="absolute -right-40 bottom-1/4 h-96 w-96 rounded-full opacity-[0.04]"
+              style={{ backgroundColor: TEAL }}
+            />
+            <div
+              className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.03]"
+              style={{ backgroundColor: TEAL }}
+            />
+          </div>
+
+          <div className="relative grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8">
             {/* Left: copy + CTAs + mascot */}
             <div className="max-w-xl">
               <span
@@ -130,24 +149,58 @@ export function AssetHubLandingPage() {
                   คุยกับเราทาง LINE
                 </a>
               </div>
-              <div className="mt-8 flex items-center gap-3">
-                <Image
-                  src="/porjai-logo.png"
-                  alt=""
-                  width={40}
-                  height={40}
-                  className="h-10 w-10 shrink-0 object-contain"
+              {/* Mascot with soft glow behind */}
+              <div className="relative mt-8">
+                <div
+                  className="absolute -inset-4 rounded-2xl opacity-40 blur-2xl"
+                  style={{
+                    background: `radial-gradient(circle at 30% 50%, ${TEAL}22 0%, transparent 70%)`,
+                  }}
                   aria-hidden
                 />
-                <p className="text-sm text-slate-700">
-                  สวัสดีครับ! ผมชื่อพอใจ พร้อมดูแลทรัพย์สินของคุณแล้ว 🦉
-                </p>
+                <div className="relative flex items-center gap-3">
+                  <Image
+                    src="/porjai-logo.png"
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 shrink-0 object-contain"
+                    aria-hidden
+                  />
+                  <p className="text-sm text-slate-700">
+                    สวัสดีครับ! ผมชื่อพอใจ พร้อมดูแลทรัพย์สินของคุณแล้ว 🦉
+                  </p>
+                </div>
               </div>
             </div>
-            {/* Right: phone mockup */}
-            <div className="flex justify-center lg:justify-end">
+
+            {/* Right: phone mockup with overlap + floating elements */}
+            <div className="relative flex justify-center lg:-ml-12 lg:justify-end">
+              {/* Floating icons (depth of field: closer = larger/opaque, farther = smaller/faint) */}
+              <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
+                <Home
+                  className="absolute right-[15%] top-[20%] h-8 w-8 opacity-25"
+                  style={{ color: TEAL }}
+                />
+                <CircleDollarSign
+                  className="absolute bottom-[30%] right-[5%] h-6 w-6 opacity-20"
+                  style={{ color: TEAL }}
+                />
+                <CheckCircle
+                  className="absolute left-[10%] top-[35%] h-7 w-7 opacity-30"
+                  style={{ color: TEAL }}
+                />
+                <Home
+                  className="absolute bottom-[25%] left-[20%] h-5 w-5 opacity-15"
+                  style={{ color: TEAL }}
+                />
+                <CheckCircle
+                  className="absolute right-[25%] bottom-[15%] h-5 w-5 opacity-18"
+                  style={{ color: TEAL }}
+                />
+              </div>
               <div
-                className="relative w-full max-w-[260px] rounded-[2.25rem] border-4 border-slate-800 bg-slate-900 p-1.5 shadow-2xl lg:-rotate-2"
+                className="relative z-10 w-full max-w-[260px] rounded-[2.25rem] border-4 border-slate-800 bg-slate-900 p-1.5 shadow-2xl lg:-rotate-2"
                 aria-hidden
               >
                 <div className="absolute left-1/2 top-3 z-10 h-4 w-20 -translate-x-1/2 rounded-full bg-slate-800" />
@@ -205,7 +258,7 @@ export function AssetHubLandingPage() {
                 </div>
                 <div className="p-6">
                   <h3 className="font-semibold text-slate-900">
-                    บริหารห้องเช่าง่าย... เหมือนสั่งอาหาร
+                    บริหารคอนโดและบ้านเช่าง่าย... เหมือนสั่งอาหาร
                   </h3>
                   <p className="mt-2 text-sm text-slate-600">
                     อัปเดตสถานะห้องง่ายแค่ปลายนิ้ว เอเจนต์เห็นปุ๊บ จองปั๊บ
@@ -320,9 +373,9 @@ export function AssetHubLandingPage() {
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-              {/* Left: property listing card */}
+              {/* Left: property listing card (image smaller vs design – 16:9) */}
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
-                <div className="relative aspect-[4/3] bg-slate-100">
+                <div className="relative aspect-[16/9] bg-slate-100">
                   <Image
                     src="/trust-card-image.png"
                     alt="The Bangkok Thonglor"
