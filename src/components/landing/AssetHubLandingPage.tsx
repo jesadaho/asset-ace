@@ -174,13 +174,13 @@ export function AssetHubLandingPage() {
 
             {/* Right: hero illustration — on mobile show first (order-1) */}
             <div className="order-1 relative flex justify-center lg:order-2 lg:-ml-12 lg:justify-end">
-              <div className="relative w-full max-w-[380px] aspect-[4/3] lg:max-w-[420px]" aria-hidden>
+              <div className="relative w-full max-w-[420px] aspect-[4/3] lg:max-w-[520px]" aria-hidden>
                 <Image
                   src="/hero-illustration.png"
                   alt="พอใจ – บริหารคอนโดและบ้านเช่า"
                   fill
                   className="object-contain object-center"
-                  sizes="(max-width: 1024px) 90vw, 420px"
+                  sizes="(max-width: 1024px) 90vw, 520px"
                   priority
                 />
               </div>
@@ -624,7 +624,13 @@ export function AssetHubLandingPage() {
                 <ul className="mt-3 space-y-2 text-sm text-slate-600">
                   <li className="flex items-start gap-2">
                     <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                    123 อาคารสาทรไพรม์ แขวงทุ่งมหาเมฆ เขตสาทร กรุงเทพฯ
+                    <span>
+                      10th floor, SPE Tower,
+                      <br />
+                      252 Phahonyothin Rd, Samsen Nai,
+                      <br />
+                      Phaya Thai, Bangkok 10400
+                    </span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Phone className="h-4 w-4 shrink-0" />
@@ -632,7 +638,7 @@ export function AssetHubLandingPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Mail className="h-4 w-4 shrink-0" />
-                    hello@porjai.co
+                    porjai.assethub@gmail.com
                   </li>
                 </ul>
               </div>
