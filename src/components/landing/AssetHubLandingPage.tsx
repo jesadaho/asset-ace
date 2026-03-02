@@ -587,7 +587,13 @@ export function AssetHubLandingPage() {
                   ผู้ช่วยส่วนตัวที่ดูแลคอนโดและบ้านให้เช่าบน AssetHub ให้คุณมีเวลาทำอย่างอื่นมากขึ้น
                 </p>
                 <div className="mt-4 flex gap-3">
-                  <a href="#" className="text-slate-500 hover:text-slate-700" aria-label="Facebook">
+                  <a
+                    href="https://www.facebook.com/people/Asset-Hub/61586247177169/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-500 hover:text-slate-700"
+                    aria-label="Facebook"
+                  >
                     <Facebook className="h-5 w-5" />
                   </a>
                   <a href="#" className="text-slate-500 hover:text-slate-700" aria-label="Instagram">
