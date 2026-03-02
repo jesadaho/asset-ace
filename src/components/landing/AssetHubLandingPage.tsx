@@ -372,9 +372,9 @@ export function AssetHubLandingPage() {
           {...reveal}
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-              {/* Left: property listing card (image smaller vs design – 16:9) */}
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+            <div className="grid items-center gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:gap-16">
+              {/* Left: property listing card – narrower column + max-width so card stays smaller */}
+              <div className="mx-auto w-full max-w-[320px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg lg:mx-0">
                 <div className="relative aspect-[16/9] bg-slate-100">
                   <Image
                     src="/trust-card-image.png"
