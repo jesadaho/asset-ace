@@ -85,8 +85,8 @@ export function AssetHubLandingPage() {
           transition={{ duration: 0.5 }}
         >
           <div className="relative grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8">
-            {/* Left: copy + CTAs + mascot */}
-            <div className="max-w-xl">
+            {/* Left: copy + CTAs + mascot — on mobile show after illustration (order-2) */}
+            <div className="order-2 max-w-xl lg:order-1">
               <span
                 className="inline-block rounded-full px-4 py-1.5 text-sm font-medium text-white"
                 style={{ backgroundColor: TEAL }}
@@ -126,7 +126,7 @@ export function AssetHubLandingPage() {
                   คุยกับเราทาง LINE
                 </a>
               </div>
-              <div className="mt-8 flex items-center gap-3">
+              <div className="mt-8 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
                   <Image
                     src="/porjai-logo.png"
                     alt=""
@@ -141,8 +141,8 @@ export function AssetHubLandingPage() {
               </div>
             </div>
 
-            {/* Right: hero illustration (owl, buildings, app – replaces phone mockup) */}
-            <div className="relative flex justify-center lg:-ml-12 lg:justify-end">
+            {/* Right: hero illustration — on mobile show first (order-1) */}
+            <div className="order-1 relative flex justify-center lg:order-2 lg:-ml-12 lg:justify-end">
               <div className="relative w-full max-w-[380px] aspect-[4/3] lg:max-w-[420px]" aria-hidden>
                 <Image
                   src="/hero-illustration.png"
