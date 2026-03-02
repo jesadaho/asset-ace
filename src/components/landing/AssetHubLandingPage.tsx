@@ -101,7 +101,7 @@ export function AssetHubLandingPage() {
                 <span className="text-slate-900">เรื่องการหาผู้เช่าและติดตามค่าเช่า</span>
               </h1>
               <p className="mt-4 text-slate-600">
-                ผู้ช่วยส่วนตัวที่ดูแลคอนโดและบ้านของคุณครบวงจร พร้อมยกระดับทรัพย์สินของคุณบน AssetHub แพลตฟอร์มมาตรฐานสากล
+                &quot;พอใจ&quot; เป็น Line OA ที่จะเป็นผู้ช่วยส่วนตัวที่ดูแลคอนโดและบ้านของคุณครบวงจร พร้อมยกระดับทรัพย์สินของคุณบน Asset Hub แพลตฟอร์มมาตรฐานสากล
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link

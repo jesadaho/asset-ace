@@ -18,29 +18,29 @@ import { uploadFilesWithProgress } from "@/lib/uploadWithProgress";
 const MAX_PHOTOS = 10;
 
 const LISTING_TYPES = [
-  { value: "rent", label: "For rent" },
-  { value: "sale", label: "For sale" },
+  { value: "rent", labelKey: "listingTypeRent" as const },
+  { value: "sale", labelKey: "listingTypeSale" as const },
 ];
 
 const PROPERTY_TYPES = [
-  { value: "Condo", label: "Condo" },
-  { value: "House", label: "House" },
-  { value: "Apartment", label: "Apartment" },
+  { value: "Condo", labelKey: "propertyTypeCondo" as const },
+  { value: "House", labelKey: "propertyTypeHouse" as const },
+  { value: "Apartment", labelKey: "propertyTypeApartment" as const },
 ];
 
-const AMENITY_OPTIONS = [
-  { id: "balcony", label: "Balcony" },
-  { id: "basement", label: "Basement" },
-  { id: "bike-parking", label: "Bike Parking" },
-  { id: "cable-tv", label: "Cable TV" },
-  { id: "pool", label: "Pool" },
-  { id: "gym", label: "Gym" },
-  { id: "parking", label: "Parking" },
-  { id: "garden", label: "Garden" },
-  { id: "security", label: "Security" },
-  { id: "elevator", label: "Elevator" },
-  { id: "wifi", label: "WiFi" },
-  { id: "air-conditioning", label: "Air Conditioning" },
+const AMENITY_OPTIONS: { id: string; labelKey: string }[] = [
+  { id: "balcony", labelKey: "amenityBalcony" },
+  { id: "basement", labelKey: "amenityBasement" },
+  { id: "bike-parking", labelKey: "amenityBikeParking" },
+  { id: "cable-tv", labelKey: "amenityCableTv" },
+  { id: "pool", labelKey: "amenityPool" },
+  { id: "gym", labelKey: "amenityGym" },
+  { id: "parking", labelKey: "amenityParking" },
+  { id: "garden", labelKey: "amenityGarden" },
+  { id: "security", labelKey: "amenitySecurity" },
+  { id: "elevator", labelKey: "amenityElevator" },
+  { id: "wifi", labelKey: "amenityWifi" },
+  { id: "air-conditioning", labelKey: "amenityAirConditioning" },
 ];
 
 const STATUS_OPTIONS = ["Available", "Occupied", "Draft"] as const;
@@ -53,6 +53,8 @@ const inputError = "border-red-500 focus:border-red-500";
 export default function AddPropertyPage() {
   const router = useRouter();
   const t = useTranslations("propertyDetail");
+  const tEdit = useTranslations("propertyEdit");
+  const tProps = useTranslations("properties");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
@@ -97,7 +99,7 @@ export default function AddPropertyPage() {
     );
   };
   const filteredAmenityOptions = AMENITY_OPTIONS.filter((opt) =>
-    opt.label.toLowerCase().includes(amenitySearch.toLowerCase().trim())
+    tEdit(opt.labelKey).toLowerCase().includes(amenitySearch.toLowerCase().trim())
   );
 
   const handleImageClick = () => fileInputRef.current?.click();
@@ -157,14 +159,14 @@ export default function AddPropertyPage() {
             })),
           });
           if (!hasUploads) {
-            setUploadError("Invalid upload response");
-            setImageDebug((d) => (d ? { ...d, error: "Invalid upload response" } : null));
+            setUploadError(tEdit("uploadInvalidResponse"));
+            setImageDebug((d) => (d ? { ...d, error: tEdit("uploadInvalidResponse") } : null));
             setSaving(false);
             return;
           }
         } catch (uploadErr) {
           setUploadProgress(null);
-          const msg = uploadErr instanceof Error ? uploadErr.message : "Upload failed";
+          const msg = uploadErr instanceof Error ? uploadErr.message : tEdit("uploadFailed");
           setUploadError(msg);
           setImageDebug({
             presign: { status: 0, ok: false },
@@ -186,7 +188,7 @@ export default function AddPropertyPage() {
       const liff = (await import("@line/liff")).default;
       const token = liff.getAccessToken();
       if (!token) {
-        setUploadError("Please log in with LINE to save the property.");
+        setUploadError(tEdit("pleaseLoginToSave"));
         setSaving(false);
         return;
       }
@@ -225,16 +227,16 @@ export default function AddPropertyPage() {
 
       const createData = await createRes.json().catch(() => ({}));
       if (!createRes.ok) {
-        setUploadError(createData.message ?? `Failed to save property (${createRes.status})`);
+        setUploadError(createData.message ?? tEdit("saveFailedGeneric"));
         setSaving(false);
         return;
       }
 
-      alert("Property saved.");
+      alert(tEdit("saveSuccess"));
       router.push("/owner/properties");
     } catch (err) {
       console.error("[Add Property] Upload error (full error):", err);
-      const msg = err instanceof Error ? err.message : "Something went wrong";
+      const msg = err instanceof Error ? err.message : tEdit("saveFailedGeneric");
       const errName = err instanceof Error ? err.constructor?.name ?? "Error" : "Unknown";
       setUploadError(msg);
       setImageDebug((d) =>
@@ -254,12 +256,12 @@ export default function AddPropertyPage() {
           <Link
             href="/owner/properties"
             className="flex items-center justify-center p-2 -m-2 text-[#0F172A] hover:text-[#003366] tap-target min-h-[44px] min-w-[44px]"
-            aria-label="Back"
+            aria-label={tEdit("backAria")}
           >
             <ArrowLeft className="h-5 w-5" aria-hidden />
           </Link>
           <h1 className="flex-1 text-lg font-semibold text-[#0F172A] text-center -ml-12">
-            Add New Property
+            {tEdit("addPageTitle")}
           </h1>
           <span className="w-10" aria-hidden />
         </div>
@@ -269,11 +271,11 @@ export default function AddPropertyPage() {
         <div className="py-6 space-y-8">
           <section>
             <label className="block text-sm font-medium text-[#0F172A] mb-2">
-              Property Photos
+              {tEdit("propertyPhotos")}
             </label>
             {uploadProgress != null && (
               <div className="mb-3">
-                <p className="text-sm text-slate-600 mb-1.5">Uploading photos…</p>
+                <p className="text-sm text-slate-600 mb-1.5">{tEdit("uploadingPhotos")}</p>
                 <div
                   className="w-full h-2 bg-slate-200 rounded-full overflow-hidden"
                   role="progressbar"
@@ -297,10 +299,10 @@ export default function AddPropertyPage() {
               <ImagePlus className="h-10 w-10" aria-hidden />
               <span className="text-sm font-medium">
                 {imageFiles.length >= MAX_PHOTOS
-                  ? `Maximum ${MAX_PHOTOS} photos`
+                  ? tEdit("maximumPhotos", { max: MAX_PHOTOS })
                   : imageFiles.length > 0
-                    ? "Add more photos"
-                    : "Upload Property Photos"}
+                    ? tEdit("addMorePhotos")
+                    : tEdit("uploadPropertyPhotos")}
               </span>
             </button>
             <input
@@ -310,7 +312,7 @@ export default function AddPropertyPage() {
               multiple
               onChange={handleImageChange}
               className="sr-only"
-              aria-label="Choose property photos"
+              aria-label={tEdit("choosePropertyPhotosAria")}
             />
             {imageFiles.length > 0 && (
               <ul className="mt-3 space-y-2">
@@ -324,7 +326,7 @@ export default function AddPropertyPage() {
                       type="button"
                       onClick={() => removeImage(index)}
                       className="shrink-0 p-1 text-slate-400 hover:text-red-500 tap-target"
-                      aria-label={`Remove ${file.name}`}
+                      aria-label={t("removeAmenity", { name: file.name })}
                     >
                       <X className="h-4 w-4" aria-hidden />
                     </button>
@@ -366,7 +368,7 @@ export default function AddPropertyPage() {
 
           <section>
             <label htmlFor="listing-type" className="block text-sm font-medium text-[#0F172A] mb-1">
-              Homes for sale or rent
+              {tEdit("homesSaleOrRent")}
             </label>
             <select
               id="listing-type"
@@ -376,7 +378,7 @@ export default function AddPropertyPage() {
             >
               {LISTING_TYPES.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {tEdit(opt.labelKey)}
                 </option>
               ))}
             </select>
@@ -384,11 +386,11 @@ export default function AddPropertyPage() {
 
           <section className="space-y-4">
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-              Basic Info
+              {tEdit("basicInfo")}
             </h2>
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-[#0F172A] mb-1">
-                Property Name
+                {tEdit("propertyName")}
               </label>
               <input
                 id="name"
@@ -398,20 +400,20 @@ export default function AddPropertyPage() {
                   setName(e.target.value);
                   setNameError(false);
                 }}
-                placeholder="Enter property name"
+                placeholder={tEdit("propertyNamePlaceholder")}
                 className={`${inputBase} ${nameError ? inputError : ""}`}
                 aria-invalid={nameError}
                 aria-describedby={nameError ? "name-error" : undefined}
               />
               {nameError && (
                 <p id="name-error" className="mt-1 text-sm text-red-500" role="alert">
-                  Property name is required
+                  {tEdit("propertyNameRequired")}
                 </p>
               )}
             </div>
             <div>
               <label htmlFor="type" className="block text-sm font-medium text-[#0F172A] mb-1">
-                Property Type
+                {tEdit("propertyType")}
               </label>
               <select
                 id="type"
@@ -421,14 +423,14 @@ export default function AddPropertyPage() {
               >
                 {PROPERTY_TYPES.map((opt) => (
                   <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {tEdit(opt.labelKey)}
                   </option>
                 ))}
               </select>
             </div>
             <div>
               <label htmlFor="rent" className="block text-sm font-medium text-[#0F172A] mb-1">
-                Monthly Rent
+                {tEdit("monthlyRent")}
               </label>
               <div className="flex items-center border-b border-slate-200 focus-within:border-[#003366]">
                 <span className="text-base text-slate-500 mr-2">฿</span>
@@ -449,19 +451,19 @@ export default function AddPropertyPage() {
               </div>
               {priceError && (
                 <p id="price-error" className="mt-1 text-sm text-red-500" role="alert">
-                  Monthly rent is required
+                  {tEdit("monthlyRentRequired")}
                 </p>
               )}
             </div>
             <div>
               <label htmlFor="address" className="block text-sm font-medium text-[#0F172A] mb-1">
-                Address
+                {tEdit("address")}
               </label>
               <textarea
                 id="address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="Enter full address"
+                placeholder={tEdit("addressPlaceholder")}
                 rows={3}
                 className={`${inputBase} resize-none border border-slate-200 rounded-lg px-3 focus:border-[#003366]`}
               />
@@ -470,11 +472,11 @@ export default function AddPropertyPage() {
 
           <section className="space-y-4">
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-              Details
+              {tEdit("details")}
             </h2>
             <div>
               <label htmlFor="bedrooms" className="block text-sm font-medium text-[#0F172A] mb-1">
-                Bedrooms
+                {t("bedrooms")}
               </label>
               <input
                 id="bedrooms"
@@ -482,13 +484,13 @@ export default function AddPropertyPage() {
                 inputMode="numeric"
                 value={bedrooms}
                 onChange={(e) => setBedrooms(e.target.value.replace(/\D/g, ""))}
-                placeholder="e.g. 2"
+                placeholder={tEdit("bedroomsPlaceholder")}
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
               />
             </div>
             <div>
               <label htmlFor="bathrooms" className="block text-sm font-medium text-[#0F172A] mb-1">
-                Bathrooms
+                {t("bathrooms")}
               </label>
               <input
                 id="bathrooms"
@@ -496,7 +498,7 @@ export default function AddPropertyPage() {
                 inputMode="numeric"
                 value={bathrooms}
                 onChange={(e) => setBathrooms(e.target.value.replace(/\D/g, ""))}
-                placeholder="e.g. 1"
+                placeholder={tEdit("bathroomsPlaceholder")}
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
               />
             </div>
@@ -505,7 +507,7 @@ export default function AddPropertyPage() {
           <section>
             <div className="flex items-center justify-between gap-3">
               <label htmlFor="address-private" className="text-sm font-medium text-[#0F172A]">
-                Keep property address private
+                {tEdit("keepAddressPrivate")}
               </label>
               <button
                 id="address-private"
@@ -525,19 +527,19 @@ export default function AddPropertyPage() {
               </button>
             </div>
             <p className="mt-1.5 text-sm text-slate-500">
-              We won&apos;t show the exact address. The exact address helps us verify and list your property.
+              {tEdit("addressPrivateDescription")}
             </p>
           </section>
 
           <section>
             <label htmlFor="description" className="block text-sm font-medium text-[#0F172A] mb-1">
-              Property description
+              {tEdit("propertyDescription")}
             </label>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your property..."
+              placeholder={tEdit("propertyDescriptionPlaceholder")}
               rows={4}
               className={`${inputBase} resize-none border border-slate-200 rounded-lg px-3 focus:border-[#003366]`}
             />
@@ -545,12 +547,12 @@ export default function AddPropertyPage() {
 
           <section className="space-y-4">
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide flex items-center gap-2">
-              Advanced Details
-              <span className="text-xs font-normal normal-case text-slate-500">Optional</span>
+              {tEdit("advancedDetails")}
+              <span className="text-xs font-normal normal-case text-slate-500">{tEdit("optional")}</span>
             </h2>
             <div>
               <label htmlFor="square-meters" className="block text-sm font-medium text-[#0F172A] mb-1">
-                Square meters
+                {tEdit("squareMeters")}
               </label>
               <input
                 id="square-meters"
@@ -558,16 +560,16 @@ export default function AddPropertyPage() {
                 inputMode="decimal"
                 value={squareMeters}
                 onChange={(e) => setSquareMeters(e.target.value.replace(/[^\d.]/g, ""))}
-                placeholder="e.g. 85"
+                placeholder={tEdit("squareMetersPlaceholder")}
                 className={`${inputBase} border border-slate-200 rounded-lg px-3`}
               />
-              <p className="mt-1 text-xs text-slate-500">Optional</p>
+              <p className="mt-1 text-xs text-slate-500">{tEdit("optional")}</p>
             </div>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-              Amenities
+              {t("amenities")}
             </h2>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" aria-hidden />
@@ -575,9 +577,9 @@ export default function AddPropertyPage() {
                 type="search"
                 value={amenitySearch}
                 onChange={(e) => setAmenitySearch(e.target.value)}
-                placeholder="Search amenities..."
+                placeholder={tEdit("searchAmenities")}
                 className={`${inputBase} pl-9 border border-slate-200 rounded-lg focus:border-[#003366]`}
-                aria-label="Search amenities"
+                aria-label={tEdit("searchAmenitiesAria")}
               />
             </div>
             <div className="flex flex-wrap gap-2">
@@ -599,7 +601,7 @@ export default function AddPropertyPage() {
                     ) : (
                       <Plus className="h-4 w-4 shrink-0" aria-hidden />
                     )}
-                    <span>{opt.label}</span>
+                    <span>{tEdit(opt.labelKey)}</span>
                   </button>
                 );
               })}
@@ -608,7 +610,7 @@ export default function AddPropertyPage() {
 
           <section>
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide mb-3">
-              Rental Status
+              {tEdit("rentalStatus")}
             </h2>
             <div className="flex rounded-lg border border-slate-200 p-1 bg-slate-50/50">
               {STATUS_OPTIONS.map((opt) => (
@@ -622,7 +624,7 @@ export default function AddPropertyPage() {
                       : "text-slate-600 hover:text-[#0F172A]"
                   }`}
                 >
-                  {opt}
+                  {tProps(`status.${opt}`)}
                 </button>
               ))}
             </div>
@@ -631,7 +633,7 @@ export default function AddPropertyPage() {
           {status === "Occupied" && (
             <section className="space-y-6">
               <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
-                Resident Details
+                {tEdit("residentDetails")}
               </h2>
 
               {/* Tenant section */}
@@ -639,27 +641,27 @@ export default function AddPropertyPage() {
                 <h3 className="text-sm font-medium text-[#0F172A]">{t("tenantSection")}</h3>
                 <div>
                   <label htmlFor="tenant" className="block text-sm font-medium text-[#0F172A] mb-1">
-                    Tenant Name
+                    {tEdit("tenantName")}
                   </label>
                   <input
                     id="tenant"
                     type="text"
                     value={tenantName}
                     onChange={(e) => setTenantName(e.target.value)}
-                    placeholder="Enter tenant name..."
+                    placeholder={tEdit("tenantNamePlaceholder2")}
                     className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                   />
                 </div>
                 <div>
                   <label htmlFor="tenant-line-id" className="block text-sm text-slate-500 mb-1">
-                    LINE ID (Optional)
+                    {tEdit("lineIdOptional")}
                   </label>
                   <input
                     id="tenant-line-id"
                     type="text"
                     value={tenantLineId}
                     onChange={(e) => setTenantLineId(e.target.value)}
-                    placeholder="Paste tenant LINE user ID"
+                    placeholder={tEdit("pasteTenantLineId")}
                     className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                   />
                 </div>
@@ -670,7 +672,7 @@ export default function AddPropertyPage() {
                 <h3 className="text-sm font-medium text-[#0F172A]">{t("agentSection")}</h3>
                 <div>
                   <label htmlFor="agent" className="block text-sm text-slate-500 mb-1">
-                    Agent Name (optional)
+                    {tEdit("agentNameOptional")}
                   </label>
                   <input
                     id="agent"
@@ -683,27 +685,27 @@ export default function AddPropertyPage() {
                 </div>
                 <div>
                   <label htmlFor="agent-line-id" className="block text-sm text-slate-500 mb-1">
-                    LINE ID (Optional)
+                    {tEdit("lineIdOptional")}
                   </label>
                   <input
                     id="agent-line-id"
                     type="text"
                     value={agentLineId}
                     onChange={(e) => setAgentLineId(e.target.value)}
-                    placeholder="Paste agent LINE user ID"
+                    placeholder={tEdit("pasteAgentLineId")}
                     className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                   />
                 </div>
                 <div>
                   <label htmlFor="line-group" className="block text-sm text-slate-500 mb-1">
-                    LINE Group (Optional)
+                    {tEdit("lineGroupOptional")}
                   </label>
                   <input
                     id="line-group"
                     type="text"
                     value={lineGroup}
                     onChange={(e) => setLineGroup(e.target.value)}
-                    placeholder="Name or invite link of LINE group for this property"
+                    placeholder={tEdit("lineGroupPlaceholder")}
                     className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                   />
                 </div>
@@ -711,7 +713,7 @@ export default function AddPropertyPage() {
 
               <div>
                 <label htmlFor="contract-start-date" className="block text-sm font-medium text-[#0F172A] mb-1">
-                  Contract start date (optional)
+                  {tEdit("contractStartOptional")}
                 </label>
                 <input
                   id="contract-start-date"
@@ -736,7 +738,7 @@ export default function AddPropertyPage() {
           disabled={saving}
           isLoading={saving}
         >
-          Save Property
+          {tEdit("save")}
         </Button>
       </div>
     </div>

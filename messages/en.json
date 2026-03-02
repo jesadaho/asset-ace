@@ -254,7 +254,15 @@
     "pleaseLoginToSave": "Please log in with LINE to save.",
     "contractUploadFailed": "Contract upload failed",
     "saveFailedGeneric": "Something went wrong",
-    "editPageTitle": "Edit property"
+    "editPageTitle": "Edit property",
+    "addPageTitle": "Add New Property",
+    "propertyPhotos": "Property Photos",
+    "maximumPhotos": "Maximum {max} photos",
+    "uploadPropertyPhotos": "Upload Property Photos",
+    "rentalStatus": "Rental Status",
+    "saveSuccess": "Property saved.",
+    "agentNameOptional": "Agent name (optional)",
+    "pasteAgentLineId": "Paste agent LINE user ID"
   },
   "marketplace": {
     "title": "Agent Marketplace",

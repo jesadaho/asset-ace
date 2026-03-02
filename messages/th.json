@@ -254,7 +254,15 @@
     "pleaseLoginToSave": "กรุณาเข้าสู่ระบบด้วย LINE เพื่อบันทึก",
     "contractUploadFailed": "อัปโหลดสัญญาไม่สำเร็จ",
     "saveFailedGeneric": "เกิดข้อผิดพลาด",
-    "editPageTitle": "แก้ไขทรัพย์สิน"
+    "editPageTitle": "แก้ไขทรัพย์สิน",
+    "addPageTitle": "เพิ่มทรัพย์สินใหม่",
+    "propertyPhotos": "รูปภาพทรัพย์สิน",
+    "maximumPhotos": "สูงสุด {max} รูป",
+    "uploadPropertyPhotos": "อัปโหลดรูปทรัพย์สิน",
+    "rentalStatus": "สถานะการเช่า",
+    "saveSuccess": "บันทึกทรัพย์สินแล้ว",
+    "agentNameOptional": "ชื่อตัวแทน (ไม่บังคับ)",
+    "pasteAgentLineId": "วาง LINE ID ของตัวแทน"
   },
   "marketplace": {
     "title": "ตลาดตัวแทน",
