@@ -10,7 +10,15 @@ import {
 
 const ONBOARDING_PATH = "/onboarding";
 const ADD_FRIEND_REQUIRED_PATH = "/add-friend-required";
+const OPEN_IN_LINE_PATH = "/open-in-line";
 const INVITE_PATH = "/invite";
+
+/** Paths that are allowed when opened in external browser (not LINE in-app). */
+function isAllowedInExternalBrowser(pathname: string): boolean {
+  if (pathname === "/" || pathname === "/enter" || pathname === OPEN_IN_LINE_PATH) return true;
+  if (pathname.startsWith("/listings/") || pathname.startsWith("/admin/")) return true;
+  return false;
+}
 
 const ALLOWED_PATHS = [
   "/",
@@ -50,8 +58,15 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isReady, isLoggedIn, profile, liffId, error, isFriend } = useLiff();
+  const { isReady, isLoggedIn, profile, liffId, error, isFriend, isInClient } = useLiff();
   const [checked, setChecked] = useState(false);
+
+  // Redirect to "open in LINE" page when link is opened in external browser (not in LINE app)
+  useEffect(() => {
+    if (!isReady || !liffId || isInClient) return;
+    if (isAllowedInExternalBrowser(pathname)) return;
+    router.replace(OPEN_IN_LINE_PATH);
+  }, [isReady, liffId, isInClient, pathname, router]);
 
   const invitePropId = pathname === INVITE_PATH ? searchParams.get("propId") : null;
   /** รับงาน flow: on /invite?propId=xxx — wait for run() before showing invite page so we can redirect to onboarding without flashing invite. */
@@ -79,6 +94,10 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
     if (pathname === ADD_FRIEND_REQUIRED_PATH) {
+      setChecked(true);
+      return;
+    }
+    if (pathname === OPEN_IN_LINE_PATH) {
       setChecked(true);
       return;
     }
