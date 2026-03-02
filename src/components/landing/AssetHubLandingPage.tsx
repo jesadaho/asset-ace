@@ -355,11 +355,11 @@ export function AssetHubLandingPage() {
 
         {/* 7. Trust and Visibility */}
         <motion.section
-          className="border-t border-slate-200 bg-white py-16"
+          className="border-t border-slate-200 bg-white py-12 sm:py-16"
           {...reveal}
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid items-center gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:gap-16">
+            <div className="grid items-center gap-14 sm:gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:gap-16">
               {/* Left: property listing card – max 380px, slight tilt, hover to straighten */}
               <div className="mx-auto w-full max-w-[380px] -rotate-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg transition-transform duration-300 ease-out hover:rotate-0 lg:mx-0">
                 <div className="relative aspect-[16/9] bg-slate-100">
@@ -383,11 +383,11 @@ export function AssetHubLandingPage() {
                     ✓ Verified by Porjai
                   </span>
                 </div>
-                <div className="p-4">
+                <div className="p-5 sm:p-4">
                   <h3 className="font-semibold text-slate-900">The Bangkok Thonglor</h3>
-                  <p className="mt-1 text-sm text-slate-600">1 ห้องนอน - 1 ห้องน้ำ - 45 ตร.ม.</p>
-                  <p className="mt-2 font-semibold text-slate-900">฿35,000 / เดือน</p>
-                  <p className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                  <p className="mt-2 text-sm text-slate-600">1 ห้องนอน - 1 ห้องน้ำ - 45 ตร.ม.</p>
+                  <p className="mt-3 font-semibold text-slate-900">฿35,000 / เดือน</p>
+                  <p className="mt-3 flex items-center gap-2 text-sm text-slate-600">
                     <Image
                       src="/porjai-logo.png"
                       alt=""
@@ -400,26 +400,26 @@ export function AssetHubLandingPage() {
                   </p>
                   <button
                     type="button"
-                    className="mt-4 w-full rounded-xl py-2.5 text-sm font-medium text-white"
+                    className="mt-6 w-full rounded-xl py-3 text-sm font-medium text-white sm:mt-4 sm:py-2.5"
                     style={{ backgroundColor: TEAL }}
                   >
                     ติดต่อ
                   </button>
                 </div>
               </div>
-              {/* Right: Trust & Visibility copy */}
-              <div>
+              {/* Right: Trust & Visibility copy – more spacing on mobile */}
+              <div className="pt-2 sm:pt-0">
                 <p className="text-sm font-semibold" style={{ color: TEAL }}>
                   Trust & Visibility
                 </p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+                <h2 className="mt-3 text-2xl font-bold leading-snug text-slate-900 sm:mt-2 sm:text-3xl sm:leading-tight">
                   ทรัพย์สินของคุณจะถูก{" "}
                   <span style={{ color: TEAL }}>Verified</span> บน AssetHub.in.th
                 </h2>
-                <p className="mt-4 text-slate-600">
+                <p className="mt-5 leading-relaxed text-slate-600 sm:mt-4">
                   เพิ่มโอกาสปิดการเช่าเร็วขึ้น 2 เท่า ด้วยการยืนยันตัวตนทรัพย์สินให้น่าเชื่อถือที่สุดในตลาด เราทำการตลาดให้คุณบนแพลตฟอร์มที่มีผู้ใช้งานจริงกว่า 100,000 คนต่อเดือน
                 </p>
-                <ul className="mt-6 space-y-3">
+                <ul className="mt-8 space-y-4 sm:mt-6 sm:space-y-3">
                   <li className="flex items-center gap-2 text-slate-700">
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: TEAL }}>✓</span>
                     ติดป้าย Verified สีเขียวเด่นชัด ดึงดูดผู้เช่าเกรด A
@@ -437,7 +437,7 @@ export function AssetHubLandingPage() {
                   href="https://assethub.in.th"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-8 inline-flex items-center gap-1 text-sm font-medium hover:underline"
+                  className="mt-10 inline-flex items-center gap-1 text-sm font-medium hover:underline sm:mt-8"
                   style={{ color: TEAL }}
                 >
                   ดูตัวอย่างประกาศบน AssetHub →
