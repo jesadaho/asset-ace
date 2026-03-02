@@ -10,9 +10,6 @@ import {
   FileText,
   Users,
   Headphones,
-  BedDouble,
-  Bath,
-  Square,
   MapPin,
   Mail,
   ChevronDown,
@@ -28,8 +25,6 @@ const reveal = {
 };
 
 const TEAL = "#0d9488";
-const TRUST_IMAGE =
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80";
 
 export function AssetHubLandingPage() {
   const [faqOpen, setFaqOpen] = useState<number | null>(0);
@@ -97,17 +92,9 @@ export function AssetHubLandingPage() {
             {/* Left: copy + CTAs + mascot */}
             <div className="max-w-xl">
               <span
-                className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium text-white"
+                className="inline-block rounded-full px-4 py-1.5 text-sm font-medium text-white"
                 style={{ backgroundColor: TEAL }}
               >
-                <Image
-                  src="/porjai-logo.png"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="h-4 w-4 shrink-0 object-contain opacity-90"
-                  aria-hidden
-                />
                 Porjai x AssetHub
               </span>
               <h1 className="mt-6 text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.5rem] lg:leading-tight">
@@ -328,45 +315,49 @@ export function AssetHubLandingPage() {
 
         {/* 7. Trust and Visibility */}
         <motion.section
-          className="border-t border-slate-200 bg-slate-50 py-16"
+          className="border-t border-slate-200 bg-white py-16"
           {...reveal}
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+              {/* Left: property listing card */}
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
                 <div className="relative aspect-[4/3] bg-slate-100">
                   <Image
-                    src={TRUST_IMAGE}
+                    src="/trust-card-image.png"
                     alt="The Bangkok Thonglor"
                     fill
                     className="object-cover"
                     sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                   <span
-                    className="absolute left-3 top-3 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
+                    className="absolute right-3 top-3 flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
                     style={{ backgroundColor: TEAL }}
                   >
-                    Verified by Porjai
+                    <MapPin className="h-3.5 w-3.5" /> สุขุมวิท 39
+                  </span>
+                  <span
+                    className="absolute bottom-3 left-3 flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
+                    style={{ backgroundColor: TEAL }}
+                  >
+                    ✓ Verified by Porjai
                   </span>
                 </div>
                 <div className="p-4">
-                  <p className="flex items-center gap-1 text-sm text-slate-500">
-                    <MapPin className="h-4 w-4" /> สุขุมวิท 39
+                  <h3 className="font-semibold text-slate-900">The Bangkok Thonglor</h3>
+                  <p className="mt-1 text-sm text-slate-600">1 ห้องนอน - 1 ห้องน้ำ - 45 ตร.ม.</p>
+                  <p className="mt-2 font-semibold text-slate-900">฿35,000 / เดือน</p>
+                  <p className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                    <Image
+                      src="/porjai-logo.png"
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="h-[18px] w-[18px] shrink-0 object-contain"
+                      aria-hidden
+                    />
+                    ดูแลโดย Porjai Team ตอบกลับภายใน 5 นาที
                   </p>
-                  <h3 className="mt-1 font-semibold text-slate-900">The Bangkok Thonglor</h3>
-                  <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-600">
-                    <span className="inline-flex items-center gap-1">
-                      <BedDouble className="h-4 w-4" /> 1 ห้องนอน
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Bath className="h-4 w-4" /> 1 ห้องน้ำ
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Square className="h-4 w-4" /> 45 ตร.ม.
-                    </span>
-                  </div>
-                  <p className="mt-2 font-semibold text-slate-900">฿35,000/เดือน</p>
-                  <p className="mt-1 text-sm text-slate-600">ดูแลโดย Porjai Team • ตอบกลับภายใน 5 นาที</p>
                   <button
                     type="button"
                     className="mt-4 w-full rounded-xl py-2.5 text-sm font-medium text-white"
@@ -376,6 +367,7 @@ export function AssetHubLandingPage() {
                   </button>
                 </div>
               </div>
+              {/* Right: Trust & Visibility copy */}
               <div>
                 <p className="text-sm font-semibold" style={{ color: TEAL }}>
                   Trust & Visibility
@@ -385,26 +377,27 @@ export function AssetHubLandingPage() {
                   <span style={{ color: TEAL }}>Verified</span> บน AssetHub.in.th
                 </h2>
                 <p className="mt-4 text-slate-600">
-                  ประกาศที่ผ่านการตรวจสอบจาก Porjai จะได้ความน่าเชื่อถือสูง ปิดดีลได้เร็วขึ้น 2 เท่า
-                  จากผู้ใช้กว่า 100,000 คนบนแพลตฟอร์ม
+                  เพิ่มโอกาสปิดการเช่าเร็วขึ้น 2 เท่า ด้วยการยืนยันตัวตนทรัพย์สินให้น่าเชื่อถือที่สุดในตลาด เราทำการตลาดให้คุณบนแพลตฟอร์มที่มีผู้ใช้งานจริงกว่า 100,000 คนต่อเดือน
                 </p>
                 <ul className="mt-6 space-y-3">
                   <li className="flex items-center gap-2 text-slate-700">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span>
-                    แบดจ์ Verified บนประกาศ
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: TEAL }}>✓</span>
+                    ติดป้าย Verified สีเขียวเด่นชัด ดึงดูดผู้เช่าเกรด A
                   </li>
                   <li className="flex items-center gap-2 text-slate-700">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span>
-                    โปรโมทอัตโนมัติในแพลตฟอร์ม
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: TEAL }}>✓</span>
+                    ดันประกาศให้อยู่ในตำแหน่งที่ดีที่สุดโดยอัตโนมัติ
                   </li>
                   <li className="flex items-center gap-2 text-slate-700">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span>
-                    บริการถ่ายภาพฟรี (เมื่อมีโปรโมชัน)
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: TEAL }}>✓</span>
+                    ถ่ายรูปห้องโดยช่างภาพมืออาชีพ ฟรี!
                   </li>
                 </ul>
                 <Link
-                  href="#"
-                  className="mt-8 inline-flex items-center gap-1 text-sm font-medium"
+                  href="https://assethub.in.th"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-8 inline-flex items-center gap-1 text-sm font-medium hover:underline"
                   style={{ color: TEAL }}
                 >
                   ดูตัวอย่างประกาศบน AssetHub →
@@ -433,7 +426,10 @@ export function AssetHubLandingPage() {
               กดเพิ่มเพื่อนกับ &apos;พอใจ&apos; ได้ง่ายๆ
             </h2>
             <p className="mt-4 text-slate-300">
-              แนะนำบริการฟรี ไม่มีข้อผูกมัด เพิ่ม LINE แล้วทีมงานจะติดต่อกลับเพื่อปรึกษาความต้องการของคุณ
+              เริ่มจัดการคอนโดและบ้านเช่าได้ฟรี วันนี้
+            </p>
+            <p className="mt-2 text-slate-300">
+              เพิ่มเพื่อนกับ &apos;พอใจ&apos; ใน LINE เพื่อเริ่มต้นใช้งานได้ทันที
             </p>
             <a
               href="https://line.me/ti/p/~porjai_assethub"
