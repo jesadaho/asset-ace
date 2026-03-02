@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://assethub.in.th"),
   title: "Asset Ace",
   description: "Professional multi-tenant property management platform",
 };

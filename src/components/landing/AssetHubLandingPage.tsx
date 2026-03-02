@@ -603,7 +603,7 @@ export function AssetHubLandingPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900">บริการ</h3>
-                <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                <ul className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-slate-600 sm:grid-cols-1">
                   <li><Link href="#">ฝากเช่าคอนโด</Link></li>
                   <li><Link href="#">ฝากขายคอนโด</Link></li>
                   <li><Link href="#">ค้นหาที่พัก</Link></li>
@@ -612,7 +612,7 @@ export function AssetHubLandingPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900">บริษัท</h3>
-                <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                <ul className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-slate-600 sm:grid-cols-1">
                   <li><Link href="#">เกี่ยวกับเรา</Link></li>
                   <li><Link href="#">ร่วมงานกับเรา</Link></li>
                   <li><Link href="#">บทความ</Link></li>
