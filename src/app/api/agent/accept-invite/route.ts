@@ -49,11 +49,16 @@ export async function POST(request: NextRequest) {
     }
 
     const agentName = (user as { name: string }).name.trim();
+    const agentLineAccountId = (user as { lineId?: string }).lineId?.trim().replace(/^@/, "") || undefined;
 
     const updated = await Property.findOneAndUpdate(
       { _id: propId },
       {
-        $set: { agentLineId: lineUserId, agentName },
+        $set: {
+          agentLineId: lineUserId,
+          agentName,
+          ...(agentLineAccountId && { agentLineAccountId }),
+        },
         $unset: { agentInviteSentAt: "", invitedAgentName: "" },
       },
       { new: true, select: "ownerId" }

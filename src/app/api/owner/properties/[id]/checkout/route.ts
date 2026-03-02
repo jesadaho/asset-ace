@@ -57,6 +57,7 @@ export async function POST(
     property.tenantLineId = undefined;
     property.agentName = undefined;
     property.agentLineId = undefined;
+    (property as { agentLineAccountId?: string }).agentLineAccountId = undefined;
     property.contractStartDate = undefined;
     property.leaseDurationMonths = undefined;
     property.contractKey = undefined;

@@ -154,7 +154,8 @@
     "add": "เพิ่ม",
     "removeAmenity": "ลบ {name}",
     "invitedStatus": "รอตัวแทนรับงาน",
-    "invitedToName": "ส่งคำเชิญไปให้ {name}"
+    "invitedToName": "ส่งคำเชิญไปให้ {name}",
+    "agentSetLineIdHint": "ตัวแทนยังไม่ได้ตั้งค่า LINE ID ใน Settings เพื่อเปิดแชทได้ กรุณาขอให้ตัวแทนไปตั้งค่า LINE ID ในเมนูตั้งค่า"
   },
   "propertyEdit": {
     "listingTypeRent": "ปล่อยเช่า",

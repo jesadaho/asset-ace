@@ -89,9 +89,10 @@ export async function GET(
     const followerCount = await PropertyFollow.countDocuments({
       propertyId: (doc as { _id: mongoose.Types.ObjectId })._id,
     });
-    let agentLineAccountId: string | undefined;
-    const agentLineId = (doc as { agentLineId?: string }).agentLineId?.trim();
-    if (agentLineId) {
+    const docAgent = doc as { agentLineId?: string; agentLineAccountId?: string };
+    let agentLineAccountId: string | undefined = docAgent.agentLineAccountId?.trim().replace(/^@/, "") || undefined;
+    const agentLineId = docAgent.agentLineId?.trim();
+    if (!agentLineAccountId && agentLineId) {
       const agentUser = await User.findOne(
         { lineUserId: agentLineId, role: "agent" },
         { lineId: 1 }
@@ -186,7 +187,10 @@ export async function PATCH(
     const previousAgentLineId = (property as { agentLineId?: string }).agentLineId?.trim() || undefined;
     const propertyNameForNotify = (property as { name?: string }).name?.trim() || "ห้อง";
     if (typeof body.agentName === "string") property.agentName = body.agentName.trim() || undefined;
-    if (typeof body.agentLineId === "string") property.agentLineId = body.agentLineId || undefined;
+    if (typeof body.agentLineId === "string") {
+      property.agentLineId = body.agentLineId || undefined;
+      if (!property.agentLineId) (property as { agentLineAccountId?: string }).agentLineAccountId = undefined;
+    }
     if (typeof body.lineGroup === "string") property.lineGroup = body.lineGroup || undefined;
     if (typeof body.contractStartDate === "string" && body.contractStartDate.trim()) {
       const d = new Date(body.contractStartDate);

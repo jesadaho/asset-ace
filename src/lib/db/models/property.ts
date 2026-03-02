@@ -25,6 +25,8 @@ export interface IProperty {
   tenantLineId?: string;
   agentName?: string;
   agentLineId?: string;
+  /** Agent's LINE account ID (@username) for chat link; set when agent accepts or from User.lineId */
+  agentLineAccountId?: string;
   agentInviteSentAt?: Date;
   invitedAgentName?: string;
   lineGroup?: string;
@@ -62,6 +64,7 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     tenantLineId: String,
     agentName: String,
     agentLineId: String,
+    agentLineAccountId: String,
     agentInviteSentAt: Date,
     invitedAgentName: String,
     lineGroup: String,

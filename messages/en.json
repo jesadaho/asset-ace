@@ -154,7 +154,8 @@
     "add": "Add",
     "removeAmenity": "Remove {name}",
     "invitedStatus": "Invited",
-    "invitedToName": "Sent invite to {name}"
+    "invitedToName": "Sent invite to {name}",
+    "agentSetLineIdHint": "Agent has not set LINE ID in Settings to enable chat. Ask the agent to set their LINE ID in Settings."
   },
   "propertyEdit": {
     "listingTypeRent": "For rent",

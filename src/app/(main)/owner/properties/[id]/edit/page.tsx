@@ -1595,19 +1595,21 @@ export default function EditPropertyPage() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <a
-                        href={
-                          agentLineAccountId?.trim()
-                            ? `https://line.me/ti/p/~${agentLineAccountId.replace(/^@/, "")}`
-                            : `https://line.me/ti/p/~${agentLineId}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/10 tap-target min-h-[44px]"
-                      >
-                        <MessageCircle className="h-4 w-4" aria-hidden />
-                        {t("chat")}
-                      </a>
+                      {agentLineAccountId?.trim() ? (
+                        <a
+                          href={`https://line.me/ti/p/~${agentLineAccountId.replace(/^@/, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/10 tap-target min-h-[44px]"
+                        >
+                          <MessageCircle className="h-4 w-4" aria-hidden />
+                          {t("chat")}
+                        </a>
+                      ) : (
+                        <p className="text-xs text-slate-500 max-w-[240px]">
+                          {t("agentSetLineIdHint")}
+                        </p>
+                      )}
                       <button
                         type="button"
                         onClick={() => setRemoveAgentModalOpen(true)}
