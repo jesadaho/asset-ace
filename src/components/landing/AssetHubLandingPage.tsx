@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
-  MessageCircle,
   Phone,
   Database,
   FileText,
@@ -87,76 +86,91 @@ export function AssetHubLandingPage() {
       </header>
 
       <main>
-        {/* 2. Hero (two columns) */}
+        {/* 2. Hero (cover hero – two columns) */}
         <motion.section
           className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
-            <div>
+          <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+            {/* Left: copy + CTAs + mascot */}
+            <div className="max-w-xl">
               <span
-                className="inline-block rounded-full px-4 py-1.5 text-sm font-medium text-white"
+                className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium text-white"
                 style={{ backgroundColor: TEAL }}
               >
-                • Porjai x AssetHub
+                <Image
+                  src="/porjai-logo.png"
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="h-4 w-4 shrink-0 object-contain opacity-90"
+                  aria-hidden
+                />
+                Porjai x AssetHub
               </span>
-              <h1 className="mt-6 text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-                จัดการคอนโดและบ้านให้เช่า
+              <h1 className="mt-6 text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.5rem] lg:leading-tight">
+                ปล่อยเช่าแบบ &apos;พอใจ&apos;
                 <br />
                 <span style={{ color: TEAL }}>ไม่ต้องปวดหัว</span>
+                <br />
+                <span className="text-slate-900">เรื่องการหาผู้เช่าและติดตามค่าเช่า</span>
               </h1>
-              <p className="mt-4 max-w-lg text-slate-600">
-                พอใจคือผู้ช่วยส่วนตัวที่ดูแลคอนโดและบ้านให้เช่าของคุณบน AssetHub
-                ให้คุณมีเวลาทำอย่างอื่นมากขึ้น
+              <p className="mt-4 text-slate-600">
+                ผู้ช่วยส่วนตัวที่ดูแลคอนโดและบ้านของคุณครบวงจร พร้อมยกระดับทรัพย์สินของคุณบน AssetHub แพลตฟอร์มมาตรฐานสากล
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
+              <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link
                   href="#line-cta"
-                  className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
+                  className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-medium text-white transition hover:opacity-90"
                   style={{ backgroundColor: TEAL }}
                 >
                   เริ่มฝากห้องฟรี →
                 </Link>
                 <a
                   href="#line-cta"
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="inline-flex items-center gap-2 rounded-xl border-2 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  style={{ borderColor: TEAL }}
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#06C755] text-white">
-                    <MessageCircle className="h-4 w-4" />
-                  </span>
+                  <Image
+                    src="/line-icon.png"
+                    alt="LINE"
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 shrink-0 object-contain"
+                  />
                   คุยกับเราทาง LINE
                 </a>
               </div>
-              <div className="mt-8 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="mt-8 flex items-center gap-3">
                 <Image
                   src="/porjai-logo.png"
                   alt=""
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 shrink-0 object-contain"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 shrink-0 object-contain"
                   aria-hidden
                 />
-                <div>
-                  <p className="font-medium text-slate-900">สวัสดีครับ! ผมชื่อพอใจ</p>
-                  <p className="mt-0.5 text-sm text-slate-600">
-                    ผมช่วยจัดการห้องให้เช่า ตั้งแต่หาผู้เช่า จนถึงติดตามค่าเช่า
-                    ให้คุณสบายใจ
-                  </p>
-                </div>
+                <p className="text-sm text-slate-700">
+                  สวัสดีครับ! ผมชื่อพอใจ พร้อมดูแลทรัพย์สินของคุณแล้ว 🦉
+                </p>
               </div>
             </div>
-            <div className="flex justify-center">
-              <div className="relative w-full max-w-[280px] rounded-[2.5rem] border-4 border-slate-800 bg-slate-900 p-2 shadow-2xl">
-                <div className="absolute left-1/2 top-4 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-slate-800" />
-                <div className="relative mt-6 aspect-[9/19] w-full overflow-hidden rounded-[1.5rem] bg-white">
+            {/* Right: phone mockup */}
+            <div className="flex justify-center lg:justify-end">
+              <div
+                className="relative w-full max-w-[260px] rounded-[2.25rem] border-4 border-slate-800 bg-slate-900 p-1.5 shadow-2xl lg:-rotate-2"
+                aria-hidden
+              >
+                <div className="absolute left-1/2 top-3 z-10 h-4 w-20 -translate-x-1/2 rounded-full bg-slate-800" />
+                <div className="relative mt-5 aspect-[9/19] w-full overflow-hidden rounded-[1.25rem] bg-white">
                   <Image
                     src="/hero-dashboard-preview.png"
-                    alt="Asset Ace dashboard preview"
+                    alt="Porjai Dashboard"
                     fill
                     className="object-cover object-top"
-                    sizes="280px"
+                    sizes="260px"
                     priority
                   />
                 </div>
@@ -427,7 +441,13 @@ export function AssetHubLandingPage() {
               rel="noopener noreferrer"
               className="mt-8 inline-flex items-center gap-3 rounded-xl bg-[#06C755] px-8 py-4 text-lg font-semibold text-white hover:bg-[#05b04c]"
             >
-              <MessageCircle className="h-7 w-7" />
+              <Image
+                src="/line-icon.png"
+                alt="LINE"
+                width={28}
+                height={28}
+                className="h-7 w-7 shrink-0 object-contain"
+              />
               เพิ่มเพื่อนเพื่อเริ่มฝากห้อง
             </a>
             <p className="mt-6 text-sm text-slate-400">
@@ -449,7 +469,7 @@ export function AssetHubLandingPage() {
             {[
               {
                 q: "มีค่าบริการเท่าไหร่?",
-                a: "บริการฝากเช่าผ่าน Porjai มีหลายแพ็กเกจ คุณสามารถสอบถามรายละเอียดและราคาได้ฟรีผ่าน LINE หลังจากเพิ่มเพื่อนกับพอใจ",
+                a: "เจ้าของห้อง (Owner) ใช้งานฟรี 100%! ไม่มีค่าใช้จ่ายแอบแฝง",
               },
               {
                 q: "ต้องมอบอำนาจไหม?",
@@ -535,7 +555,13 @@ export function AssetHubLandingPage() {
                     <Instagram className="h-5 w-5" />
                   </a>
                   <a href="#line-cta" className="text-slate-500 hover:text-slate-700" aria-label="LINE">
-                    <MessageCircle className="h-5 w-5" />
+                    <Image
+                      src="/line-icon.png"
+                      alt="LINE"
+                      width={20}
+                      height={20}
+                      className="h-5 w-5 shrink-0 object-contain"
+                    />
                   </a>
                 </div>
               </div>

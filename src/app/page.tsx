@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
+import { Prompt } from "next/font/google";
 import { AssetHubLandingPage } from "@/components/landing/AssetHubLandingPage";
+
+const prompt = Prompt({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["thai", "latin"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Porjai by AssetHub",
@@ -7,5 +14,9 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <AssetHubLandingPage />;
+  return (
+    <div className={prompt.className}>
+      <AssetHubLandingPage />
+    </div>
+  );
 }
