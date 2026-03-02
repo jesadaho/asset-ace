@@ -1,6 +1,57 @@
 import { NextResponse } from "next/server";
 
 /**
+ * GET /api/richmenu/[richMenuId]
+ * Returns the full rich menu JSON from LINE (including areas).
+ */
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ richMenuId: string }> }
+) {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token?.trim()) {
+    return NextResponse.json(
+      { error: "LINE_CHANNEL_ACCESS_TOKEN is not set" },
+      { status: 500 }
+    );
+  }
+
+  const { richMenuId } = await params;
+  if (!richMenuId?.trim()) {
+    return NextResponse.json(
+      { error: "richMenuId is required" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const res = await fetch(
+      `https://api.line.me/v2/bot/richmenu/${encodeURIComponent(richMenuId)}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: "LINE API error", status: res.status, ...data },
+        { status: res.status }
+      );
+    }
+
+    return NextResponse.json(data);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json(
+      { error: "Failed to fetch rich menu", detail: message },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * DELETE /api/richmenu/[richMenuId]
  * Deletes the rich menu from LINE.
  */

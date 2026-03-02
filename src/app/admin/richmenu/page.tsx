@@ -48,6 +48,11 @@ export default function AdminRichMenuPage() {
     message?: string;
   } | null>(null);
 
+  const [jsonModalOpen, setJsonModalOpen] = useState(false);
+  const [jsonModalContent, setJsonModalContent] = useState<string | null>(null);
+  const [jsonModalLoading, setJsonModalLoading] = useState(false);
+  const [jsonModalError, setJsonModalError] = useState<string | null>(null);
+
   const loadList = async () => {
     setListError(null);
     setListLoading(true);
@@ -286,18 +291,45 @@ export default function AdminRichMenuPage() {
                     <div className="font-semibold text-emerald-700">{m.richMenuId}</div>
                     {m.name != null && <div className="text-slate-700">name: {m.name}</div>}
                     {m.chatBarText != null && <div className="text-slate-700">chatBarText: {m.chatBarText}</div>}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRemoveMenuId(m.richMenuId);
-                        setRemoveError(null);
-                        setRemoveSuccess(false);
-                        document.getElementById("remove-menu-card")?.scrollIntoView({ behavior: "smooth" });
-                      }}
-                      className="mt-1 text-xs text-emerald-600 hover:underline font-medium"
-                    >
-                      Remove
-                    </button>
+                    <div className="mt-1 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setJsonModalOpen(true);
+                          setJsonModalContent(null);
+                          setJsonModalError(null);
+                          setJsonModalLoading(true);
+                          try {
+                            const res = await fetch(`/api/richmenu/${encodeURIComponent(m.richMenuId)}`);
+                            const data = await res.json().catch(() => ({}));
+                            if (!res.ok) {
+                              setJsonModalError(data.error || data.message || `Error ${res.status}`);
+                              return;
+                            }
+                            setJsonModalContent(JSON.stringify(data, null, 2));
+                          } catch (e) {
+                            setJsonModalError(e instanceof Error ? e.message : String(e));
+                          } finally {
+                            setJsonModalLoading(false);
+                          }
+                        }}
+                        className="text-xs text-slate-600 hover:text-slate-800 hover:underline font-medium"
+                      >
+                        ดู JSON
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRemoveMenuId(m.richMenuId);
+                          setRemoveError(null);
+                          setRemoveSuccess(false);
+                          document.getElementById("remove-menu-card")?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                        className="text-xs text-emerald-600 hover:underline font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -567,6 +599,48 @@ export default function AdminRichMenuPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* JSON modal */}
+      {jsonModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="json-modal-title"
+          onClick={(e) => e.target === e.currentTarget && setJsonModalOpen(false)}
+          onKeyDown={(e) => e.key === "Escape" && setJsonModalOpen(false)}
+        >
+          <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-slate-200 bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+              <h2 id="json-modal-title" className="text-lg font-semibold text-slate-800">
+                Rich Menu JSON
+              </h2>
+              <button
+                type="button"
+                onClick={() => setJsonModalOpen(false)}
+                className="rounded-lg px-2 py-1 text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+              >
+                ปิด
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-auto p-4">
+              {jsonModalLoading && (
+                <p className="text-slate-600">กำลังโหลด…</p>
+              )}
+              {jsonModalError && (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+                  {jsonModalError}
+                </p>
+              )}
+              {jsonModalContent != null && !jsonModalLoading && (
+                <pre className="whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-800">
+                  {jsonModalContent}
+                </pre>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
