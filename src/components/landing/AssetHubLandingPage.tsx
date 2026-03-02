@@ -27,7 +27,7 @@ const reveal = {
   transition: { duration: 0.4, ease: "easeOut" },
 };
 
-const TEAL = "#0d9488";
+const TEAL = "#55A9BC";
 
 export function AssetHubLandingPage() {
   const [faqOpen, setFaqOpen] = useState<number | null>(0);
