@@ -8,6 +8,8 @@ import {
   Phone,
   Database,
   FileText,
+  FileCheck,
+  Bell,
   Users,
   Headphones,
   MapPin,
@@ -15,9 +17,6 @@ import {
   ChevronDown,
   Facebook,
   Instagram,
-  Home,
-  CircleDollarSign,
-  CheckCircle,
 } from "lucide-react";
 
 const reveal = {
@@ -91,22 +90,6 @@ export function AssetHubLandingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Subtle background: geometric shapes */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
-            <div
-              className="absolute -right-20 top-1/4 h-72 w-72 rounded-full opacity-[0.06]"
-              style={{ backgroundColor: TEAL }}
-            />
-            <div
-              className="absolute -right-40 bottom-1/4 h-96 w-96 rounded-full opacity-[0.04]"
-              style={{ backgroundColor: TEAL }}
-            />
-            <div
-              className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.03]"
-              style={{ backgroundColor: TEAL }}
-            />
-          </div>
-
           <div className="relative grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8">
             {/* Left: copy + CTAs + mascot */}
             <div className="max-w-xl">
@@ -149,16 +132,7 @@ export function AssetHubLandingPage() {
                   คุยกับเราทาง LINE
                 </a>
               </div>
-              {/* Mascot with soft glow behind */}
-              <div className="relative mt-8">
-                <div
-                  className="absolute -inset-4 rounded-2xl opacity-40 blur-2xl"
-                  style={{
-                    background: `radial-gradient(circle at 30% 50%, ${TEAL}22 0%, transparent 70%)`,
-                  }}
-                  aria-hidden
-                />
-                <div className="relative flex items-center gap-3">
+              <div className="mt-8 flex items-center gap-3">
                   <Image
                     src="/porjai-logo.png"
                     alt=""
@@ -170,44 +144,20 @@ export function AssetHubLandingPage() {
                   <p className="text-sm text-slate-700">
                     สวัสดีครับ! ผมชื่อพอใจ พร้อมดูแลทรัพย์สินของคุณแล้ว 🦉
                   </p>
-                </div>
               </div>
             </div>
 
-            {/* Right: phone mockup with overlap + floating elements */}
+            {/* Right: phone mockup */}
             <div className="relative flex justify-center lg:-ml-12 lg:justify-end">
-              {/* Floating icons (depth of field: closer = larger/opaque, farther = smaller/faint) */}
-              <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
-                <Home
-                  className="absolute right-[15%] top-[20%] h-8 w-8 opacity-25"
-                  style={{ color: TEAL }}
-                />
-                <CircleDollarSign
-                  className="absolute bottom-[30%] right-[5%] h-6 w-6 opacity-20"
-                  style={{ color: TEAL }}
-                />
-                <CheckCircle
-                  className="absolute left-[10%] top-[35%] h-7 w-7 opacity-30"
-                  style={{ color: TEAL }}
-                />
-                <Home
-                  className="absolute bottom-[25%] left-[20%] h-5 w-5 opacity-15"
-                  style={{ color: TEAL }}
-                />
-                <CheckCircle
-                  className="absolute right-[25%] bottom-[15%] h-5 w-5 opacity-18"
-                  style={{ color: TEAL }}
-                />
-              </div>
               <div
-                className="relative z-10 w-full max-w-[260px] rounded-[2.25rem] border-4 border-slate-800 bg-slate-900 p-1.5 shadow-2xl lg:-rotate-2"
+                className="relative w-full max-w-[260px] rounded-[2.25rem] border-4 border-slate-800 bg-slate-900 p-1.5 shadow-2xl lg:-rotate-2"
                 aria-hidden
               >
                 <div className="absolute left-1/2 top-3 z-10 h-4 w-20 -translate-x-1/2 rounded-full bg-slate-800" />
                 <div className="relative mt-5 aspect-[9/19] w-full overflow-hidden rounded-[1.25rem] bg-white">
                   <Image
-                    src="/hero-dashboard-preview.png"
-                    alt="Porjai Dashboard"
+                    src="/hero-cover.png"
+                    alt="Porjai – บริหารคอนโดและบ้านเช่า"
                     fill
                     className="object-cover object-top"
                     sizes="260px"
@@ -316,24 +266,24 @@ export function AssetHubLandingPage() {
           </div>
         </motion.section>
 
-        {/* 5. What Can Porjai Do (4 cards 2x2) */}
+        {/* 5. What Can Porjai Do (6 cards 2x3) */}
         <motion.section
           id="services"
           className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
           {...reveal}
         >
           <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-            พอใจทําอะไรได้บ้าง
+            พอใจทำอะไรได้บ้าง?
           </h2>
           <p className="mt-1 text-slate-600">ฟีเจอร์อัพเดทล่าสุดเพื่อเจ้าของทรัพย์สิน</p>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                 <Database className="h-6 w-6" />
               </div>
               <h3 className="mt-4 font-semibold text-slate-900">ระบบบันทึกสถานะสินทรัพย์</h3>
               <p className="mt-2 text-sm text-slate-600">
-                บันทึกสถานะห้องว่าง กำลังเช่า อยู่ระหว่างสัญญา ดูภาพรวมได้ใน Dashboard
+                บันทึกสถานะห้องว่าง กำลังเช่า หรืออยู่ระหว่างสัญญา ดูภาพรวมทรัพย์สินทั้งหมดได้ทันทีผ่าน Dashboard
               </p>
             </article>
             <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -342,7 +292,25 @@ export function AssetHubLandingPage() {
               </div>
               <h3 className="mt-4 font-semibold text-slate-900">สรุปภาพรวมการเงิน & ภาษี</h3>
               <p className="mt-2 text-sm text-slate-600">
-                รายรับ-รายจ่ายสรุปตามเดือน/ปี พร้อมข้อมูลสำหรับยื่นภาษี
+                รวบรวมรายรับ-รายจ่าย สรุปแยกตามเดือนและปี เตรียมข้อมูลให้พร้อมสำหรับนำไปยื่นภาษีได้ทันที
+              </p>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                <FileCheck className="h-6 w-6" />
+              </div>
+              <h3 className="mt-4 font-semibold text-slate-900">สร้างสัญญาเช่าดิจิทัล</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                ออกเอกสารสัญญาเช่ามาตรฐานผ่านระบบได้รวดเร็ว ลดขั้นตอนการจัดเตรียมเอกสารและจัดเก็บไฟล์ให้เป็นระเบียบ
+              </p>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                <Bell className="h-6 w-6" />
+              </div>
+              <h3 className="mt-4 font-semibold text-slate-900">ติดตามค่าเช่าอัตโนมัติ</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                ระบบแจ้งเตือนเมื่อถึงกำหนดชำระ และยืนยันยอดเงินโอน ช่วยให้คุณไม่ต้องคอยเช็กสลิปหรือทวงถามด้วยตัวเอง
               </p>
             </article>
             <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -351,7 +319,7 @@ export function AssetHubLandingPage() {
               </div>
               <h3 className="mt-4 font-semibold text-slate-900">จัดการหาตัวแทนอัตโนมัติ</h3>
               <p className="mt-2 text-sm text-slate-600">
-                ส่งคำเชิญให้ตัวแทนในเครือข่าย รับคำตอบและมอบหมายงานได้ในระบบ
+                ส่งคำเชิญให้ตัวแทนในเครือข่ายช่วยปล่อยเช่าได้ในคลิกเดียว รับคำตอบและมอบหมายงานได้ครบจบในระบบเดียว
               </p>
             </article>
             <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -360,7 +328,7 @@ export function AssetHubLandingPage() {
               </div>
               <h3 className="mt-4 font-semibold text-slate-900">ศูนย์รับแจ้งเรื่องจากผู้เช่า</h3>
               <p className="mt-2 text-sm text-slate-600">
-                ผู้เช่าส่งเรื่องแจ้งซ่อมหรือสอบถามผ่าน LINE ได้ ติดตามสถานะจนจบ
+                ผู้เช่าแจ้งซ่อมหรือสอบถามผ่าน LINE ได้โดยตรง เจ้าของติดตามสถานะการแก้ไขได้จนจบงาน
               </p>
             </article>
           </div>
