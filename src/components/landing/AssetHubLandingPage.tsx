@@ -472,7 +472,7 @@ export function AssetHubLandingPage() {
               เพิ่มเพื่อนกับ &apos;พอใจ&apos; ใน LINE เพื่อเริ่มต้นใช้งานได้ทันที
             </p>
             <a
-              href="https://line.me/ti/p/~porjai_assethub"
+              href="https://line.me/ti/p/~porjai_asset"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-8 inline-flex items-center gap-3 rounded-xl bg-[#06C755] px-8 py-4 text-lg font-semibold text-white hover:bg-[#05b04c]"
@@ -487,7 +487,7 @@ export function AssetHubLandingPage() {
               เพิ่มเพื่อนเพื่อเริ่มฝากห้อง
             </a>
             <p className="mt-6 text-sm text-slate-400">
-              หรือค้นหา ID: @porjai_assethub
+              หรือค้นหา ID: @porjai_asset
             </p>
           </div>
         </motion.section>
