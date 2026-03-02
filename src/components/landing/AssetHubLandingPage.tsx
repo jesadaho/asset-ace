@@ -126,7 +126,7 @@ export function AssetHubLandingPage() {
                   คุยกับเราทาง LINE
                 </a>
               </div>
-              <div className="mt-8 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
+              <div className="mt-8 flex items-center gap-3">
                   <Image
                     src="/porjai-logo.png"
                     alt=""
@@ -135,9 +135,40 @@ export function AssetHubLandingPage() {
                     className="h-10 w-10 shrink-0 object-contain"
                     aria-hidden
                   />
-                  <p className="text-sm text-slate-700">
-                    สวัสดีครับ! ผมชื่อพอใจ พร้อมดูแลทรัพย์สินของคุณแล้ว 🦉
-                  </p>
+                  {/* Speech bubble with tail pointing to owl */}
+                  <div className="relative rounded-2xl border-2 bg-white px-4 py-3 shadow-sm" style={{ borderColor: TEAL }}>
+                    {/* Tail (left-pointing triangle) – border */}
+                    <span
+                      className="absolute top-1/2 -translate-y-1/2"
+                      style={{
+                        left: "-10px",
+                        width: 0,
+                        height: 0,
+                        borderTop: "8px solid transparent",
+                        borderBottom: "8px solid transparent",
+                        borderRight: `10px solid ${TEAL}`,
+                      }}
+                      aria-hidden
+                    />
+                    {/* Tail – fill */}
+                    <span
+                      className="absolute top-1/2 -translate-y-1/2"
+                      style={{
+                        left: "-8px",
+                        width: 0,
+                        height: 0,
+                        borderTop: "7px solid transparent",
+                        borderBottom: "7px solid transparent",
+                        borderRight: "9px solid white",
+                      }}
+                      aria-hidden
+                    />
+                    <p className="text-sm text-slate-800">
+                      สวัสดีครับ! ผมชื่อพอใจ
+                      <br />
+                      พร้อมดูแลทรัพย์สินของคุณแล้ว 🦉
+                    </p>
+                  </div>
               </div>
             </div>
 
