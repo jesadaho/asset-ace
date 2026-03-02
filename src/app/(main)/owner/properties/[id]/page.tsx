@@ -41,6 +41,8 @@ type PropertyDetail = {
   tenantLineId?: string;
   agentName?: string;
   agentLineId?: string;
+  /** Agent's LINE account ID (@username) for chat link; from User.lineId */
+  agentLineAccountId?: string;
   lineGroup?: string;
   contractStartDate?: string;
   leaseDurationMonths?: number;
@@ -894,7 +896,11 @@ export default function PropertyDetailPage() {
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <a
-                            href={`https://line.me/ti/p/~${property.agentLineId}`}
+                            href={
+                              property.agentLineAccountId
+                                ? `https://line.me/ti/p/~${property.agentLineAccountId.replace(/^@/, "")}`
+                                : `https://line.me/ti/p/~${property.agentLineId}`
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/10 tap-target min-h-[44px]"

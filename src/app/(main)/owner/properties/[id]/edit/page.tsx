@@ -87,6 +87,8 @@ type PropertyData = {
   tenantLineId?: string;
   agentName?: string;
   agentLineId?: string;
+  /** Agent's LINE account ID (@username) for chat link; from User.lineId */
+  agentLineAccountId?: string;
   agentInviteSentAt?: string;
   invitedAgentName?: string;
   lineGroup?: string;
@@ -162,6 +164,7 @@ export default function EditPropertyPage() {
   const [tenantLineId, setTenantLineId] = useState("");
   const [agentName, setAgentName] = useState("");
   const [agentLineId, setAgentLineId] = useState("");
+  const [agentLineAccountId, setAgentLineAccountId] = useState("");
   const [agentInviteSentAt, setAgentInviteSentAt] = useState<string | undefined>(undefined);
   const [invitedAgentName, setInvitedAgentName] = useState("");
   const [contractStartDate, setContractStartDate] = useState("");
@@ -220,6 +223,7 @@ export default function EditPropertyPage() {
     setTenantLineId(p.tenantLineId ?? "");
     setAgentName(p.agentName ?? "");
     setAgentLineId(p.agentLineId ?? "");
+    setAgentLineAccountId((p as { agentLineAccountId?: string }).agentLineAccountId ?? "");
     setAgentInviteSentAt((p as { agentInviteSentAt?: string }).agentInviteSentAt ?? undefined);
     setInvitedAgentName((p as { invitedAgentName?: string }).invitedAgentName ?? "");
     // #region debug chat button
@@ -1592,29 +1596,14 @@ export default function EditPropertyPage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <a
-                        href={`https://line.me/ti/p/~${agentLineId}`}
+                        href={
+                          agentLineAccountId?.trim()
+                            ? `https://line.me/ti/p/~${agentLineAccountId.replace(/^@/, "")}`
+                            : `https://line.me/ti/p/~${agentLineId}`
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/10 tap-target min-h-[44px]"
-                        onClick={() => {
-                          // #region debug chat button
-                          fetch("http://127.0.0.1:7803/ingest/908fb44a-2012-43fd-b36e-e7f74cb458a6", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d6e810" },
-                            body: JSON.stringify({
-                              sessionId: "d6e810",
-                              hypothesisId: "H2",
-                              location: "owner/properties/[id]/edit/page.tsx:chat-link-click",
-                              message: "Chat link clicked",
-                              data: {
-                                agentLineIdLength: (agentLineId ?? "").length,
-                                hrefPrefix: "https://line.me/ti/p/~",
-                              },
-                              timestamp: Date.now(),
-                            }),
-                          }).catch(() => {});
-                          // #endregion
-                        }}
                       >
                         <MessageCircle className="h-4 w-4" aria-hidden />
                         {t("chat")}

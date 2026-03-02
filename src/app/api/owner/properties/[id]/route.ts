@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property, type IProperty } from "@/lib/db/models/property";
 import { PropertyFollow } from "@/lib/db/models/propertyFollow";
+import { User } from "@/lib/db/models/user";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { pushMessage } from "@/lib/line/push";
 import { getPresignedGetUrl } from "@/lib/s3";
@@ -88,6 +89,16 @@ export async function GET(
     const followerCount = await PropertyFollow.countDocuments({
       propertyId: (doc as { _id: mongoose.Types.ObjectId })._id,
     });
+    let agentLineAccountId: string | undefined;
+    const agentLineId = (doc as { agentLineId?: string }).agentLineId?.trim();
+    if (agentLineId) {
+      const agentUser = await User.findOne(
+        { lineUserId: agentLineId, role: "agent" },
+        { lineId: 1 }
+      ).lean();
+      const lineId = (agentUser as { lineId?: string } | null)?.lineId?.trim();
+      if (lineId) agentLineAccountId = lineId.replace(/^@/, "");
+    }
     const property = toResponse(doc as unknown as PropertyDoc);
     return NextResponse.json({
       property: {
@@ -96,6 +107,7 @@ export async function GET(
         imageUrls,
         contractUrl: contractUrl ?? undefined,
         followerCount,
+        agentLineAccountId,
       },
     });
   } catch (err) {
