@@ -361,6 +361,7 @@
     "lineIdOptional": "LINE ID (ไม่บังคับ)",
     "lineIdPlaceholder": "@username หรือ username",
     "lineIdOptionalDescription": "ตั้งค่าเพื่อให้ตัวแทนสามารถกดส่งข้อความทาง LINE ถึงคุณได้",
+    "lineIdHintNoUid": "กรุณาใช้ LINE ID (@username) ที่ใช้ค้นหาเพิ่มเพื่อนได้ ไม่ใช่รหัส U ที่ยาว (UID)",
     "lineIdOptionalDescriptionAgent": "ตั้งค่าเพื่อให้เจ้าของสามารถกดส่งข้อความทาง LINE ถึงคุณได้",
     "paymentInfo": "ข้อมูลรับเงิน (Manual)",
     "paymentInfoPlaceholder": "ธนาคาร - เลขบัญชี - ชื่อบัญชี",

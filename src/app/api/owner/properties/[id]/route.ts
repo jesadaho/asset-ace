@@ -7,6 +7,7 @@ import { User } from "@/lib/db/models/user";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { pushMessage } from "@/lib/line/push";
 import { getPresignedGetUrl } from "@/lib/s3";
+import { isLineUid } from "@/lib/utils";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
 const STATUSES = ["Available", "Occupied", "Draft"] as const;
@@ -91,6 +92,7 @@ export async function GET(
     });
     const docAgent = doc as { agentLineId?: string; agentLineAccountId?: string };
     let agentLineAccountId: string | undefined = docAgent.agentLineAccountId?.trim().replace(/^@/, "") || undefined;
+    if (isLineUid(agentLineAccountId)) agentLineAccountId = undefined;
     const agentLineId = docAgent.agentLineId?.trim();
     if (!agentLineAccountId && agentLineId) {
       const agentUser = await User.findOne(
@@ -98,7 +100,7 @@ export async function GET(
         { lineId: 1 }
       ).lean();
       const lineId = (agentUser as { lineId?: string } | null)?.lineId?.trim();
-      if (lineId) agentLineAccountId = lineId.replace(/^@/, "");
+      if (lineId && !isLineUid(lineId)) agentLineAccountId = lineId.replace(/^@/, "");
     }
     const property = toResponse(doc as unknown as PropertyDoc);
     return NextResponse.json({

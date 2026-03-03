@@ -297,6 +297,9 @@ export default function OwnerSettingsPage() {
             <p className="mt-1 text-xs text-slate-500">
               {t("lineIdOptionalDescription")}
             </p>
+            <p className="mt-0.5 text-xs text-amber-700">
+              {t("lineIdHintNoUid")}
+            </p>
           </div>
         </section>
 

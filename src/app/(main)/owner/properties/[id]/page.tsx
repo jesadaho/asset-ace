@@ -906,9 +906,15 @@ export default function PropertyDetailPage() {
                               {t("chat")}
                             </a>
                           ) : (
-                            <p className="text-xs text-slate-500 max-w-[240px]">
-                              {t("agentSetLineIdHint")}
-                            </p>
+                            <span
+                              role="button"
+                              aria-disabled="true"
+                              title={t("agentSetLineIdHint")}
+                              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-medium text-sm cursor-not-allowed min-h-[44px]"
+                            >
+                              <MessageCircle className="h-4 w-4" aria-hidden />
+                              {t("chat")}
+                            </span>
                           )}
                           <button
                             type="button"

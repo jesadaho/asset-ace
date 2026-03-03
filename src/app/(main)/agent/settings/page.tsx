@@ -297,6 +297,9 @@ export default function AgentSettingsPage() {
             <p className="mt-1 text-xs text-slate-500">
               {t("lineIdOptionalDescriptionAgent")}
             </p>
+            <p className="mt-0.5 text-xs text-amber-700">
+              {t("lineIdHintNoUid")}
+            </p>
           </div>
         </section>
 

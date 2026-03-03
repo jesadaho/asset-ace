@@ -362,6 +362,7 @@
     "lineIdPlaceholder": "@username or username",
     "lineIdOptionalDescription": "Set this so agents can tap to message you on LINE",
     "lineIdOptionalDescriptionAgent": "Set this so owners can tap to message you on LINE",
+    "lineIdHintNoUid": "Use your LINE ID (@username) that can be used to add friends, not the long U... user ID (UID)",
     "paymentInfo": "Payment info (Manual)",
     "paymentInfoPlaceholder": "Bank - Account number - Account name",
     "notifications": "Notifications",

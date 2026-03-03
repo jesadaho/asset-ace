@@ -5,6 +5,7 @@ import { User } from "@/lib/db/models/user";
 import { Property } from "@/lib/db/models/property";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { pushMessage } from "@/lib/line/push";
+import { isLineUid } from "@/lib/utils";
 
 /**
  * Accept an invite (link current agent to property).
@@ -49,7 +50,8 @@ export async function POST(request: NextRequest) {
     }
 
     const agentName = (user as { name: string }).name.trim();
-    const agentLineAccountId = (user as { lineId?: string }).lineId?.trim().replace(/^@/, "") || undefined;
+    let agentLineAccountId = (user as { lineId?: string }).lineId?.trim().replace(/^@/, "") || undefined;
+    if (agentLineAccountId && isLineUid(agentLineAccountId)) agentLineAccountId = undefined;
 
     const updated = await Property.findOneAndUpdate(
       { _id: propId },

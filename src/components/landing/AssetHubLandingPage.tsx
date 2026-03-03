@@ -65,13 +65,13 @@ export function AssetHubLandingPage() {
             </a>
           </div>
           <div className="flex items-center gap-2">
-            <Link
+            <a
               href="#line-cta"
               className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg px-4 text-sm font-medium text-white hover:opacity-90"
               style={{ backgroundColor: TEAL }}
             >
               เริ่มฝากห้องฟรี
-            </Link>
+            </a>
           </div>
         </nav>
       </header>
@@ -104,13 +104,13 @@ export function AssetHubLandingPage() {
                 &quot;พอใจ&quot; เป็น Line OA ที่จะเป็นผู้ช่วยส่วนตัวที่ดูแลคอนโดและบ้านของคุณครบวงจร พร้อมยกระดับทรัพย์สินของคุณบน Asset Hub แพลตฟอร์มมาตรฐานสากล
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link
+                <a
                   href="#line-cta"
                   className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-medium text-white transition hover:opacity-90"
                   style={{ backgroundColor: TEAL }}
                 >
                   เริ่มฝากห้องฟรี →
-                </Link>
+                </a>
                 <a
                   href="#line-cta"
                   className="inline-flex items-center gap-2 rounded-xl border-2 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
