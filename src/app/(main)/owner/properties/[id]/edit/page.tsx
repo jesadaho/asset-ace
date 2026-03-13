@@ -249,7 +249,11 @@ export default function EditPropertyPage() {
     setContractStartDate(p.contractStartDate ?? "");
     setLineGroup(p.lineGroup ?? "");
     setOpenForAgent((p as { openForAgent?: boolean }).openForAgent ?? false);
-    setPublicListing((p as { publicListing?: boolean }).publicListing ?? false);
+    setPublicListing(
+      p.listingType === "sale"
+        ? true
+        : ((p as { publicListing?: boolean }).publicListing ?? false)
+    );
     setLeaseDurationMonths((p as { leaseDurationMonths?: number }).leaseDurationMonths != null ? String((p as { leaseDurationMonths?: number }).leaseDurationMonths) : "");
     setContractKey((p as { contractKey?: string }).contractKey ?? undefined);
     setExistingImageKeys(Array.isArray(p.imageKeys) ? p.imageKeys : []);
@@ -463,7 +467,7 @@ export default function EditPropertyPage() {
         contractStartDate: contractStartDate.trim() || undefined,
         lineGroup: lineGroup.trim() || undefined,
         openForAgent: openForAgent || undefined,
-        publicListing: publicListing || undefined,
+        publicListing: listingType === "sale" ? true : publicListing || undefined,
         leaseDurationMonths: leaseDurationMonths.trim() ? parseInt(leaseDurationMonths, 10) : undefined,
         contractKey: finalContractKey,
       };
@@ -1041,6 +1045,7 @@ export default function EditPropertyPage() {
               onChange={(e) => {
                 const nextListingType = e.target.value as "sale" | "rent";
                 setListingType(nextListingType);
+                if (nextListingType === "sale") setPublicListing(true);
                 if (nextListingType !== "sale") setSaleWithTenant(false);
               }}
               className={`${inputBase} border-b border-slate-200 cursor-pointer`}

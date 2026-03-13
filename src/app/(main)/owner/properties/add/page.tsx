@@ -203,6 +203,7 @@ export default function AddPropertyPage() {
         address: address.trim(),
         imageKeys,
         listingType: listingType || undefined,
+        publicListing: listingType === "sale" ? true : undefined,
         saleWithTenant: listingType === "sale" ? saleWithTenant : false,
         bedrooms: bedrooms || undefined,
         bathrooms: bathrooms || undefined,

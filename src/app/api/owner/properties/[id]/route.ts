@@ -203,7 +203,11 @@ export async function PATCH(
       property.contractStartDate = undefined;
     }
     if (typeof body.openForAgent === "boolean") property.openForAgent = body.openForAgent;
-    if (typeof body.publicListing === "boolean") property.publicListing = body.publicListing;
+    if (property.listingType === "sale") {
+      property.publicListing = true;
+    } else if (typeof body.publicListing === "boolean") {
+      property.publicListing = body.publicListing;
+    }
     const leaseDurationMonths =
       typeof body.leaseDurationMonths === "number"
         ? body.leaseDurationMonths

@@ -81,6 +81,14 @@ export async function POST(request: NextRequest) {
         ? Number(body.price)
         : NaN;
   const address = typeof body.address === "string" ? body.address.trim() : "";
+  const listingType =
+    typeof body.listingType === "string" ? body.listingType : undefined;
+  const publicListing =
+    listingType === "sale"
+      ? true
+      : typeof body.publicListing === "boolean"
+        ? body.publicListing
+        : undefined;
   const imageKeys = Array.isArray(body.imageKeys)
     ? (body.imageKeys as unknown[]).filter((k): k is string => typeof k === "string")
     : [];
@@ -126,8 +134,8 @@ export async function POST(request: NextRequest) {
       price,
       address,
       imageKeys,
-      listingType:
-        typeof body.listingType === "string" ? body.listingType : undefined,
+      listingType,
+      publicListing,
       saleWithTenant:
         typeof body.saleWithTenant === "boolean" ? body.saleWithTenant : undefined,
       bedrooms:
