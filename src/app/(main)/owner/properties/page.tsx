@@ -19,6 +19,8 @@ type Property = {
   price: number;
   address: string;
   image?: string;
+  listingType?: string;
+  saleWithTenant?: boolean;
   agentName?: string;
   agentLineId?: string;
   agentInviteSentAt?: string;
@@ -41,6 +43,8 @@ export default function OwnerPropertiesPage() {
   const t = useTranslations("dashboard");
   const tAuth = useTranslations("auth");
   const tCommon = useTranslations("common");
+  const tDetail = useTranslations("propertyDetail");
+  const tEdit = useTranslations("propertyEdit");
   const tProps = useTranslations("properties");
   const { profile } = useLiff();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -87,7 +91,20 @@ export default function OwnerPropertiesPage() {
           return;
         }
         const data = await res.json();
-        const list = (data.properties ?? []).map((p: { id: string; name: string; type: string; status: string; price: number; address: string; imageUrl?: string; agentName?: string; agentLineId?: string; agentInviteSentAt?: string }) => ({
+        const list = (data.properties ?? []).map((p: {
+          id: string;
+          name: string;
+          type: string;
+          status: string;
+          price: number;
+          address: string;
+          imageUrl?: string;
+          listingType?: string;
+          saleWithTenant?: boolean;
+          agentName?: string;
+          agentLineId?: string;
+          agentInviteSentAt?: string;
+        }) => ({
           id: p.id,
           name: p.name,
           type: p.type as PropertyType,
@@ -95,6 +112,8 @@ export default function OwnerPropertiesPage() {
           price: p.price,
           address: p.address,
           image: p.imageUrl,
+          listingType: p.listingType,
+          saleWithTenant: p.saleWithTenant,
           agentName: p.agentName,
           agentLineId: p.agentLineId,
           agentInviteSentAt: p.agentInviteSentAt,
@@ -357,11 +376,21 @@ export default function OwnerPropertiesPage() {
                     <ImageIcon className="h-12 w-12" aria-hidden />
                   </div>
                 )}
-                <span className="absolute top-2 right-2">
+                <div className="absolute top-2 right-2 flex flex-wrap justify-end gap-2">
+                  {property.listingType === "sale" && (
+                    <Badge variant="default">
+                      {tEdit("listingTypeSale")}
+                    </Badge>
+                  )}
+                  {property.listingType === "sale" && property.saleWithTenant && (
+                    <Badge variant="warning">
+                      {tDetail("saleWithTenantBadge")}
+                    </Badge>
+                  )}
                   <Badge variant={statusBadgeVariant[property.status]}>
                     {tProps(`status.${property.status}`)}
                   </Badge>
-                </span>
+                </div>
               </div>
               <div className="p-4">
                 <h2 className="font-bold text-[#0F172A] text-base">
