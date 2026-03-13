@@ -34,6 +34,8 @@ export async function GET(request: NextRequest) {
           price: doc.price,
           address: doc.address,
           imageUrl: imageUrl ?? undefined,
+          listingType: doc.listingType ?? undefined,
+          saleWithTenant: doc.saleWithTenant ?? undefined,
           agentName: doc.agentName ?? undefined,
           agentLineId: doc.agentLineId ?? undefined,
           agentInviteSentAt: (doc as { agentInviteSentAt?: Date }).agentInviteSentAt
@@ -126,6 +128,8 @@ export async function POST(request: NextRequest) {
       imageKeys,
       listingType:
         typeof body.listingType === "string" ? body.listingType : undefined,
+      saleWithTenant:
+        typeof body.saleWithTenant === "boolean" ? body.saleWithTenant : undefined,
       bedrooms:
         typeof body.bedrooms === "string" ? body.bedrooms : undefined,
       bathrooms:

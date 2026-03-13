@@ -24,6 +24,7 @@ function toResponse(doc: PropertyDoc) {
     address: doc.address,
     imageKeys: doc.imageKeys ?? [],
     listingType: doc.listingType,
+    saleWithTenant: doc.saleWithTenant,
     bedrooms: doc.bedrooms,
     bathrooms: doc.bathrooms,
     addressPrivate: doc.addressPrivate,
@@ -174,6 +175,7 @@ export async function PATCH(
       );
     }
     if (typeof body.listingType === "string") property.listingType = body.listingType;
+    if (typeof body.saleWithTenant === "boolean") property.saleWithTenant = body.saleWithTenant;
     if (typeof body.bedrooms === "string") property.bedrooms = body.bedrooms;
     if (typeof body.bathrooms === "string") property.bathrooms = body.bathrooms;
     if (typeof body.addressPrivate === "boolean") property.addressPrivate = body.addressPrivate;

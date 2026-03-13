@@ -15,6 +15,7 @@ export interface IProperty {
   address: string;
   imageKeys: string[];
   listingType?: string;
+  saleWithTenant?: boolean;
   bedrooms?: string;
   bathrooms?: string;
   addressPrivate?: boolean;
@@ -54,6 +55,7 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     address: { type: String, required: true },
     imageKeys: { type: [String], default: [] },
     listingType: String,
+    saleWithTenant: Boolean,
     bedrooms: String,
     bathrooms: String,
     addressPrivate: Boolean,

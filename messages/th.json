@@ -155,11 +155,15 @@
     "removeAmenity": "ลบ {name}",
     "invitedStatus": "รอตัวแทนรับงาน",
     "invitedToName": "ส่งคำเชิญไปให้ {name}",
-    "agentSetLineIdHint": "ตัวแทนยังไม่ได้ตั้งค่า LINE ID ใน Settings เพื่อเปิดแชทได้ กรุณาขอให้ตัวแทนไปตั้งค่า LINE ID ในเมนูตั้งค่า"
+    "agentSetLineIdHint": "ตัวแทนยังไม่ได้ตั้งค่า LINE ID ใน Settings เพื่อเปิดแชทได้ กรุณาขอให้ตัวแทนไปตั้งค่า LINE ID ในเมนูตั้งค่า",
+    "saleWithTenantBadge": "ขายพร้อมผู้เช่า"
   },
   "propertyEdit": {
     "listingTypeRent": "ปล่อยเช่า",
     "listingTypeSale": "ขาย",
+    "saleWithTenant": "ขายพร้อมผู้เช่า",
+    "saleWithTenantDescription": "เหมาะสำหรับประกาศขายที่ผู้ซื้อรับรายได้ค่าเช่าต่อได้ทันที",
+    "saleWithTenantNoTenantHint": "ตอนนี้ยังไม่มีผู้เช่าอยู่ในห้อง เพิ่มข้อมูลผู้เช่าและสัญญาเมื่อห้องมีผู้เช่าแล้ว",
     "propertyTypeCondo": "คอนโด",
     "propertyTypeHouse": "บ้าน",
     "propertyTypeApartment": "อพาร์ตเมนต์",

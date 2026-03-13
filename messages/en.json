@@ -155,11 +155,15 @@
     "removeAmenity": "Remove {name}",
     "invitedStatus": "Invited",
     "invitedToName": "Sent invite to {name}",
-    "agentSetLineIdHint": "Agent has not set LINE ID in Settings to enable chat. Ask the agent to set their LINE ID in Settings."
+    "agentSetLineIdHint": "Agent has not set LINE ID in Settings to enable chat. Ask the agent to set their LINE ID in Settings.",
+    "saleWithTenantBadge": "Sale with tenant"
   },
   "propertyEdit": {
     "listingTypeRent": "For rent",
     "listingTypeSale": "For sale",
+    "saleWithTenant": "Sale with tenant",
+    "saleWithTenantDescription": "Suitable for sale listings where the buyer can continue receiving rental income right away.",
+    "saleWithTenantNoTenantHint": "There is no current tenant yet. Add tenant and lease details when this unit is occupied.",
     "propertyTypeCondo": "Condo",
     "propertyTypeHouse": "House",
     "propertyTypeApartment": "Apartment",

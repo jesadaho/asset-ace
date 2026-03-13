@@ -59,6 +59,7 @@ export default function AddPropertyPage() {
 
   const [name, setName] = useState("");
   const [listingType, setListingType] = useState<"sale" | "rent">("rent");
+  const [saleWithTenant, setSaleWithTenant] = useState(false);
   const [propertyType, setPropertyType] = useState("Condo");
   const [monthlyRent, setMonthlyRent] = useState("");
   const [address, setAddress] = useState("");
@@ -202,6 +203,7 @@ export default function AddPropertyPage() {
         address: address.trim(),
         imageKeys,
         listingType: listingType || undefined,
+        saleWithTenant: listingType === "sale" ? saleWithTenant : false,
         bedrooms: bedrooms || undefined,
         bathrooms: bathrooms || undefined,
         addressPrivate: addressPrivate || undefined,
@@ -373,7 +375,11 @@ export default function AddPropertyPage() {
             <select
               id="listing-type"
               value={listingType}
-              onChange={(e) => setListingType(e.target.value as "sale" | "rent")}
+              onChange={(e) => {
+                const nextListingType = e.target.value as "sale" | "rent";
+                setListingType(nextListingType);
+                if (nextListingType !== "sale") setSaleWithTenant(false);
+              }}
               className={`${inputBase} border-b border-slate-200 cursor-pointer`}
             >
               {LISTING_TYPES.map((opt) => (
@@ -382,6 +388,43 @@ export default function AddPropertyPage() {
                 </option>
               ))}
             </select>
+            {listingType === "sale" && (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <label htmlFor="sale-with-tenant" className="block text-sm font-medium text-[#0F172A]">
+                      {tEdit("saleWithTenant")}
+                    </label>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {tEdit("saleWithTenantDescription")}
+                    </p>
+                  </div>
+                  <button
+                    id="sale-with-tenant"
+                    type="button"
+                    role="switch"
+                    aria-checked={saleWithTenant}
+                    onClick={() => setSaleWithTenant((prev) => !prev)}
+                    className={`relative inline-flex h-7 w-12 shrink-0 rounded-full border border-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#003366]/20 tap-target ${
+                      saleWithTenant
+                        ? "border-[#003366] bg-[#003366]"
+                        : "bg-slate-100"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition-transform ${
+                        saleWithTenant ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+                {status !== "Occupied" && (
+                  <p className="mt-3 text-xs text-amber-700">
+                    {tEdit("saleWithTenantNoTenantHint")}
+                  </p>
+                )}
+              </div>
+            )}
           </section>
 
           <section className="space-y-4">

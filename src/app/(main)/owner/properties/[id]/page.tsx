@@ -31,6 +31,7 @@ type PropertyDetail = {
   imageUrls?: string[];
   imageKeys?: string[];
   listingType?: string;
+  saleWithTenant?: boolean;
   bedrooms?: string;
   bathrooms?: string;
   addressPrivate?: boolean;
@@ -707,11 +708,16 @@ export default function PropertyDetailPage() {
                     <ImageIcon className="h-12 w-12" aria-hidden />
                   </div>
                 )}
-                <span className="absolute top-2 right-2">
+                <div className="absolute top-2 right-2 flex flex-wrap justify-end gap-2">
+                  {property.listingType === "sale" && property.saleWithTenant && (
+                    <Badge variant="warning">
+                      {t("saleWithTenantBadge")}
+                    </Badge>
+                  )}
                   <Badge variant={statusBadgeVariant[property.status]}>
                     {tProps(`status.${property.status}`)}
                   </Badge>
-                </span>
+                </div>
               </div>
               <div className="p-4 space-y-3">
                 <h2 className="text-xl font-bold text-[#0F172A]">
