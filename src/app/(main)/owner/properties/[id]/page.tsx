@@ -81,6 +81,7 @@ export default function PropertyDetailPage() {
   const router = useRouter();
   const id = typeof params.id === "string" ? params.id : "";
   const t = useTranslations("propertyDetail");
+  const tEdit = useTranslations("propertyEdit");
   const tAuth = useTranslations("auth");
   const tProps = useTranslations("properties");
   const [property, setProperty] = useState<PropertyDetail | null>(null);
@@ -709,6 +710,11 @@ export default function PropertyDetailPage() {
                   </div>
                 )}
                 <div className="absolute top-2 right-2 flex flex-wrap justify-end gap-2">
+                  {property.listingType === "sale" && (
+                    <Badge variant="default">
+                      {tEdit("listingTypeSale")}
+                    </Badge>
+                  )}
                   {property.listingType === "sale" && property.saleWithTenant && (
                     <Badge variant="warning">
                       {t("saleWithTenantBadge")}
