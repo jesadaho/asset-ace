@@ -404,7 +404,13 @@ export default function AddPropertyPage() {
                     type="button"
                     role="switch"
                     aria-checked={saleWithTenant}
-                    onClick={() => setSaleWithTenant((prev) => !prev)}
+                    onClick={() =>
+                      setSaleWithTenant((prev) => {
+                        const next = !prev;
+                        if (next) setStatus("Occupied");
+                        return next;
+                      })
+                    }
                     className={`relative inline-flex h-7 w-12 shrink-0 rounded-full border border-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#003366]/20 tap-target ${
                       saleWithTenant
                         ? "border-[#003366] bg-[#003366]"
