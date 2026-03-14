@@ -28,9 +28,13 @@ export async function GET(
       return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
     const openForAgent = !!(doc as { openForAgent?: boolean }).openForAgent;
+    const status = (doc as { status?: string }).status;
     const agentLineId = (doc as { agentLineId?: string }).agentLineId;
     const isManagingAgent =
       agentLineId != null && agentLineId.trim() !== "" && agentLineId === userId;
+    if ((status === "Paused" || status === "Archived") && !isManagingAgent) {
+      return NextResponse.json({ message: "Not found" }, { status: 404 });
+    }
 
     const keys = (doc as { imageKeys?: string[] }).imageKeys ?? [];
     const imageUrls: string[] = [];
@@ -46,7 +50,7 @@ export async function GET(
       id: (doc as { _id: mongoose.Types.ObjectId })._id.toString(),
       name: (doc as { name: string }).name,
       type: (doc as { type: string }).type,
-      status: (doc as { status?: string }).status,
+      status,
       price: (doc as { price: number }).price,
       address: (doc as { address: string }).address,
       description: (doc as { description?: string }).description,

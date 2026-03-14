@@ -14,7 +14,7 @@ import {
 } from "@/lib/property-pricing";
 
 type PropertyType = "Condo" | "House" | "Apartment";
-type PropertyStatus = "Available" | "Occupied" | "Draft";
+type PropertyStatus = "Available" | "Occupied" | "Draft" | "Paused" | "Archived";
 
 type Property = {
   id: string;
@@ -35,11 +35,13 @@ type Property = {
 
 const statusBadgeVariant: Record<
   PropertyStatus,
-  "success" | "error" | "default"
+  "success" | "error" | "default" | "warning"
 > = {
   Available: "success",
   Occupied: "error",
   Draft: "default",
+  Paused: "warning",
+  Archived: "default",
 };
 
 type StatusFilter = "All" | PropertyStatus;
@@ -352,7 +354,7 @@ export default function OwnerPropertiesPage() {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        {(["All", "Occupied", "Available", "Draft"] as const).map(
+        {(["All", "Occupied", "Available", "Paused", "Archived", "Draft"] as const).map(
           (option) => (
             <button
               key={option}
@@ -364,7 +366,7 @@ export default function OwnerPropertiesPage() {
                   : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
               }`}
             >
-              {option === "All" ? tProps("all") : tProps(option.toLowerCase() as "occupied" | "available" | "draft")}
+              {option === "All" ? tProps("all") : tProps(option.toLowerCase() as "occupied" | "available" | "draft" | "paused" | "archived")}
             </button>
           )
         )}

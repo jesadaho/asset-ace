@@ -50,16 +50,19 @@ const AMENITY_OPTIONS = [
   { id: "air-conditioning", labelKey: "amenityAirConditioning" as const },
 ];
 
-const STATUS_OPTIONS = ["Available", "Occupied", "Draft"] as const;
-type Status = (typeof STATUS_OPTIONS)[number];
+const STATUS_OPTIONS = ["Available", "Occupied", "Draft", "Paused"] as const;
+const ALL_STATUSES = [...STATUS_OPTIONS, "Archived"] as const;
+type Status = (typeof ALL_STATUSES)[number];
 
 const statusBadgeVariant: Record<
   Status,
-  "success" | "error" | "default"
+  "success" | "error" | "default" | "warning"
 > = {
   Available: "success",
   Occupied: "error",
   Draft: "default",
+  Paused: "warning",
+  Archived: "default",
 };
 
 const inputBase =
@@ -210,6 +213,7 @@ export default function EditPropertyPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [removeAgentModalOpen, setRemoveAgentModalOpen] = useState(false);
   const [removeAgentLoading, setRemoveAgentLoading] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
 
   const setFormFromProperty = (p: PropertyData) => {
     setName(p.name ?? "");
@@ -234,7 +238,7 @@ export default function EditPropertyPage() {
     setDescription(p.description ?? "");
     setSquareMeters(p.squareMeters ?? "");
     setAmenities(Array.isArray(p.amenities) ? p.amenities : []);
-    setStatus((STATUS_OPTIONS.includes(p.status as Status) ? p.status : "Available") as Status);
+    setStatus((ALL_STATUSES.includes(p.status as Status) ? p.status : "Available") as Status);
     setTenantName(p.tenantName ?? "");
     setTenantLineId(p.tenantLineId ?? "");
     setAgentName(p.agentName ?? "");
@@ -1960,6 +1964,24 @@ export default function EditPropertyPage() {
             {t("gotTenant")}
           </button>
         )}
+        {status === "Available" && (
+          <button
+            type="button"
+            onClick={() => setStatus("Paused")}
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-base font-medium hover:bg-amber-100 tap-target min-h-[48px]"
+          >
+            {t("pauseListing")}
+          </button>
+        )}
+        {(status === "Available" || status === "Draft" || status === "Paused") && (
+          <button
+            type="button"
+            onClick={() => setArchiveConfirmOpen(true)}
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-slate-300 bg-slate-100 text-slate-800 text-base font-medium hover:bg-slate-200 tap-target min-h-[48px]"
+          >
+            {t("archiveListing")}
+          </button>
+        )}
         {status === "Draft" && (
           <button
             type="button"
@@ -1968,6 +1990,60 @@ export default function EditPropertyPage() {
           >
             {t("publish")}
           </button>
+        )}
+        {status === "Paused" && (
+          <button
+            type="button"
+            onClick={() => setStatus("Available")}
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-base font-medium hover:bg-emerald-100 tap-target min-h-[48px]"
+          >
+            {t("resumeListing")}
+          </button>
+        )}
+        {status === "Archived" && (
+          <button
+            type="button"
+            onClick={() => setStatus("Draft")}
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-800 text-base font-medium hover:bg-slate-50 tap-target min-h-[48px]"
+          >
+            {t("restoreArchived")}
+          </button>
+        )}
+        {archiveConfirmOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="archive-confirm-title"
+          >
+            <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
+              <div className="space-y-1">
+                <h2 id="archive-confirm-title" className="text-lg font-semibold text-[#0F172A]">
+                  {t("archiveConfirmTitle")}
+                </h2>
+                <p className="text-sm text-slate-600">{t("archiveConfirmMessage")}</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setArchiveConfirmOpen(false)}
+                  className="flex-1 py-2.5 px-4 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50"
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatus("Archived");
+                    setArchiveConfirmOpen(false);
+                  }}
+                  className="flex-1 py-2.5 px-4 rounded-lg border border-slate-300 bg-slate-900 text-white text-sm font-medium hover:bg-slate-800"
+                >
+                  {t("archiveConfirmAction")}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
         <Button
           type="submit"

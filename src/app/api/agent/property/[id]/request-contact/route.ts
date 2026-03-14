@@ -45,6 +45,12 @@ export async function POST(
       return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
 
+    const status = (doc as { status?: string }).status;
+    const managingAgentId = (doc as { agentLineId?: string }).agentLineId?.trim();
+    if ((status === "Paused" || status === "Archived") && managingAgentId !== agentLineUserId) {
+      return NextResponse.json({ message: "Not found" }, { status: 404 });
+    }
+
     const ownerId = (doc as { ownerId: string }).ownerId;
     if (!ownerId) {
       return NextResponse.json({ message: "Property owner not found" }, { status: 404 });

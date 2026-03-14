@@ -13,15 +13,17 @@ import {
 } from "@/lib/property-pricing";
 
 type PropertyType = "Condo" | "House" | "Apartment";
-type PropertyStatus = "Available" | "Occupied" | "Draft";
+type PropertyStatus = "Available" | "Occupied" | "Draft" | "Paused" | "Archived";
 
 const statusBadgeVariant: Record<
   PropertyStatus,
-  "success" | "error" | "default"
+  "success" | "error" | "default" | "warning"
 > = {
   Available: "success",
   Occupied: "error",
   Draft: "default",
+  Paused: "warning",
+  Archived: "default",
 };
 
 type PropertyDetail = {

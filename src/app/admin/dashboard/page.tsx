@@ -53,6 +53,8 @@ const STATUS_OPTIONS = [
   { value: "", label: "All statuses" },
   { value: "Available", label: "Available" },
   { value: "Occupied", label: "Occupied" },
+  { value: "Paused", label: "Paused" },
+  { value: "Archived", label: "Archived" },
   { value: "Draft", label: "Draft" },
 ];
 
@@ -209,6 +211,8 @@ export default function AdminDashboardPage() {
     const styles: Record<string, string> = {
       Available: "bg-emerald-100 text-emerald-800",
       Occupied: "bg-amber-100 text-amber-800",
+      Paused: "bg-orange-100 text-orange-800",
+      Archived: "bg-slate-300 text-slate-800",
       Draft: "bg-slate-200 text-slate-700",
     };
     return (

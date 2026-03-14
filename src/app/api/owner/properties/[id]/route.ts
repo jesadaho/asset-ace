@@ -16,7 +16,7 @@ import {
 } from "@/lib/property-pricing";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
-const STATUSES = ["Available", "Occupied", "Draft"] as const;
+const STATUSES = ["Available", "Occupied", "Draft", "Paused", "Archived"] as const;
 
 type PropertyDoc = IProperty & { _id: mongoose.Types.ObjectId };
 

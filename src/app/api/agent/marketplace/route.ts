@@ -36,11 +36,13 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const filter: Record<string, unknown> = {};
+    const filter: Record<string, unknown> = {
+      status: { $nin: ["Paused", "Archived"] },
+    };
     if (openForAgent) {
       filter.openForAgent = true;
     }
-    // No status filter: show all rooms (Available, Occupied, Draft) — แสดงห้องว่างและห้องไม่ว่าง
+    // Hide paused listings from marketplace, but still show active/occupied inventory.
 
     if (location) {
       filter.address = { $regex: location, $options: "i" };

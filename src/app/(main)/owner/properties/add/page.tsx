@@ -43,7 +43,7 @@ const AMENITY_OPTIONS: { id: string; labelKey: string }[] = [
   { id: "air-conditioning", labelKey: "amenityAirConditioning" },
 ];
 
-const STATUS_OPTIONS = ["Available", "Occupied", "Draft"] as const;
+const STATUS_OPTIONS = ["Available", "Occupied", "Draft", "Paused"] as const;
 type Status = (typeof STATUS_OPTIONS)[number];
 
 const inputBase =

@@ -63,6 +63,8 @@
     "occupied": "มีการเช่า",
     "available": "ว่าง",
     "draft": "ฉบับร่าง",
+    "paused": "พักประกาศ",
+    "archived": "เก็บเข้าคลัง",
     "searchPlaceholder": "ค้นหาชื่อหรือที่อยู่...",
     "all": "ทั้งหมด",
     "perMonth": "/ เดือน",
@@ -70,7 +72,9 @@
     "status": {
       "Available": "ว่าง",
       "Occupied": "มีการเช่า",
-      "Draft": "ฉบับร่าง"
+      "Draft": "ฉบับร่าง",
+      "Paused": "พักประกาศ",
+      "Archived": "เก็บเข้าคลัง"
     },
     "contractCompleted": "ครบสัญญา",
     "contractEnded": "ครบสัญญาแล้ว"
@@ -125,6 +129,14 @@
     "notifyMoveOut": "แจ้งออก / ว่าง",
     "gotTenant": "ได้ผู้เช่า / มีการเช่า",
     "publish": "เผยแพร่ / ว่าง",
+    "pauseListing": "พักประกาศ",
+    "resumeListing": "กลับมาเผยแพร่ / ว่าง",
+    "archiveListing": "เก็บเข้าคลัง",
+    "restoreArchived": "นำออกจากคลัง / ฉบับร่าง",
+    "archiveConfirmTitle": "เก็บสินทรัพย์นี้เข้าคลังใช่ไหม?",
+    "archiveConfirmMessage": "ระบบจะเปลี่ยนสถานะเป็น Archived และซ่อนจาก marketplace กับหน้าประกาศสาธารณะหลังจากกดบันทึก",
+    "archiveConfirmAction": "เก็บเข้าคลัง",
+    "cancel": "ยกเลิก",
     "rentalHistory": "ประวัติการเช่า",
     "noRentalHistory": "ยังไม่มีประวัติการเช่า",
     "current": "ปัจจุบัน",

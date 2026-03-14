@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
-const STATUSES = ["Available", "Occupied", "Draft"] as const;
+const STATUSES = ["Available", "Occupied", "Draft", "Paused", "Archived"] as const;
 
 export type PropertyType = (typeof PROPERTY_TYPES)[number];
 export type PropertyStatus = (typeof STATUSES)[number];

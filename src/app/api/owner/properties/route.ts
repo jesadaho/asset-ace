@@ -11,7 +11,7 @@ import {
 } from "@/lib/property-pricing";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
-const STATUSES = ["Available", "Occupied", "Draft"] as const;
+const STATUSES = ["Available", "Occupied", "Draft", "Paused", "Archived"] as const;
 
 export async function GET(request: NextRequest) {
   const ownerId = await getLineUserIdFromRequest(request);
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
   }
   if (!STATUSES.includes(status as (typeof STATUSES)[number])) {
     return NextResponse.json(
-      { message: "status must be Available, Occupied, or Draft" },
+      { message: "status must be Available, Occupied, Draft, Paused, or Archived" },
       { status: 400 }
     );
   }

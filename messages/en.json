@@ -63,6 +63,8 @@
     "occupied": "Occupied",
     "available": "Available",
     "draft": "Draft",
+    "paused": "Paused",
+    "archived": "Archived",
     "searchPlaceholder": "Search by name or address...",
     "all": "All",
     "perMonth": "/ mo",
@@ -70,7 +72,9 @@
     "status": {
       "Available": "Available",
       "Occupied": "Occupied",
-      "Draft": "Draft"
+      "Draft": "Draft",
+      "Paused": "Paused",
+      "Archived": "Archived"
     },
     "contractCompleted": "Contract completed",
     "contractEnded": "Contract ended"
@@ -125,6 +129,14 @@
     "notifyMoveOut": "Check-out / Available",
     "gotTenant": "Got tenant / Occupied",
     "publish": "Publish / Available",
+    "pauseListing": "Pause listing / Paused",
+    "resumeListing": "Resume listing / Available",
+    "archiveListing": "Archive listing / Archived",
+    "restoreArchived": "Restore from archive / Draft",
+    "archiveConfirmTitle": "Archive this property?",
+    "archiveConfirmMessage": "This will move the property to Archived. It will be hidden from marketplace and public listings after you save.",
+    "archiveConfirmAction": "Move to archived",
+    "cancel": "Cancel",
     "rentalHistory": "Rental History",
     "noRentalHistory": "No rental history yet.",
     "current": "Current",
