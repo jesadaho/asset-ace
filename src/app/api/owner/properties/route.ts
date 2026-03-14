@@ -3,6 +3,12 @@ import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { getPresignedGetUrl } from "@/lib/s3";
+import {
+  getInferredMonthlyRent,
+  getInferredSalePrice,
+  getPrimaryDisplayPrice,
+  getStoredPrimaryPrice,
+} from "@/lib/property-pricing";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
 const STATUSES = ["Available", "Occupied", "Draft"] as const;
@@ -31,7 +37,9 @@ export async function GET(request: NextRequest) {
           name: doc.name,
           type: doc.type,
           status: doc.status,
-          price: doc.price,
+          price: getPrimaryDisplayPrice(doc),
+          salePrice: getInferredSalePrice(doc),
+          monthlyRent: getInferredMonthlyRent(doc),
           address: doc.address,
           imageUrl: imageUrl ?? undefined,
           listingType: doc.listingType ?? undefined,
@@ -83,6 +91,20 @@ export async function POST(request: NextRequest) {
   const address = typeof body.address === "string" ? body.address.trim() : "";
   const listingType =
     typeof body.listingType === "string" ? body.listingType : undefined;
+  const saleWithTenant =
+    typeof body.saleWithTenant === "boolean" ? body.saleWithTenant : undefined;
+  const salePrice =
+    typeof body.salePrice === "number"
+      ? body.salePrice
+      : typeof body.salePrice === "string"
+        ? Number(body.salePrice)
+        : undefined;
+  const monthlyRent =
+    typeof body.monthlyRent === "number"
+      ? body.monthlyRent
+      : typeof body.monthlyRent === "string"
+        ? Number(body.monthlyRent)
+        : undefined;
   const publicListing =
     listingType === "sale"
       ? true
@@ -123,6 +145,21 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+  if (listingType === "sale" && (salePrice == null || Number.isNaN(salePrice) || salePrice < 0)) {
+    return NextResponse.json(
+      { message: "salePrice must be a non-negative number" },
+      { status: 400 }
+    );
+  }
+  if (
+    listingType === "rent" &&
+    (monthlyRent == null || Number.isNaN(monthlyRent) || monthlyRent < 0)
+  ) {
+    return NextResponse.json(
+      { message: "monthlyRent must be a non-negative number" },
+      { status: 400 }
+    );
+  }
 
   try {
     await connectDB();
@@ -131,13 +168,32 @@ export async function POST(request: NextRequest) {
       name,
       type: type as (typeof PROPERTY_TYPES)[number],
       status: status as (typeof STATUSES)[number],
-      price,
+      price: getStoredPrimaryPrice({
+        listingType,
+        salePrice,
+        monthlyRent,
+        price,
+      }),
+      salePrice: getInferredSalePrice({
+        listingType,
+        salePrice,
+        monthlyRent,
+        price,
+        saleWithTenant,
+      }),
+      monthlyRent: getInferredMonthlyRent({
+        listingType,
+        salePrice,
+        monthlyRent,
+        price,
+        saleWithTenant,
+      }),
       address,
       imageKeys,
       listingType,
       publicListing,
       saleWithTenant:
-        typeof body.saleWithTenant === "boolean" ? body.saleWithTenant : undefined,
+        saleWithTenant,
       bedrooms:
         typeof body.bedrooms === "string" ? body.bedrooms : undefined,
       bathrooms:

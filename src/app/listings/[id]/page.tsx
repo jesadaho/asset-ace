@@ -9,6 +9,8 @@ type ListingData = {
   name: string;
   type: string;
   price: number;
+  salePrice?: number;
+  monthlyRent?: number;
   address: string;
   description?: string;
   bedrooms?: string;
@@ -16,6 +18,8 @@ type ListingData = {
   squareMeters?: string;
   amenities?: string[];
   imageUrls?: string[];
+  listingType?: string;
+  saleWithTenant?: boolean;
 };
 
 export default function PublicListingPage() {
@@ -100,9 +104,24 @@ export default function PublicListingPage() {
           <div className="p-4 space-y-3">
             <h2 className="text-xl font-bold text-[#0F172A]">{listing.name}</h2>
             <p className="text-slate-600 text-sm">{listing.type}</p>
-            <p className="font-semibold text-[#0F172A]">
-              ฿{listing.price.toLocaleString()} / mo
+            <p className="text-xs font-medium text-slate-500">
+              {listing.listingType === "sale" && listing.salePrice
+                ? "Sale price"
+                : listing.saleWithTenant && listing.monthlyRent
+                  ? "Current monthly rent"
+                  : listing.listingType === "sale"
+                    ? "Price"
+                    : "Monthly rent"}
             </p>
+            <p className="font-semibold text-[#0F172A]">
+              ฿{listing.price.toLocaleString()}
+              {listing.listingType === "sale" ? "" : " / mo"}
+            </p>
+            {listing.listingType === "sale" && (listing.monthlyRent ?? 0) > 0 && (
+              <p className="text-sm text-slate-500">
+                Current monthly rent: ฿{listing.monthlyRent!.toLocaleString()} / mo
+              </p>
+            )}
             <p className="text-slate-600 text-sm">{listing.address}</p>
           </div>
         </div>

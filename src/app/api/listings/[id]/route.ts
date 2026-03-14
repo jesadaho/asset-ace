@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
+import {
+  getInferredMonthlyRent,
+  getInferredSalePrice,
+  getPrimaryDisplayPrice,
+} from "@/lib/property-pricing";
 import { getPresignedGetUrl } from "@/lib/s3";
 
 export async function GET(
@@ -33,13 +38,35 @@ export async function GET(
       id: (doc as { _id: mongoose.Types.ObjectId })._id.toString(),
       name: (doc as { name: string }).name,
       type: (doc as { type: string }).type,
-      price: (doc as { price: number }).price,
+      price: getPrimaryDisplayPrice(doc as {
+        listingType?: string;
+        saleWithTenant?: boolean;
+        price?: number;
+        salePrice?: number;
+        monthlyRent?: number;
+      }),
+      salePrice: getInferredSalePrice(doc as {
+        listingType?: string;
+        saleWithTenant?: boolean;
+        price?: number;
+        salePrice?: number;
+        monthlyRent?: number;
+      }),
+      monthlyRent: getInferredMonthlyRent(doc as {
+        listingType?: string;
+        saleWithTenant?: boolean;
+        price?: number;
+        salePrice?: number;
+        monthlyRent?: number;
+      }),
       address: (doc as { address: string }).address,
       description: (doc as { description?: string }).description,
       bedrooms: (doc as { bedrooms?: string }).bedrooms,
       bathrooms: (doc as { bathrooms?: string }).bathrooms,
       squareMeters: (doc as { squareMeters?: string }).squareMeters,
       amenities: (doc as { amenities?: string[] }).amenities ?? [],
+      listingType: (doc as { listingType?: string }).listingType,
+      saleWithTenant: (doc as { saleWithTenant?: boolean }).saleWithTenant ?? false,
       imageUrls,
     });
   } catch (err) {

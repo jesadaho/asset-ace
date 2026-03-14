@@ -61,6 +61,7 @@ export default function AddPropertyPage() {
   const [listingType, setListingType] = useState<"sale" | "rent">("rent");
   const [saleWithTenant, setSaleWithTenant] = useState(false);
   const [propertyType, setPropertyType] = useState("Condo");
+  const [salePrice, setSalePrice] = useState("");
   const [monthlyRent, setMonthlyRent] = useState("");
   const [address, setAddress] = useState("");
   const [bedrooms, setBedrooms] = useState("");
@@ -124,7 +125,10 @@ export default function AddPropertyPage() {
     setUploadError(null);
 
     const hasName = name.trim().length > 0;
-    const hasPrice = monthlyRent.trim().length > 0 && !Number.isNaN(Number(monthlyRent.replace(/,/g, "")));
+    const primaryPriceInput = listingType === "sale" ? salePrice : monthlyRent;
+    const hasPrice =
+      primaryPriceInput.trim().length > 0 &&
+      !Number.isNaN(Number(primaryPriceInput.replace(/,/g, "")));
     if (!hasName) setNameError(true);
     if (!hasPrice) setPriceError(true);
     if (!hasName || !hasPrice) return;
@@ -194,12 +198,16 @@ export default function AddPropertyPage() {
         return;
       }
 
-      const price = Number(monthlyRent.replace(/,/g, "")) || 0;
+      const numericSalePrice = Number(salePrice.replace(/,/g, "")) || 0;
+      const numericMonthlyRent = Number(monthlyRent.replace(/,/g, "")) || 0;
       const payload = {
         name: name.trim(),
         type: propertyType,
         status,
-        price,
+        price: listingType === "sale" ? numericSalePrice : numericMonthlyRent,
+        salePrice: listingType === "sale" ? numericSalePrice : undefined,
+        monthlyRent:
+          listingType === "rent" || saleWithTenant ? numericMonthlyRent : undefined,
         address: address.trim(),
         imageKeys,
         listingType: listingType || undefined,
@@ -479,18 +487,20 @@ export default function AddPropertyPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="rent" className="block text-sm font-medium text-[#0F172A] mb-1">
-                {tEdit("monthlyRent")}
+              <label htmlFor="primary-price" className="block text-sm font-medium text-[#0F172A] mb-1">
+                {listingType === "sale" ? tEdit("salePrice") : tEdit("monthlyRent")}
               </label>
               <div className="flex items-center border-b border-slate-200 focus-within:border-[#003366]">
                 <span className="text-base text-slate-500 mr-2">฿</span>
                 <input
-                  id="rent"
+                  id="primary-price"
                   type="text"
                   inputMode="numeric"
-                  value={monthlyRent}
+                  value={listingType === "sale" ? salePrice : monthlyRent}
                   onChange={(e) => {
-                    setMonthlyRent(e.target.value.replace(/\D/g, ""));
+                    const nextValue = e.target.value.replace(/\D/g, "");
+                    if (listingType === "sale") setSalePrice(nextValue);
+                    else setMonthlyRent(nextValue);
                     setPriceError(false);
                   }}
                   placeholder="0"
@@ -501,10 +511,34 @@ export default function AddPropertyPage() {
               </div>
               {priceError && (
                 <p id="price-error" className="mt-1 text-sm text-red-500" role="alert">
-                  {tEdit("monthlyRentRequired")}
+                  {listingType === "sale"
+                    ? tEdit("salePriceRequired")
+                    : tEdit("monthlyRentRequired")}
                 </p>
               )}
             </div>
+            {listingType === "sale" && saleWithTenant && (
+              <div>
+                <label htmlFor="current-monthly-rent" className="block text-sm font-medium text-[#0F172A] mb-1">
+                  {tEdit("currentMonthlyRent")}
+                </label>
+                <div className="flex items-center border-b border-slate-200 focus-within:border-[#003366]">
+                  <span className="text-base text-slate-500 mr-2">฿</span>
+                  <input
+                    id="current-monthly-rent"
+                    type="text"
+                    inputMode="numeric"
+                    value={monthlyRent}
+                    onChange={(e) => setMonthlyRent(e.target.value.replace(/\D/g, ""))}
+                    placeholder="0"
+                    className="flex-1 bg-transparent py-3 text-base text-[#0F172A] placeholder:text-slate-400 focus:outline-none"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  {tEdit("currentMonthlyRentHint")}
+                </p>
+              </div>
+            )}
             <div>
               <label htmlFor="address" className="block text-sm font-medium text-[#0F172A] mb-1">
                 {tEdit("address")}

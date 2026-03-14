@@ -13,6 +13,8 @@ function buildClonePayload(
     name: string;
     type: string;
     price: number;
+    salePrice?: number;
+    monthlyRent?: number;
     address: string;
     listingType?: string;
     bedrooms?: string;
@@ -30,6 +32,8 @@ function buildClonePayload(
     type: source.type,
     status: "Draft" as const,
     price: source.price,
+    salePrice: source.salePrice,
+    monthlyRent: source.monthlyRent,
     address: source.address,
     imageKeys: [] as string[],
     listingType: source.listingType,
@@ -114,6 +118,8 @@ export async function POST(request: NextRequest) {
       name: source.name,
       type: source.type,
       price: source.price,
+      salePrice: source.salePrice,
+      monthlyRent: source.monthlyRent,
       address: source.address,
       listingType: source.listingType,
       bedrooms: source.bedrooms,

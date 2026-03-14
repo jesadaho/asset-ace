@@ -8,6 +8,12 @@ import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { pushMessage } from "@/lib/line/push";
 import { getPresignedGetUrl } from "@/lib/s3";
 import { isLineUid } from "@/lib/utils";
+import {
+  getInferredMonthlyRent,
+  getInferredSalePrice,
+  getPrimaryDisplayPrice,
+  getStoredPrimaryPrice,
+} from "@/lib/property-pricing";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
 const STATUSES = ["Available", "Occupied", "Draft"] as const;
@@ -20,7 +26,9 @@ function toResponse(doc: PropertyDoc) {
     name: doc.name,
     type: doc.type,
     status: doc.status,
-    price: doc.price,
+    price: getPrimaryDisplayPrice(doc),
+    salePrice: getInferredSalePrice(doc),
+    monthlyRent: getInferredMonthlyRent(doc),
     address: doc.address,
     imageKeys: doc.imageKeys ?? [],
     listingType: doc.listingType,
@@ -167,6 +175,18 @@ export async function PATCH(
         : typeof body.price === "string"
           ? Number(body.price)
           : undefined;
+    const salePrice =
+      typeof body.salePrice === "number"
+        ? body.salePrice
+        : typeof body.salePrice === "string"
+          ? Number(body.salePrice)
+          : undefined;
+    const monthlyRent =
+      typeof body.monthlyRent === "number"
+        ? body.monthlyRent
+        : typeof body.monthlyRent === "string"
+          ? Number(body.monthlyRent)
+          : undefined;
     if (price !== undefined && !Number.isNaN(price) && price >= 0) property.price = price;
     if (typeof body.address === "string") property.address = body.address.trim();
     if (Array.isArray(body.imageKeys)) {
@@ -208,6 +228,26 @@ export async function PATCH(
     } else if (typeof body.publicListing === "boolean") {
       property.publicListing = body.publicListing;
     }
+    property.salePrice = getInferredSalePrice({
+      listingType: property.listingType,
+      saleWithTenant: property.saleWithTenant,
+      price: price ?? property.price,
+      salePrice,
+      monthlyRent,
+    });
+    property.monthlyRent = getInferredMonthlyRent({
+      listingType: property.listingType,
+      saleWithTenant: property.saleWithTenant,
+      price: price ?? property.price,
+      salePrice,
+      monthlyRent,
+    });
+    property.price = getStoredPrimaryPrice({
+      listingType: property.listingType,
+      salePrice: property.salePrice,
+      monthlyRent: property.monthlyRent,
+      price: price ?? property.price,
+    });
     const leaseDurationMonths =
       typeof body.leaseDurationMonths === "number"
         ? body.leaseDurationMonths

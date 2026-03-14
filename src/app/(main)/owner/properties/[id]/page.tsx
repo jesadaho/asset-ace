@@ -7,6 +7,10 @@ import { useTranslations } from "next-intl";
 import { ArrowLeft, ImageIcon, Pencil, MessageCircle, Copy, Users, Layers, Check } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
+import {
+  getInferredMonthlyRent,
+  getPrimaryDisplayPrice,
+} from "@/lib/property-pricing";
 
 type PropertyType = "Condo" | "House" | "Apartment";
 type PropertyStatus = "Available" | "Occupied" | "Draft";
@@ -26,6 +30,8 @@ type PropertyDetail = {
   type: PropertyType;
   status: PropertyStatus;
   price: number;
+  salePrice?: number;
+  monthlyRent?: number;
   address: string;
   imageUrl?: string;
   imageUrls?: string[];
@@ -731,8 +737,19 @@ export default function PropertyDetailPage() {
                 </h2>
                 <p className="text-slate-600 text-sm">{property.type}</p>
                 <p className="font-semibold text-[#0F172A]">
-                  ฿{property.price.toLocaleString()} {tProps("perMonth")}
+                  {property.listingType === "sale" && property.salePrice
+                    ? "ราคาขาย "
+                    : property.listingType === "sale" && (getInferredMonthlyRent(property) ?? 0) > 0
+                      ? "ค่าเช่าปัจจุบัน "
+                      : ""}
+                  ฿{getPrimaryDisplayPrice(property).toLocaleString()}
+                  {property.listingType === "sale" ? "" : ` ${tProps("perMonth")}`}
                 </p>
+                {property.listingType === "sale" && (getInferredMonthlyRent(property) ?? 0) > 0 && (
+                  <p className="text-sm text-slate-500">
+                    ค่าเช่าปัจจุบัน ฿{getInferredMonthlyRent(property)!.toLocaleString()} {tProps("perMonth")}
+                  </p>
+                )}
                 <p className="text-slate-600 text-sm">{property.address}</p>
               </div>
             </div>

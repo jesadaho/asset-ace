@@ -6,6 +6,10 @@ import { useTranslations } from "next-intl";
 import { ChevronRight, Plus, ImageIcon, Eye, EyeOff } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { useLiff } from "@/providers/LiffProvider";
+import {
+  getInferredMonthlyRent,
+  getPrimaryDisplayPrice,
+} from "@/lib/property-pricing";
 
 type PropertyType = "Condo" | "House" | "Apartment";
 type PropertyStatus = "Available" | "Occupied" | "Draft";
@@ -16,8 +20,11 @@ type Property = {
   type: PropertyType;
   status: PropertyStatus;
   price: number;
+  salePrice?: number;
+  monthlyRent?: number;
   address: string;
   image?: string;
+  listingType?: string;
   agentName?: string;
   agentLineId?: string;
   agentInviteSentAt?: string;
@@ -76,8 +83,11 @@ export default function OwnerDashboardPage() {
             type: string;
             status: string;
             price: number;
+            salePrice?: number;
+            monthlyRent?: number;
             address: string;
             imageUrl?: string;
+            listingType?: string;
             agentName?: string;
             agentLineId?: string;
             agentInviteSentAt?: string;
@@ -87,8 +97,11 @@ export default function OwnerDashboardPage() {
             type: p.type as PropertyType,
             status: p.status as PropertyStatus,
             price: p.price,
+            salePrice: p.salePrice,
+            monthlyRent: p.monthlyRent,
             address: p.address,
             image: p.imageUrl,
+            listingType: p.listingType,
             agentName: p.agentName,
             agentLineId: p.agentLineId,
             agentInviteSentAt: p.agentInviteSentAt,
@@ -115,9 +128,9 @@ export default function OwnerDashboardPage() {
     useMemo(() => {
       const totalMonthlyIncome = properties
         .filter((p) => p.status === "Occupied")
-        .reduce((sum, p) => sum + (p.price ?? 0), 0);
+        .reduce((sum, p) => sum + (getInferredMonthlyRent(p) ?? 0), 0);
       const potentialIncome = properties.reduce(
-        (sum, p) => sum + (p.price ?? 0),
+        (sum, p) => sum + (getInferredMonthlyRent(p) ?? 0),
         0
       );
       const total = properties.length;
@@ -279,7 +292,8 @@ export default function OwnerDashboardPage() {
                   </p>
                   <div className="flex items-center justify-between mt-3">
                     <span className="font-semibold text-[#0F172A]">
-                      ฿{property.price.toLocaleString()} {tProps("perMonth")}
+                      ฿{getPrimaryDisplayPrice(property).toLocaleString()}
+                      {property.listingType === "sale" ? "" : ` ${tProps("perMonth")}`}
                     </span>
                     <span className="inline-flex items-center gap-1 text-sm text-[#10B981] font-medium">
                       {tCommon("viewDetails")}

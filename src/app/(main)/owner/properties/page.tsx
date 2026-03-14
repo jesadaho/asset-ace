@@ -7,6 +7,11 @@ import { useTranslations } from "next-intl";
 import { Search, ChevronRight, Plus, ImageIcon, Eye, EyeOff, LayoutDashboard, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { useLiff } from "@/providers/LiffProvider";
+import {
+  getInferredMonthlyRent,
+  getInferredSalePrice,
+  getPrimaryDisplayPrice,
+} from "@/lib/property-pricing";
 
 type PropertyType = "Condo" | "House" | "Apartment";
 type PropertyStatus = "Available" | "Occupied" | "Draft";
@@ -17,6 +22,8 @@ type Property = {
   type: PropertyType;
   status: PropertyStatus;
   price: number;
+  salePrice?: number;
+  monthlyRent?: number;
   address: string;
   image?: string;
   listingType?: string;
@@ -97,6 +104,8 @@ export default function OwnerPropertiesPage() {
           type: string;
           status: string;
           price: number;
+          salePrice?: number;
+          monthlyRent?: number;
           address: string;
           imageUrl?: string;
           listingType?: string;
@@ -110,6 +119,8 @@ export default function OwnerPropertiesPage() {
           type: p.type as PropertyType,
           status: p.status as PropertyStatus,
           price: p.price,
+          salePrice: p.salePrice,
+          monthlyRent: p.monthlyRent,
           address: p.address,
           image: p.imageUrl,
           listingType: p.listingType,
@@ -133,8 +144,11 @@ export default function OwnerPropertiesPage() {
   const { totalMonthlyIncome, potentialIncome, total, available, pending } = useMemo(() => {
     const totalMonthlyIncome = properties
       .filter((p) => p.status === "Occupied")
-      .reduce((sum, p) => sum + (p.price ?? 0), 0);
-    const potentialIncome = properties.reduce((sum, p) => sum + (p.price ?? 0), 0);
+      .reduce((sum, p) => sum + (getInferredMonthlyRent(p) ?? 0), 0);
+    const potentialIncome = properties.reduce(
+      (sum, p) => sum + (getInferredMonthlyRent(p) ?? 0),
+      0
+    );
     const total = properties.length;
     const available = properties.filter((p) => p.status === "Available").length;
     const pending = properties.filter(
@@ -401,7 +415,8 @@ export default function OwnerPropertiesPage() {
                 </p>
                 <div className="flex items-center justify-between mt-3">
                   <span className="font-semibold text-[#0F172A]">
-                    ฿{property.price.toLocaleString()} {tProps("perMonth")}
+                    ฿{getPrimaryDisplayPrice(property).toLocaleString()}
+                    {property.listingType === "sale" ? "" : ` ${tProps("perMonth")}`}
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm text-[#10B981] font-medium">
                     {tCommon("viewDetails")}
