@@ -393,16 +393,18 @@ export default function OwnerPropertiesPage() {
                   </div>
                 )}
                 <div className="absolute top-2 right-2 flex flex-wrap justify-end gap-2">
-                  {property.listingType === "sale" && (
+                  {property.listingType === "sale" && property.status !== "Archived" && (
                     <Badge variant="default">
                       {tEdit("listingTypeSale")}
                     </Badge>
                   )}
-                  {property.listingType === "sale" && property.saleWithTenant && (
+                  {property.listingType === "sale" &&
+                    property.saleWithTenant &&
+                    property.status !== "Archived" && (
                     <Badge variant="warning">
                       {tDetail("saleWithTenantBadge")}
                     </Badge>
-                  )}
+                    )}
                   <Badge variant={statusBadgeVariant[property.status]}>
                     {tProps(`status.${property.status}`)}
                   </Badge>
