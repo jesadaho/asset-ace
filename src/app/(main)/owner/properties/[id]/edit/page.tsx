@@ -377,14 +377,10 @@ export default function EditPropertyPage() {
   const isSaleWithTenantListing = listingType === "sale" && saleWithTenant;
   const resumeStatus: Extract<Status, "Available" | "Occupied"> =
     isSaleWithTenantListing ? "Occupied" : "Available";
-  const showCheckoutAction = status === "Occupied" && !isSaleWithTenantListing;
+  const showCheckoutAction = status === "Occupied";
   const showPauseAction =
     status === "Available" || (isSaleWithTenantListing && status === "Occupied");
-  const showArchiveAction =
-    status === "Available" ||
-    status === "Draft" ||
-    status === "Paused" ||
-    (isSaleWithTenantListing && status === "Occupied");
+  const showArchiveAction = status === "Paused";
 
   const maxNewPhotos = Math.max(0, MAX_PHOTOS - existingImageKeys.length);
   const handleImageClick = () => fileInputRef.current?.click();
