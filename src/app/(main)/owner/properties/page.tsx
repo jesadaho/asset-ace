@@ -167,7 +167,9 @@ export default function OwnerPropertiesPage() {
         p.name.toLowerCase().includes(q) ||
         p.address.toLowerCase().includes(q);
       const matchesStatus =
-        statusFilter === "All" || p.status === statusFilter;
+        statusFilter === "All"
+          ? p.status !== "Archived"
+          : p.status === statusFilter;
       const matchesSummary =
         summaryFilter === "all" ||
         (summaryFilter === "available" && p.status === "Available") ||
