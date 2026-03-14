@@ -374,6 +374,17 @@ export default function EditPropertyPage() {
   const filteredAmenityOptions = AMENITY_OPTIONS.filter((opt) =>
     tEdit(opt.labelKey).toLowerCase().includes(amenitySearch.toLowerCase().trim())
   );
+  const isSaleWithTenantListing = listingType === "sale" && saleWithTenant;
+  const resumeStatus: Extract<Status, "Available" | "Occupied"> =
+    isSaleWithTenantListing ? "Occupied" : "Available";
+  const showCheckoutAction = status === "Occupied" && !isSaleWithTenantListing;
+  const showPauseAction =
+    status === "Available" || (isSaleWithTenantListing && status === "Occupied");
+  const showArchiveAction =
+    status === "Available" ||
+    status === "Draft" ||
+    status === "Paused" ||
+    (isSaleWithTenantListing && status === "Occupied");
 
   const maxNewPhotos = Math.max(0, MAX_PHOTOS - existingImageKeys.length);
   const handleImageClick = () => fileInputRef.current?.click();
@@ -1943,7 +1954,7 @@ export default function EditPropertyPage() {
       </form>
 
       <div className="fixed bottom-0 left-0 right-0 z-30 max-w-lg mx-auto safe-area-bottom bg-white border-t border-slate-100 p-4 space-y-3">
-        {status === "Occupied" && (
+        {showCheckoutAction && (
           <button
             type="button"
             onClick={() => setCheckoutModalOpen(true)}
@@ -1964,7 +1975,7 @@ export default function EditPropertyPage() {
             {t("gotTenant")}
           </button>
         )}
-        {status === "Available" && (
+        {showPauseAction && (
           <button
             type="button"
             onClick={() => setStatus("Paused")}
@@ -1973,7 +1984,7 @@ export default function EditPropertyPage() {
             {t("pauseListing")}
           </button>
         )}
-        {(status === "Available" || status === "Draft" || status === "Paused") && (
+        {showArchiveAction && (
           <button
             type="button"
             onClick={() => setArchiveConfirmOpen(true)}
@@ -1985,7 +1996,7 @@ export default function EditPropertyPage() {
         {status === "Draft" && (
           <button
             type="button"
-            onClick={() => setStatus("Available")}
+            onClick={() => setStatus(resumeStatus)}
             className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-red-200 bg-red-50 text-red-800 text-base font-medium hover:bg-red-100 tap-target min-h-[48px]"
           >
             {t("publish")}
@@ -1994,7 +2005,7 @@ export default function EditPropertyPage() {
         {status === "Paused" && (
           <button
             type="button"
-            onClick={() => setStatus("Available")}
+            onClick={() => setStatus(resumeStatus)}
             className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-base font-medium hover:bg-emerald-100 tap-target min-h-[48px]"
           >
             {t("resumeListing")}
