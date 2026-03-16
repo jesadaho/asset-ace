@@ -86,6 +86,7 @@ export async function POST(
     property.reservedAt = undefined;
     property.reservedByName = undefined;
     property.reservedByContact = undefined;
+    (property as { showOnAssetHub?: boolean }).showOnAssetHub = true;
     await property.save();
 
     const propertyName = property.name ?? "ห้อง";

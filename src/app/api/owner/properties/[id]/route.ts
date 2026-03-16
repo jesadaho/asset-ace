@@ -60,6 +60,7 @@ function toResponse(doc: PropertyDoc) {
       : undefined,
     reservedByName: doc.reservedByName,
     reservedByContact: doc.reservedByContact,
+    showOnAssetHub: doc.showOnAssetHub,
     createdAt: doc.createdAt,
   };
 }
@@ -227,6 +228,9 @@ export async function PATCH(
       property.publicListing = true;
     } else if (typeof body.publicListing === "boolean") {
       property.publicListing = body.publicListing;
+    }
+    if (typeof body.showOnAssetHub === "boolean") {
+      (property as { showOnAssetHub?: boolean }).showOnAssetHub = body.showOnAssetHub;
     }
     property.salePrice = getInferredSalePrice({
       listingType: property.listingType,
