@@ -12,6 +12,7 @@ const ONBOARDING_PATH = "/onboarding";
 const ADD_FRIEND_REQUIRED_PATH = "/add-friend-required";
 const OPEN_IN_LINE_PATH = "/open-in-line";
 const INVITE_PATH = "/invite";
+const ADD_PROPERTY_PATH = "/owner/properties/add";
 
 /** Paths that are allowed when opened in external browser (not LINE in-app). */
 function isAllowedInExternalBrowser(pathname: string): boolean {
@@ -24,10 +25,19 @@ const ALLOWED_PATHS = [
   "/",
   ONBOARDING_PATH,
   ADD_FRIEND_REQUIRED_PATH,
+  ADD_PROPERTY_PATH,
   "/owners",
   "/agents",
   "/tenants",
 ];
+
+function getAddFriendRequiredRedirect(pathname: string): string {
+  const normalized = pathname.split("?")[0];
+  if (normalized === ADD_PROPERTY_PATH) {
+    return `${ADD_FRIEND_REQUIRED_PATH}?path=${encodeURIComponent(ADD_PROPERTY_PATH)}`;
+  }
+  return ADD_FRIEND_REQUIRED_PATH;
+}
 
 function getIntendedPathFromQuery(): string | null {
   if (typeof window === "undefined") return null;
@@ -102,7 +112,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
     if (isFriend === false) {
-      router.replace(ADD_FRIEND_REQUIRED_PATH);
+      router.replace(getAddFriendRequiredRedirect(pathname));
       setChecked(true);
       return;
     }

@@ -193,6 +193,9 @@ export default function EditPropertyPage() {
   const [setRentedError, setSetRentedError] = useState<string | null>(null);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutMoveOutDate, setCheckoutMoveOutDate] = useState(() =>
+    new Date().toISOString().slice(0, 10)
+  );
   const [reservedAt, setReservedAt] = useState<string | undefined>(undefined);
   const [reservedByName, setReservedByName] = useState("");
   const [reservedByContact, setReservedByContact] = useState("");
@@ -620,7 +623,11 @@ export default function EditPropertyPage() {
       }
       const res = await fetch(`/api/owner/properties/${id}/checkout`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ moveOutDate: checkoutMoveOutDate }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as { message?: string };
@@ -1537,6 +1544,15 @@ export default function EditPropertyPage() {
               <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
                 <h2 id="checkout-title" className="text-lg font-semibold text-[#0F172A]">{t("checkoutConfirmTitle")}</h2>
                 <p className="text-sm text-slate-600">{t("checkoutConfirmMessage")}</p>
+                <label className="block">
+                  <span className="text-sm font-medium text-[#0F172A]">{t("checkoutMoveOutDateLabel")}</span>
+                  <input
+                    type="date"
+                    value={checkoutMoveOutDate}
+                    onChange={(e) => setCheckoutMoveOutDate(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-[#0F172A]"
+                  />
+                </label>
                 <div className="flex gap-3 justify-end">
                   <button
                     type="button"
@@ -1953,7 +1969,10 @@ export default function EditPropertyPage() {
         {showCheckoutAction && (
           <button
             type="button"
-            onClick={() => setCheckoutModalOpen(true)}
+            onClick={() => {
+                    setCheckoutMoveOutDate(new Date().toISOString().slice(0, 10));
+                    setCheckoutModalOpen(true);
+                  }}
             className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-red-200 bg-red-50 text-red-800 text-base font-medium hover:bg-red-100 tap-target min-h-[48px]"
           >
             {t("notifyMoveOut")}

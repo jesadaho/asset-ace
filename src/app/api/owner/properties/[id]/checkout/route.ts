@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
-import { PropertyFollow } from "@/lib/db/models/propertyFollow";
 import { RentalHistory } from "@/lib/db/models/rentalHistory";
+import { User } from "@/lib/db/models/user";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { pushMessage } from "@/lib/line/push";
 
@@ -19,6 +19,28 @@ export async function POST(
   const { id: propertyId } = await params;
   if (!propertyId || !mongoose.Types.ObjectId.isValid(propertyId)) {
     return NextResponse.json({ message: "Invalid property id" }, { status: 400 });
+  }
+
+  let moveOutDateStr: string | undefined;
+  try {
+    const body = await request.json().catch(() => ({}));
+    moveOutDateStr =
+      typeof (body as { moveOutDate?: string }).moveOutDate === "string"
+        ? (body as { moveOutDate: string }).moveOutDate.trim()
+        : undefined;
+  } catch {
+    // no body or invalid JSON
+  }
+
+  const endDate =
+    moveOutDateStr && /^\d{4}-\d{2}-\d{2}$/.test(moveOutDateStr)
+      ? new Date(moveOutDateStr + "T00:00:00.000Z")
+      : new Date();
+  if (isNaN(endDate.getTime())) {
+    return NextResponse.json(
+      { message: "Invalid moveOutDate format (use YYYY-MM-DD)" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -37,7 +59,7 @@ export async function POST(
     }).sort({ startDate: -1 });
 
     if (currentLease) {
-      currentLease.endDate = new Date();
+      currentLease.endDate = endDate;
       await currentLease.save();
     } else {
       await RentalHistory.create({
@@ -45,7 +67,7 @@ export async function POST(
         tenantName: property.tenantName ?? "",
         agentName: property.agentName,
         startDate: property.contractStartDate ?? new Date(),
-        endDate: new Date(),
+        endDate,
         durationMonths: property.leaseDurationMonths ?? 0,
         contractKey: property.contractKey,
         rentPriceAtThatTime: property.price,
@@ -71,19 +93,33 @@ export async function POST(
     const detailUrl = liffId
       ? `https://liff.line.me/${liffId}/agent/property/${propertyId}`
       : "";
+    const d = endDate.getUTCDate();
+    const m = endDate.getUTCMonth() + 1;
+    const y = endDate.getUTCFullYear() + 543;
+    const dateLabel = `${d.toString().padStart(2, "0")}/${m.toString().padStart(2, "0")}/${y}`;
     const text = detailUrl
-      ? `ห้อง ${propertyName} ที่คุณติดตาม กำลังว่างแล้ว! สนใจรับงานไหม? ${detailUrl}`
-      : `ห้อง ${propertyName} ที่คุณติดตาม กำลังว่างแล้ว! สนใจรับงานไหม?`;
-    const followers = await PropertyFollow.find({ propertyId: property._id }).lean();
-    Promise.allSettled(
-      followers.map((f) => pushMessage((f as { agentId: string }).agentId, text))
-    ).then((results) => {
-      results.forEach((r, i) => {
-        if (r.status === "rejected") console.error("[checkout notify]", r.reason);
-        if (r.status === "fulfilled" && !r.value.sent)
-          console.error("[checkout notify]", followers[i], r.value.message);
-      });
-    });
+      ? `ห้อง ${propertyName} กำลังว่างแล้ว (วันที่ย้ายออก/คืนห้อง: ${dateLabel}) สนใจรับงานไหม? ${detailUrl}`
+      : `ห้อง ${propertyName} กำลังว่างแล้ว (วันที่ย้ายออก/คืนห้อง: ${dateLabel}) สนใจรับงานไหม?`;
+    const agents = await User.find({ role: "agent" })
+      .select("lineUserId")
+      .lean();
+    const agentIds = agents
+      .map((a) => (a as { lineUserId?: string }).lineUserId)
+      .filter((id): id is string => Boolean(id?.trim()));
+    Promise.allSettled(agentIds.map((id) => pushMessage(id, text))).then(
+      (results) => {
+        results.forEach((r, i) => {
+          if (r.status === "rejected")
+            console.error("[checkout notify]", r.reason);
+          if (r.status === "fulfilled" && !r.value.sent)
+            console.error(
+              "[checkout notify]",
+              agentIds[i],
+              r.value.message
+            );
+        });
+      }
+    );
 
     return NextResponse.json({ success: true, propertyId });
   } catch (err) {

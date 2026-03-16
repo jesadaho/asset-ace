@@ -11,9 +11,19 @@
     "pleaseLogin": "Please log in with LINE."
   },
   "addFriendRequired": {
-    "title": "Add friend required",
-    "copy": "For better service and to receive notifications from our team, please add us as a friend before using the system.",
-    "button": "+ Add friend to continue"
+    "title": "For room owners, featured listings are free",
+    "subtitle": "Just add us as a friend to list through our LINE OA",
+    "copy": "Start your listing flow more smoothly by sending room details, receiving follow-ups, and continuing the conversation in LINE.",
+    "benefitOne": "Send room details and photos to start listing faster",
+    "benefitTwo": "Receive updates and follow-ups from our team quickly",
+    "benefitThree": "Once you add us, you can continue to the posting flow right away",
+    "button": "Add friend on LINE",
+    "secondaryButton": "I already added you, start posting",
+    "alreadyFriend": "You have already added us. Continue to start posting.",
+    "checking": "Checking...",
+    "notAddedYet": "We still cannot confirm the friendship status. Please add us on LINE before continuing.",
+    "friendCheckFailed": "Failed to check friendship status. Please try again.",
+    "lineConfigMissing": "LINE OA is not configured for this page yet."
   },
   "onboarding": {
     "welcomeTitle": "Welcome to Asset Ace",
@@ -125,6 +135,7 @@
     "checkout": "Check-out / Move-out",
     "checkoutConfirmTitle": "Check-out tenant",
     "checkoutConfirmMessage": "Return status to Available and archive this rental to history?",
+    "checkoutMoveOutDateLabel": "Move-out / return date",
     "rentalStatus": "Rental Status",
     "notifyMoveOut": "Check-out / Available",
     "gotTenant": "Got tenant / Occupied",

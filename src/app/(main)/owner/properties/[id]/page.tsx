@@ -109,6 +109,9 @@ export default function PropertyDetailPage() {
   const [rentalHistoryLoading, setRentalHistoryLoading] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutMoveOutDate, setCheckoutMoveOutDate] = useState(() =>
+    new Date().toISOString().slice(0, 10)
+  );
   const [reserveModalOpen, setReserveModalOpen] = useState(false);
   const [reserveLoading, setReserveLoading] = useState(false);
   const [reserveName, setReserveName] = useState("");
@@ -219,7 +222,11 @@ export default function PropertyDetailPage() {
       }
       const res = await fetch(`/api/owner/properties/${id}/checkout`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ moveOutDate: checkoutMoveOutDate }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -245,7 +252,7 @@ export default function PropertyDetailPage() {
     } finally {
       setCheckoutLoading(false);
     }
-  }, [id]);
+  }, [id, checkoutMoveOutDate]);
 
   const handleReserve = useCallback(async () => {
     if (!id) return;
@@ -994,7 +1001,10 @@ export default function PropertyDetailPage() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => setCheckoutModalOpen(true)}
+                        onClick={() => {
+                        setCheckoutMoveOutDate(new Date().toISOString().slice(0, 10));
+                        setCheckoutModalOpen(true);
+                      }}
                         className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100 text-sm"
                       >
                         {t("checkout")}
@@ -1010,6 +1020,15 @@ export default function PropertyDetailPage() {
                 <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
                   <h2 id="checkout-title" className="text-lg font-semibold text-[#0F172A]">{t("checkoutConfirmTitle")}</h2>
                   <p className="text-sm text-slate-600">{t("checkoutConfirmMessage")}</p>
+                  <label className="block">
+                    <span className="text-sm font-medium text-[#0F172A]">{t("checkoutMoveOutDateLabel")}</span>
+                    <input
+                      type="date"
+                      value={checkoutMoveOutDate}
+                      onChange={(e) => setCheckoutMoveOutDate(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-[#0F172A]"
+                    />
+                  </label>
                   <div className="flex gap-3 justify-end">
                     <button
                       type="button"

@@ -317,7 +317,7 @@ export default function OwnerDashboardPage() {
       )}
 
       <Link
-        href="/owner/properties/add"
+        href="/add-friend-required?path=%2Fowner%2Fproperties%2Fadd"
         className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[#10B981] text-white shadow-lg hover:bg-[#0D9668] active:bg-[#0B7A56] transition-colors tap-target"
         aria-label={tCommon("addProperty")}
       >
