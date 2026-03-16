@@ -98,8 +98,8 @@ export async function POST(
     const y = endDate.getUTCFullYear() + 543;
     const dateLabel = `${d.toString().padStart(2, "0")}/${m.toString().padStart(2, "0")}/${y}`;
     const text = detailUrl
-      ? `ห้อง ${propertyName} กำลังว่างแล้ว (วันที่ย้ายออก/คืนห้อง: ${dateLabel}) สนใจรับงานไหม? ${detailUrl}`
-      : `ห้อง ${propertyName} กำลังว่างแล้ว (วันที่ย้ายออก/คืนห้อง: ${dateLabel}) สนใจรับงานไหม?`;
+      ? `ห้อง ${propertyName} กำลังว่างแล้ว วันที่ย้ายออก/คืนห้อง: ${dateLabel} วันที่ว่าง: ${dateLabel} สนใจรับงานไหม? ${detailUrl}`
+      : `ห้อง ${propertyName} กำลังว่างแล้ว วันที่ย้ายออก/คืนห้อง: ${dateLabel} วันที่ว่าง: ${dateLabel} สนใจรับงานไหม?`;
     const agents = await User.find({ role: "agent" })
       .select("lineUserId")
       .lean();
