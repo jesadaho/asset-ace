@@ -92,6 +92,92 @@ async function replyText(replyToken: string, text: string): Promise<void> {
   }
 }
 
+/** LINE quick reply label max 20 chars (Messaging API). */
+function clipLabel(label: string): string {
+  return Array.from(label).slice(0, 20).join("");
+}
+
+const NICHCHA_TRIGGER = "นิชา";
+
+const NICHCHA_QUICK_REPLY_ITEMS: { label: string; text: string }[] = [
+  { label: "ผูกกลุ่มกับสินทรัพย์", text: "ผูกกลุ่มกับสินทรัพย์" },
+  { label: "ดูบิลทั้งหมด", text: "ดูบิลทั้งหมด" },
+  { label: "ดูสินทรัพย์ทั้งหมด", text: "ดูสินทรัพย์ทั้งหมด" },
+  { label: "เพิ่มสินทรัพย์", text: "เพิ่มสินทรัพย์" },
+  { label: "วิธีใช้", text: "วิธีใช้" },
+];
+
+function webAppUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    "https://app.assethub.in.th"
+  );
+}
+
+const NICHCHA_MENU_HINTS: Record<string, string> = {
+  ผูกกลุ่มกับสินทรัพย์:
+    "เจ้าของทรัพย์พิมพ์ `/bind ` ตามด้วยรหัสทรัพย์ 24 ตัว (คัดลอกจากหน้าแก้ไขทรัพย์ในแอป)\nตัวอย่าง: `/bind 674a1b2c3d4e5f678901234`",
+  ดูบิลทั้งหมด:
+    "ฟีเจอร์นี้พัฒนาอยู่ — เปิดดูจากแอปได้ที่ " + webAppUrl(),
+  ดูสินทรัพย์ทั้งหมด:
+    "เปิดรายการทรัพย์สินได้จากเมนูในแอป: " + webAppUrl(),
+  เพิ่มสินทรัพย์:
+    "เพิ่มทรัพย์สินใหม่ได้จากเมนูในแอป: " + webAppUrl(),
+  วิธีใช้:
+    "• พิมพ์ นิชา เพื่อเปิดเมนู\n• ผูกกลุ่ม: พิมพ์ /bind ตามด้วยรหัสทรัพย์\n• ส่งรูปสลิปในกลุ่มที่ผูกแล้ว ระบบจะตรวจสลิปให้\n• แอป: " +
+    webAppUrl(),
+};
+
+async function replyTextWithQuickReply(
+  replyToken: string,
+  text: string,
+  items: { label: string; text: string }[]
+): Promise<void> {
+  const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
+  if (!accessToken) {
+    console.warn(
+      "[line-webhook] LINE_CHANNEL_ACCESS_TOKEN missing, skip reply"
+    );
+    return;
+  }
+
+  const res = await fetch("https://api.line.me/v2/bot/message/reply", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      replyToken,
+      messages: [
+        {
+          type: "text",
+          text,
+          quickReply: {
+            items: items.map((item) => ({
+              type: "action",
+              action: {
+                type: "message",
+                label: clipLabel(item.label),
+                text: item.text,
+              },
+            })),
+          },
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(
+      "[line-webhook] reply quickReply failed:",
+      res.status,
+      body.slice(0, 300)
+    );
+  }
+}
+
 async function fetchLineMessageImage(messageId: string): Promise<{
   ok: boolean;
   bytes?: ArrayBuffer;
@@ -309,6 +395,19 @@ export async function POST(request: NextRequest) {
             groupId,
             lineUserId
           );
+          continue;
+        }
+        if (incoming === NICHCHA_TRIGGER) {
+          await replyTextWithQuickReply(
+            event.replyToken,
+            "สวัสดีครับ — เลือกเมนูด้านล่างได้เลย",
+            NICHCHA_QUICK_REPLY_ITEMS
+          );
+          continue;
+        }
+        const menuHint = NICHCHA_MENU_HINTS[incoming];
+        if (menuHint) {
+          await replyText(event.replyToken, menuHint);
           continue;
         }
         await replyText(
