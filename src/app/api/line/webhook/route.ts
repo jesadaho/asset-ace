@@ -99,12 +99,48 @@ function clipLabel(label: string): string {
 
 const NICHCHA_TRIGGER = "นิชา";
 
-const NICHCHA_QUICK_REPLY_ITEMS: { label: string; text: string }[] = [
-  { label: "ผูกกลุ่มกับสินทรัพย์", text: "ผูกกลุ่มกับสินทรัพย์" },
-  { label: "ดูบิลทั้งหมด", text: "ดูบิลทั้งหมด" },
-  { label: "ดูสินทรัพย์ทั้งหมด", text: "ดูสินทรัพย์ทั้งหมด" },
-  { label: "เพิ่มสินทรัพย์", text: "เพิ่มสินทรัพย์" },
-  { label: "วิธีใช้", text: "วิธีใช้" },
+/** ข้อความต้อนรับเมื่อพิมพ์ "นิชา" ในกลุ่ม */
+const NICHCHA_INTRO =
+  "นิชามาแล้วค่ะ!\nมาๆ เดี๋ยวนิชาช่วยจัดการให้";
+
+/** Twemoji 72×72 PNG (HTTPS) — ใช้เป็นไอคอนปุ่ม Quick Reply ตาม LINE Messaging API */
+const TWEMOJI_72_BASE =
+  "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72";
+
+function twemoji72(hexFile: string): string {
+  return `${TWEMOJI_72_BASE}/${hexFile}.png`;
+}
+
+const NICHCHA_QUICK_REPLY_ITEMS: {
+  label: string;
+  text: string;
+  imageUrl: string;
+}[] = [
+  {
+    label: "ผูกกลุ่มกับสินทรัพย์",
+    text: "ผูกกลุ่มกับสินทรัพย์",
+    imageUrl: twemoji72("1f517"),
+  },
+  {
+    label: "ดูบิลทั้งหมด",
+    text: "ดูบิลทั้งหมด",
+    imageUrl: twemoji72("1f4c4"),
+  },
+  {
+    label: "ดูสินทรัพย์ทั้งหมด",
+    text: "ดูสินทรัพย์ทั้งหมด",
+    imageUrl: twemoji72("1f3e2"),
+  },
+  {
+    label: "เพิ่มสินทรัพย์",
+    text: "เพิ่มสินทรัพย์",
+    imageUrl: twemoji72("2795"),
+  },
+  {
+    label: "วิธีใช้",
+    text: "วิธีใช้",
+    imageUrl: twemoji72("2753"),
+  },
 ];
 
 function webAppUrl(): string {
@@ -131,7 +167,7 @@ const NICHCHA_MENU_HINTS: Record<string, string> = {
 async function replyTextWithQuickReply(
   replyToken: string,
   text: string,
-  items: { label: string; text: string }[]
+  items: { label: string; text: string; imageUrl?: string }[]
 ): Promise<void> {
   const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
   if (!accessToken) {
@@ -156,6 +192,9 @@ async function replyTextWithQuickReply(
           quickReply: {
             items: items.map((item) => ({
               type: "action",
+              ...(item.imageUrl
+                ? { imageUrl: item.imageUrl }
+                : {}),
               action: {
                 type: "message",
                 label: clipLabel(item.label),
@@ -400,7 +439,7 @@ export async function POST(request: NextRequest) {
         if (incoming === NICHCHA_TRIGGER) {
           await replyTextWithQuickReply(
             event.replyToken,
-            "สวัสดีครับ — เลือกเมนูด้านล่างได้เลย",
+            NICHCHA_INTRO,
             NICHCHA_QUICK_REPLY_ITEMS
           );
           continue;
