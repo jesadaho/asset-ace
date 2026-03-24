@@ -39,10 +39,9 @@ function getAddFriendRequiredRedirect(pathname: string): string {
   return ADD_FRIEND_REQUIRED_PATH;
 }
 
-function getIntendedPathFromQuery(): string | null {
-  if (typeof window === "undefined") return null;
-  const params = new URLSearchParams(window.location.search);
-
+function getIntendedPathFromSearchParams(
+  params: URLSearchParams | ReadonlyURLSearchParams
+): string | null {
   let path = params.get("path") ?? params.get("redirect");
   if (!path) {
     const liffState = params.get("liff.state");
@@ -64,12 +63,24 @@ function getIntendedPathFromQuery(): string | null {
   return ALLOWED_PATHS.includes(normalized) ? normalized : null;
 }
 
+function getIntendedPathFromQuery(): string | null {
+  if (typeof window === "undefined") return null;
+  return getIntendedPathFromSearchParams(new URLSearchParams(window.location.search));
+}
+
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isReady, isLoggedIn, profile, liffId, error, isFriend, isInClient } = useLiff();
   const [checked, setChecked] = useState(false);
+
+  /** LIFF opens endpoint URL (often `/`) first; `path` / `liff.state` may arrive in query. Avoid flashing the landing page before client redirect. */
+  const deepLinkTarget = getIntendedPathFromSearchParams(searchParams);
+  const normalizedPathname = pathname.split("?")[0];
+  const isPendingDeepLinkNavigation = Boolean(
+    deepLinkTarget && deepLinkTarget !== normalizedPathname
+  );
 
   // Redirect to "open in LINE" page when link is opened in external browser (not in LINE app)
   useEffect(() => {
@@ -187,6 +198,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   /** On /invite always show loading until run() has decided (avoids flash when searchParams not ready on first paint). */
   const showLoading =
     !canRedirect ||
+    isPendingDeepLinkNavigation ||
     (!checked && (isLoggedIn === true || isInviteAcceptJob || pathname === INVITE_PATH));
   if (showLoading) {
     return (
