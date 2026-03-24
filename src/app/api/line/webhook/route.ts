@@ -309,15 +309,18 @@ export async function POST(request: NextRequest) {
             groupId,
             lineUserId
           );
+          continue;
         }
-        continue;
-      }
-      if (process.env.NODE_ENV !== "production") {
         await replyText(
           event.replyToken,
           `Received: ${incoming || "(empty message)"}`
         );
+        continue;
       }
+      await replyText(
+        event.replyToken,
+        `Received: ${incoming || "(empty message)"}`
+      );
       continue;
     }
 
