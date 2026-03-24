@@ -5,6 +5,7 @@ type LineWebhookEvent = {
   type: string;
   replyToken?: string;
   message?: {
+    id?: string;
     type?: string;
     text?: string;
   };
@@ -60,6 +61,83 @@ async function replyText(replyToken: string, text: string): Promise<void> {
   }
 }
 
+async function fetchLineMessageImage(messageId: string): Promise<{
+  ok: boolean;
+  bytes?: ArrayBuffer;
+  contentType?: string;
+  error?: string;
+}> {
+  const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
+  if (!accessToken) {
+    return { ok: false, error: "LINE_CHANNEL_ACCESS_TOKEN missing" };
+  }
+
+  try {
+    const res = await fetch(
+      `https://api-data.line.me/v2/bot/message/${messageId}/content`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      return {
+        ok: false,
+        error: `LINE content API failed (${res.status}): ${body.slice(0, 200)}`,
+      };
+    }
+
+    const bytes = await res.arrayBuffer();
+    const contentType = res.headers.get("content-type") ?? "image/jpeg";
+    return { ok: true, bytes, contentType };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+async function verifySlipWithEasySlip(
+  imageBytes: ArrayBuffer,
+  contentType: string,
+  messageId: string
+): Promise<{ ok: boolean; status?: number; bodyText: string }> {
+  const endpoint =
+    process.env.EASYSLIP_ENDPOINT?.trim() ||
+    "https://api.easyslip.com/v2/verify/bank";
+  const formData = new FormData();
+  const ext = contentType.includes("png") ? "png" : "jpg";
+  formData.append(
+    "image",
+    new Blob([imageBytes], { type: contentType }),
+    `line-slip-${messageId}.${ext}`
+  );
+
+  const headers: Record<string, string> = {};
+  const apiKey = process.env.EASYSLIP_API_KEY?.trim();
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    const bodyText = await res.text().catch(() => "");
+    return { ok: res.ok, status: res.status, bodyText: bodyText.slice(0, 1200) };
+  } catch (err) {
+    return {
+      ok: false,
+      bodyText: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
 export async function GET() {
   return NextResponse.json({ ok: true, message: "LINE webhook is running" });
 }
@@ -102,6 +180,41 @@ export async function POST(request: NextRequest) {
     ) {
       const incoming = event.message.text?.trim() || "(empty message)";
       await replyText(event.replyToken, `Received: ${incoming}`);
+    }
+
+    if (
+      event.type === "message" &&
+      event.message?.type === "image" &&
+      event.message.id &&
+      event.replyToken
+    ) {
+      const image = await fetchLineMessageImage(event.message.id);
+      if (!image.ok || !image.bytes) {
+        await replyText(
+          event.replyToken,
+          `โหลดรูปจาก LINE ไม่สำเร็จ: ${image.error ?? "unknown error"}`
+        );
+        continue;
+      }
+
+      const verifyResult = await verifySlipWithEasySlip(
+        image.bytes,
+        image.contentType ?? "image/jpeg",
+        event.message.id
+      );
+
+      if (!verifyResult.ok) {
+        await replyText(
+          event.replyToken,
+          `ตรวจสอบสลิปไม่สำเร็จ (${verifyResult.status ?? "error"}): ${verifyResult.bodyText || "no response body"}`
+        );
+        continue;
+      }
+
+      await replyText(
+        event.replyToken,
+        `ผลตรวจสลิป:\n${verifyResult.bodyText || "OK"}`
+      );
     }
   }
 
