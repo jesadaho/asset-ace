@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getDeepLinkTargetFromSearchParams } from "@/lib/deep-link";
 
 const canonicalHost = "assethub.in.th";
 
@@ -16,6 +17,19 @@ export function middleware(request: NextRequest) {
     target.host = canonicalHost;
     target.protocol = "https:";
     return NextResponse.redirect(target, 308); // Permanent redirect
+  }
+
+  // LIFF deep links open endpoint `/` with ?path=...; redirect before HTML so home page never flashes.
+  const url = request.nextUrl.clone();
+  if (url.pathname === "/" || url.pathname === "") {
+    const deep = getDeepLinkTargetFromSearchParams(url.searchParams);
+    if (deep && deep !== "/") {
+      const next = new URL(request.url);
+      next.pathname = deep;
+      next.searchParams.delete("path");
+      next.searchParams.delete("redirect");
+      return NextResponse.redirect(next, 307);
+    }
   }
 
   return NextResponse.next();

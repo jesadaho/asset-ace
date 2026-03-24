@@ -7,6 +7,7 @@ import {
   checkOnboardingStatus,
   getRoleDashboardPath,
 } from "@/lib/api/onboarding";
+import { getDeepLinkTargetFromSearchParams } from "@/lib/deep-link";
 
 const ONBOARDING_PATH = "/onboarding";
 const ADD_FRIEND_REQUIRED_PATH = "/add-friend-required";
@@ -21,16 +22,6 @@ function isAllowedInExternalBrowser(pathname: string): boolean {
   return false;
 }
 
-const ALLOWED_PATHS = [
-  "/",
-  ONBOARDING_PATH,
-  ADD_FRIEND_REQUIRED_PATH,
-  ADD_PROPERTY_PATH,
-  "/owners",
-  "/agents",
-  "/tenants",
-];
-
 function getAddFriendRequiredRedirect(pathname: string): string {
   const normalized = pathname.split("?")[0];
   if (normalized === ADD_PROPERTY_PATH) {
@@ -39,33 +30,11 @@ function getAddFriendRequiredRedirect(pathname: string): string {
   return ADD_FRIEND_REQUIRED_PATH;
 }
 
-function getIntendedPathFromSearchParams(
-  params: URLSearchParams | ReadonlyURLSearchParams
-): string | null {
-  let path = params.get("path") ?? params.get("redirect");
-  if (!path) {
-    const liffState = params.get("liff.state");
-    if (liffState) {
-      try {
-        const decoded = decodeURIComponent(liffState);
-        const stateParams = new URLSearchParams(
-          decoded.startsWith("?") ? decoded.slice(1) : decoded
-        );
-        path = stateParams.get("path") ?? stateParams.get("redirect") ?? null;
-      } catch {
-        path = null;
-      }
-    }
-  }
-
-  if (!path || !path.startsWith("/")) return null;
-  const normalized = path.split("?")[0];
-  return ALLOWED_PATHS.includes(normalized) ? normalized : null;
-}
-
 function getIntendedPathFromQuery(): string | null {
   if (typeof window === "undefined") return null;
-  return getIntendedPathFromSearchParams(new URLSearchParams(window.location.search));
+  return getDeepLinkTargetFromSearchParams(
+    new URLSearchParams(window.location.search)
+  );
 }
 
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
@@ -76,7 +45,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const [checked, setChecked] = useState(false);
 
   /** LIFF opens endpoint URL (often `/`) first; `path` / `liff.state` may arrive in query. Avoid flashing the landing page before client redirect. */
-  const deepLinkTarget = getIntendedPathFromSearchParams(searchParams);
+  const deepLinkTarget = getDeepLinkTargetFromSearchParams(searchParams);
   const normalizedPathname = pathname.split("?")[0];
   const isPendingDeepLinkNavigation = Boolean(
     deepLinkTarget && deepLinkTarget !== normalizedPathname
