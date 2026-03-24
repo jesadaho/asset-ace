@@ -15,6 +15,26 @@ type LineWebhookBody = {
   events?: LineWebhookEvent[];
 };
 
+type EasySlipSuccessResponse = {
+  success?: boolean;
+  data?: {
+    amountInSlip?: number;
+    rawSlip?: {
+      date?: string;
+      sender?: {
+        account?: {
+          name?: { th?: string; en?: string };
+        };
+      };
+      receiver?: {
+        account?: {
+          name?: { th?: string; en?: string };
+        };
+      };
+    };
+  };
+};
+
 function verifySignature(
   rawBody: string,
   signature: string,
@@ -138,6 +158,33 @@ async function verifySlipWithEasySlip(
   }
 }
 
+function formatEasySlipResult(bodyText: string): string {
+  try {
+    const parsed = JSON.parse(bodyText) as EasySlipSuccessResponse;
+    const amount = parsed.data?.amountInSlip;
+    const senderName =
+      parsed.data?.rawSlip?.sender?.account?.name?.th ||
+      parsed.data?.rawSlip?.sender?.account?.name?.en ||
+      "-";
+    const receiverName =
+      parsed.data?.rawSlip?.receiver?.account?.name?.th ||
+      parsed.data?.rawSlip?.receiver?.account?.name?.en ||
+      "-";
+    const date = parsed.data?.rawSlip?.date || "-";
+    const amountText =
+      typeof amount === "number"
+        ? `${amount.toLocaleString("th-TH", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })} บาท`
+        : "-";
+
+    return `จำนวนเงิน ${amountText}\nจาก ${senderName}\nไปยัง ${receiverName}\nวันที่ ${date}`;
+  } catch {
+    return `ผลตรวจสลิป:\n${bodyText || "OK"}`;
+  }
+}
+
 export async function GET() {
   return NextResponse.json({ ok: true, message: "LINE webhook is running" });
 }
@@ -213,7 +260,7 @@ export async function POST(request: NextRequest) {
 
       await replyText(
         event.replyToken,
-        `ผลตรวจสลิป:\n${verifyResult.bodyText || "OK"}`
+        formatEasySlipResult(verifyResult.bodyText || "OK")
       );
     }
   }
