@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Search, ChevronRight, Plus, ImageIcon, Eye, EyeOff, LayoutDashboard, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -48,6 +48,7 @@ type StatusFilter = "All" | PropertyStatus;
 type SummaryFilter = "all" | "available" | "pending";
 
 export default function OwnerPropertiesPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("dashboard");
   const tAuth = useTranslations("auth");
@@ -56,6 +57,7 @@ export default function OwnerPropertiesPage() {
   const tEdit = useTranslations("propertyEdit");
   const tProps = useTranslations("properties");
   const { profile } = useLiff();
+  const [accessGate, setAccessGate] = useState<"checking" | "allowed">("checking");
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +78,53 @@ export default function OwnerPropertiesPage() {
     else if (s === null || s === "all") setSummaryFilter("all");
   }, [searchParams]);
 
+  /** Only owners may use this page; agents/tenants redirect to their home. */
   useEffect(() => {
+    let cancelled = false;
+    async function checkRole() {
+      try {
+        const liff = (await import("@line/liff")).default;
+        await liff.ready;
+        if (!liff.isLoggedIn()) {
+          if (!cancelled) setAccessGate("allowed");
+          return;
+        }
+        const token = liff.getAccessToken();
+        if (!token) {
+          if (!cancelled) setAccessGate("allowed");
+          return;
+        }
+        const res = await fetch("/api/onboarding", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = (await res.json()) as {
+          onboarded?: boolean;
+          role?: string;
+        };
+        if (cancelled) return;
+        if (!data.onboarded) {
+          router.replace("/onboarding");
+          return;
+        }
+        if (data.role !== "owner") {
+          if (data.role === "agent") router.replace("/agent/marketplace");
+          else if (data.role === "tenant") router.replace("/tenants");
+          else router.replace("/");
+          return;
+        }
+        setAccessGate("allowed");
+      } catch {
+        if (!cancelled) setAccessGate("allowed");
+      }
+    }
+    checkRole();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  useEffect(() => {
+    if (accessGate !== "allowed") return;
     let cancelled = false;
     async function fetchProperties() {
       try {
@@ -141,7 +189,7 @@ export default function OwnerPropertiesPage() {
     }
     fetchProperties();
     return () => { cancelled = true; };
-  }, []);
+  }, [accessGate]);
 
   const { totalMonthlyIncome, potentialIncome, total, available, pending } = useMemo(() => {
     const totalMonthlyIncome = properties
@@ -194,6 +242,14 @@ export default function OwnerPropertiesPage() {
     setStatusFilter(option);
     setIsDashboardVisible(false);
   };
+
+  if (accessGate === "checking") {
+    return (
+      <div className="min-h-full bg-slate-50 p-4 flex items-center justify-center min-h-[50vh]">
+        <p className="text-slate-500 text-sm">{tCommon("loading")}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full bg-slate-50 p-4">

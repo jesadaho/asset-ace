@@ -103,46 +103,6 @@ const NICHCHA_TRIGGER = "นิชา";
 const NICHCHA_INTRO =
   "นิชามาแล้วค่ะ!\nมาๆ เดี๋ยวนิชาช่วยจัดการให้";
 
-/** Twemoji 72×72 PNG (HTTPS) — ใช้เป็นไอคอนปุ่ม Quick Reply ตาม LINE Messaging API */
-const TWEMOJI_72_BASE =
-  "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72";
-
-function twemoji72(hexFile: string): string {
-  return `${TWEMOJI_72_BASE}/${hexFile}.png`;
-}
-
-const NICHCHA_QUICK_REPLY_ITEMS: {
-  label: string;
-  text: string;
-  imageUrl: string;
-}[] = [
-  {
-    label: "ผูกกลุ่มกับสินทรัพย์",
-    text: "ผูกกลุ่มกับสินทรัพย์",
-    imageUrl: twemoji72("1f517"),
-  },
-  {
-    label: "ดูบิลทั้งหมด",
-    text: "ดูบิลทั้งหมด",
-    imageUrl: twemoji72("1f4c4"),
-  },
-  {
-    label: "ดูสินทรัพย์ทั้งหมด",
-    text: "ดูสินทรัพย์ทั้งหมด",
-    imageUrl: twemoji72("1f3e2"),
-  },
-  {
-    label: "เพิ่มสินทรัพย์",
-    text: "เพิ่มสินทรัพย์",
-    imageUrl: twemoji72("2795"),
-  },
-  {
-    label: "วิธีใช้",
-    text: "วิธีใช้",
-    imageUrl: twemoji72("2753"),
-  },
-];
-
 function webAppUrl(): string {
   return (
     process.env.NEXT_PUBLIC_APP_URL?.trim() ||
@@ -150,24 +110,127 @@ function webAppUrl(): string {
   );
 }
 
+/** ไอคอนขาว-ดำ (PNG ใน public/nicha-menu/) — สไตล์เส้น outline คล้ายเมนู LINE แบบขุนทอง */
+function nichaMenuIconUrl(
+  name: "bind" | "bill" | "building" | "add" | "help"
+): string {
+  const base = webAppUrl().replace(/\/$/, "");
+  return `${base}/nicha-menu/${name}.png`;
+}
+
+/** LIFF / web: เปิดหน้ารายการทรัพย์เจ้าของ (เช็ค role ฝั่งแอป) */
+function buildOwnerPropertiesOpenUri(): string {
+  const liffId = process.env.NEXT_PUBLIC_LIFF_ID?.trim();
+  const path = "/owner/properties";
+  if (liffId) {
+    return `https://liff.line.me/${liffId}?path=${encodeURIComponent(path)}`;
+  }
+  const base = webAppUrl().replace(/\/$/, "");
+  return `${base}/?path=${encodeURIComponent(path)}`;
+}
+
+type NichaQuickReplyItem =
+  | {
+      kind: "message";
+      label: string;
+      text: string;
+      imageUrl: string;
+    }
+  | {
+      kind: "uri";
+      label: string;
+      uri: string;
+      imageUrl: string;
+    };
+
+function getNichaQuickReplyItems(): NichaQuickReplyItem[] {
+  return [
+    {
+      kind: "message",
+      label: "ผูกกลุ่มกับสินทรัพย์",
+      text: "#ผูกกลุ่มกับสินทรัพย์",
+      imageUrl: nichaMenuIconUrl("bind"),
+    },
+    {
+      kind: "message",
+      label: "ดูบิลทั้งหมด",
+      text: "#ดูบิลทั้งหมด",
+      imageUrl: nichaMenuIconUrl("bill"),
+    },
+    {
+      kind: "uri",
+      label: "ดูสินทรัพย์ทั้งหมด",
+      uri: buildOwnerPropertiesOpenUri(),
+      imageUrl: nichaMenuIconUrl("building"),
+    },
+    {
+      kind: "message",
+      label: "เพิ่มสินทรัพย์",
+      text: "#เพิ่มสินทรัพย์",
+      imageUrl: nichaMenuIconUrl("add"),
+    },
+    {
+      kind: "message",
+      label: "วิธีใช้",
+      text: "#วิธีใช้",
+      imageUrl: nichaMenuIconUrl("help"),
+    },
+  ];
+}
+
+/** คีย์หลักใช้รูปแบบ #คำสั่ง (ตรงกับข้อความที่ Quick Reply ส่ง) */
 const NICHCHA_MENU_HINTS: Record<string, string> = {
-  ผูกกลุ่มกับสินทรัพย์:
+  "#ผูกกลุ่มกับสินทรัพย์":
     "เจ้าของทรัพย์พิมพ์ `/bind ` ตามด้วยรหัสทรัพย์ 24 ตัว (คัดลอกจากหน้าแก้ไขทรัพย์ในแอป)\nตัวอย่าง: `/bind 674a1b2c3d4e5f678901234`",
-  ดูบิลทั้งหมด:
+  "#ดูบิลทั้งหมด":
     "ฟีเจอร์นี้พัฒนาอยู่ — เปิดดูจากแอปได้ที่ " + webAppUrl(),
-  ดูสินทรัพย์ทั้งหมด:
-    "เปิดรายการทรัพย์สินได้จากเมนูในแอป: " + webAppUrl(),
-  เพิ่มสินทรัพย์:
+  "#ดูสินทรัพย์ทั้งหมด":
+    "กดปุ่มเมนู \"ดูสินทรัพย์ทั้งหมด\" เพื่อเปิดหน้าทรัพย์ของฉันในแอป หรือพิมพ์คำสั่งนี้ หรือเข้า: " +
+    webAppUrl() +
+    "/owner/properties",
+  "#เพิ่มสินทรัพย์":
     "เพิ่มทรัพย์สินใหม่ได้จากเมนูในแอป: " + webAppUrl(),
-  วิธีใช้:
+  "#วิธีใช้":
     "• พิมพ์ นิชา เพื่อเปิดเมนู\n• ผูกกลุ่ม: พิมพ์ /bind ตามด้วยรหัสทรัพย์\n• ส่งรูปสลิปในกลุ่มที่ผูกแล้ว ระบบจะตรวจสลิปให้\n• แอป: " +
     webAppUrl(),
 };
 
+function getNichaMenuHint(incoming: string): string | undefined {
+  const direct = NICHCHA_MENU_HINTS[incoming];
+  if (direct) return direct;
+  const normalized = incoming.startsWith("#")
+    ? incoming
+    : `#${incoming}`;
+  return NICHCHA_MENU_HINTS[normalized];
+}
+
+function mapNichaQuickReplyPayloadItem(item: NichaQuickReplyItem) {
+  if (item.kind === "uri") {
+    return {
+      type: "action" as const,
+      imageUrl: item.imageUrl,
+      action: {
+        type: "uri" as const,
+        label: clipLabel(item.label),
+        uri: item.uri,
+      },
+    };
+  }
+  return {
+    type: "action" as const,
+    imageUrl: item.imageUrl,
+    action: {
+      type: "message" as const,
+      label: clipLabel(item.label),
+      text: item.text,
+    },
+  };
+}
+
 async function replyTextWithQuickReply(
   replyToken: string,
   text: string,
-  items: { label: string; text: string; imageUrl?: string }[]
+  items: NichaQuickReplyItem[]
 ): Promise<void> {
   const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
   if (!accessToken) {
@@ -190,17 +253,7 @@ async function replyTextWithQuickReply(
           type: "text",
           text,
           quickReply: {
-            items: items.map((item) => ({
-              type: "action",
-              ...(item.imageUrl
-                ? { imageUrl: item.imageUrl }
-                : {}),
-              action: {
-                type: "message",
-                label: clipLabel(item.label),
-                text: item.text,
-              },
-            })),
+            items: items.map(mapNichaQuickReplyPayloadItem),
           },
         },
       ],
@@ -440,11 +493,11 @@ export async function POST(request: NextRequest) {
           await replyTextWithQuickReply(
             event.replyToken,
             NICHCHA_INTRO,
-            NICHCHA_QUICK_REPLY_ITEMS
+            getNichaQuickReplyItems()
           );
           continue;
         }
-        const menuHint = NICHCHA_MENU_HINTS[incoming];
+        const menuHint = getNichaMenuHint(incoming);
         if (menuHint) {
           await replyText(event.replyToken, menuHint);
           continue;
