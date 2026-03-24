@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -55,6 +55,7 @@ export default function AddPropertyPage() {
   const t = useTranslations("propertyDetail");
   const tEdit = useTranslations("propertyEdit");
   const tProps = useTranslations("properties");
+  const tCommon = useTranslations("common");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
@@ -96,6 +97,52 @@ export default function AddPropertyPage() {
     errorName?: string;
   };
   const [imageDebug, setImageDebug] = useState<ImageDebug | null>(null);
+  const [accessGate, setAccessGate] = useState<"checking" | "allowed">("checking");
+
+  /** Only owners may add property (same as /owner/properties). */
+  useEffect(() => {
+    let cancelled = false;
+    async function checkRole() {
+      try {
+        const liff = (await import("@line/liff")).default;
+        await liff.ready;
+        if (!liff.isLoggedIn()) {
+          if (!cancelled) setAccessGate("allowed");
+          return;
+        }
+        const token = liff.getAccessToken();
+        if (!token) {
+          if (!cancelled) setAccessGate("allowed");
+          return;
+        }
+        const res = await fetch("/api/onboarding", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = (await res.json()) as {
+          onboarded?: boolean;
+          role?: string;
+        };
+        if (cancelled) return;
+        if (!data.onboarded) {
+          router.replace("/onboarding");
+          return;
+        }
+        if (data.role !== "owner") {
+          if (data.role === "agent") router.replace("/agent/marketplace");
+          else if (data.role === "tenant") router.replace("/tenants");
+          else router.replace("/");
+          return;
+        }
+        setAccessGate("allowed");
+      } catch {
+        if (!cancelled) setAccessGate("allowed");
+      }
+    }
+    checkRole();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const toggleAmenity = (id: string) => {
     setAmenities((prev) =>
@@ -266,6 +313,14 @@ export default function AddPropertyPage() {
       setSaving(false);
     }
   };
+
+  if (accessGate === "checking") {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-slate-500 text-sm">{tCommon("loading")}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">

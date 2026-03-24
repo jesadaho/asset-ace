@@ -118,10 +118,9 @@ function nichaMenuIconUrl(
   return `${base}/nicha-menu/${name}.png`;
 }
 
-/** LIFF / web: เปิดหน้ารายการทรัพย์เจ้าของ (เช็ค role ฝั่งแอป) */
-function buildOwnerPropertiesOpenUri(): string {
+/** LIFF / web: เปิด path ในแอป (เช็ค role ฝั่งแอปตามหน้า) */
+function buildLiffPathUri(path: string): string {
   const liffId = process.env.NEXT_PUBLIC_LIFF_ID?.trim();
-  const path = "/owner/properties";
   if (liffId) {
     return `https://liff.line.me/${liffId}?path=${encodeURIComponent(path)}`;
   }
@@ -160,13 +159,13 @@ function getNichaQuickReplyItems(): NichaQuickReplyItem[] {
     {
       kind: "uri",
       label: "ดูสินทรัพย์ทั้งหมด",
-      uri: buildOwnerPropertiesOpenUri(),
+      uri: buildLiffPathUri("/owner/properties"),
       imageUrl: nichaMenuIconUrl("building"),
     },
     {
-      kind: "message",
+      kind: "uri",
       label: "เพิ่มสินทรัพย์",
-      text: "#เพิ่มสินทรัพย์",
+      uri: buildLiffPathUri("/owner/properties/add"),
       imageUrl: nichaMenuIconUrl("add"),
     },
     {
@@ -189,7 +188,9 @@ const NICHCHA_MENU_HINTS: Record<string, string> = {
     webAppUrl() +
     "/owner/properties",
   "#เพิ่มสินทรัพย์":
-    "เพิ่มทรัพย์สินใหม่ได้จากเมนูในแอป: " + webAppUrl(),
+    "กดปุ่มเมนู \"เพิ่มสินทรัพย์\" เพื่อเปิดหน้าเพิ่มทรัพย์ หรือเข้า: " +
+    webAppUrl() +
+    "/owner/properties/add",
   "#วิธีใช้":
     "• พิมพ์ นิชา เพื่อเปิดเมนู\n• ผูกกลุ่ม: พิมพ์ /bind ตามด้วยรหัสทรัพย์\n• ส่งรูปสลิปในกลุ่มที่ผูกแล้ว ระบบจะตรวจสลิปให้\n• แอป: " +
     webAppUrl(),
