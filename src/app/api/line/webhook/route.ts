@@ -1,9 +1,20 @@
 import { createHmac, timingSafeEqual } from "crypto";
+import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
+import { connectDB } from "@/lib/db/mongodb";
+import { Property } from "@/lib/db/models/property";
+
+type LineSource = {
+  type: string;
+  userId?: string;
+  groupId?: string;
+  roomId?: string;
+};
 
 type LineWebhookEvent = {
   type: string;
   replyToken?: string;
+  source?: LineSource;
   message?: {
     id?: string;
     type?: string;
@@ -185,6 +196,67 @@ function formatEasySlipResult(bodyText: string): string {
   }
 }
 
+function isEasySlipSuccessJson(bodyText: string): boolean {
+  try {
+    const parsed = JSON.parse(bodyText) as { success?: boolean };
+    return parsed.success === true;
+  } catch {
+    return false;
+  }
+}
+
+async function handleBindCommand(
+  replyToken: string,
+  text: string,
+  groupId: string,
+  lineUserId: string
+): Promise<void> {
+  const m = text.trim().match(/^\/bind\s+([a-fA-F0-9]{24})$/);
+  if (!m) {
+    await replyText(
+      replyToken,
+      "รูปแบบ: /bind ตามด้วยรหัสทรัพย์ (จากหน้าแก้ไขทรัพย์ในแอป)"
+    );
+    return;
+  }
+  const propertyId = m[1];
+  if (!mongoose.Types.ObjectId.isValid(propertyId)) {
+    await replyText(replyToken, "รหัสทรัพย์ไม่ถูกต้อง");
+    return;
+  }
+
+  try {
+    await connectDB();
+    const taken = await Property.findOne({ lineGroupId: groupId }).lean();
+    if (taken && taken._id.toString() !== propertyId) {
+      await replyText(
+        replyToken,
+        "กลุ่ม LINE นี้ผูกกับทรัพย์อื่นแล้ว กรุณาแก้ไขในแอปก่อน"
+      );
+      return;
+    }
+
+    const property = await Property.findOne({
+      _id: propertyId,
+      ownerId: lineUserId,
+    });
+    if (!property) {
+      await replyText(
+        replyToken,
+        "ไม่พบทรัพย์หรือคุณไม่ใช่เจ้าของทรัพย์นี้"
+      );
+      return;
+    }
+
+    property.lineGroupId = groupId;
+    await property.save();
+    await replyText(replyToken, "ผูกกลุ่มกับทรัพย์สำเร็จแล้ว");
+  } catch (err) {
+    console.error("[line-webhook] bind error", err);
+    await replyText(replyToken, "บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง");
+  }
+}
+
 export async function GET() {
   return NextResponse.json({ ok: true, message: "LINE webhook is running" });
 }
@@ -220,17 +292,36 @@ export async function POST(request: NextRequest) {
 
   const events = payload.events ?? [];
   for (const event of events) {
-    if (
-      event.type === "message" &&
-      event.message?.type === "text" &&
-      event.replyToken
-    ) {
-      const incoming = event.message.text?.trim() || "(empty message)";
-      await replyText(event.replyToken, `Received: ${incoming}`);
+    if (event.type !== "message" || !event.replyToken) continue;
+
+    const source = event.source;
+    const groupId =
+      source?.type === "group" && source.groupId ? source.groupId : undefined;
+    const lineUserId = source?.userId;
+
+    if (event.message?.type === "text" && event.message.text != null) {
+      const incoming = event.message.text.trim();
+      if (groupId && lineUserId) {
+        if (incoming.startsWith("/bind")) {
+          await handleBindCommand(
+            event.replyToken,
+            incoming,
+            groupId,
+            lineUserId
+          );
+        }
+        continue;
+      }
+      if (process.env.NODE_ENV !== "production") {
+        await replyText(
+          event.replyToken,
+          `Received: ${incoming || "(empty message)"}`
+        );
+      }
+      continue;
     }
 
     if (
-      event.type === "message" &&
       event.message?.type === "image" &&
       event.message.id &&
       event.replyToken
@@ -242,6 +333,28 @@ export async function POST(request: NextRequest) {
           `โหลดรูปจาก LINE ไม่สำเร็จ: ${image.error ?? "unknown error"}`
         );
         continue;
+      }
+
+      let propertyIdForPayment: string | undefined;
+      if (groupId) {
+        try {
+          await connectDB();
+          const prop = await Property.findOne({ lineGroupId: groupId })
+            .select("_id")
+            .lean();
+          if (!prop) {
+            await replyText(
+              event.replyToken,
+              "ยังไม่ได้ผูกกลุ่มกับทรัพย์ พิมพ์ /bind ตามด้วยรหัสทรัพย์ (จากแอป)"
+            );
+            continue;
+          }
+          propertyIdForPayment = (prop as { _id: mongoose.Types.ObjectId })._id.toString();
+        } catch (e) {
+          console.error("[line-webhook] group property lookup", e);
+          await replyText(event.replyToken, "ระบบขัดข้อง ลองใหม่ภายหลัง");
+          continue;
+        }
       }
 
       const verifyResult = await verifySlipWithEasySlip(
@@ -256,6 +369,22 @@ export async function POST(request: NextRequest) {
           `ตรวจสอบสลิปไม่สำเร็จ (${verifyResult.status ?? "error"}): ${verifyResult.bodyText || "no response body"}`
         );
         continue;
+      }
+
+      if (
+        propertyIdForPayment &&
+        verifyResult.ok &&
+        isEasySlipSuccessJson(verifyResult.bodyText)
+      ) {
+        try {
+          await connectDB();
+          await Property.updateOne(
+            { _id: propertyIdForPayment },
+            { $set: { lastRentPaidAt: new Date() } }
+          );
+        } catch (e) {
+          console.error("[line-webhook] lastRentPaidAt update", e);
+        }
       }
 
       await replyText(

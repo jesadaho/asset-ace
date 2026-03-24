@@ -53,6 +53,9 @@ type PropertyDetail = {
   /** Agent's LINE account ID (@username) for chat link; from User.lineId */
   agentLineAccountId?: string;
   lineGroup?: string;
+  lineGroupId?: string;
+  rentDueDayOfMonth?: number;
+  lastRentPaidAt?: string;
   contractStartDate?: string;
   leaseDurationMonths?: number;
   contractUrl?: string;
@@ -892,7 +895,7 @@ export default function PropertyDetailPage() {
               </section>
             )}
 
-            {property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.contractStartDate) && (
+            {property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.lineGroupId ?? property.rentDueDayOfMonth ?? property.lastRentPaidAt ?? property.contractStartDate) && (
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] flex items-center gap-2 flex-wrap">
                   {t("residentAgent")}
@@ -972,6 +975,26 @@ export default function PropertyDetailPage() {
                 <div className="text-sm text-slate-600 space-y-1">
                   {property.lineGroup && (
                     <p>{t("lineGroup")}: {property.lineGroup}</p>
+                  )}
+                  {property.lineGroupId && (
+                    <div className="space-y-0.5">
+                      <p>
+                        {t("lineGroupIdLabel")}:{" "}
+                        <span className="font-mono text-xs break-all">{property.lineGroupId}</span>
+                      </p>
+                      <p className="text-xs text-slate-500">{t("lineGroupIdHint")}</p>
+                    </div>
+                  )}
+                  {property.rentDueDayOfMonth != null && (
+                    <p>
+                      {t("rentDueDayLabel")}: {property.rentDueDayOfMonth}
+                    </p>
+                  )}
+                  {property.lastRentPaidAt && (
+                    <p>
+                      {t("lastRentPaidLabel")}:{" "}
+                      {new Date(property.lastRentPaidAt).toLocaleDateString()}
+                    </p>
                   )}
                   {property.contractStartDate && (
                     <p>{t("contractStart")}: {property.contractStartDate}</p>
@@ -1077,7 +1100,7 @@ export default function PropertyDetailPage() {
               </div>
             )}
 
-            {property.status !== "Available" && (property.tenantLineId ?? property.agentLineId ?? property.lineGroup) && (
+            {property.status !== "Available" && (property.tenantLineId ?? property.agentLineId ?? property.lineGroup ?? property.lineGroupId) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
                   {t("contactCommunity")}

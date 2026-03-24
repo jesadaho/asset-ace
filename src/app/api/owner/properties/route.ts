@@ -217,6 +217,21 @@ export async function POST(request: NextRequest) {
         typeof body.agentLineId === "string" ? body.agentLineId : undefined,
       lineGroup:
         typeof body.lineGroup === "string" ? body.lineGroup : undefined,
+      lineGroupId:
+        typeof body.lineGroupId === "string"
+          ? body.lineGroupId.trim() || undefined
+          : undefined,
+      rentDueDayOfMonth:
+        typeof body.rentDueDayOfMonth === "number" &&
+        body.rentDueDayOfMonth >= 1 &&
+        body.rentDueDayOfMonth <= 31
+          ? body.rentDueDayOfMonth
+          : typeof body.rentDueDayOfMonth === "string"
+            ? (() => {
+                const n = parseInt(body.rentDueDayOfMonth as string, 10);
+                return !Number.isNaN(n) && n >= 1 && n <= 31 ? n : undefined;
+              })()
+            : undefined,
       contractStartDate:
         typeof body.contractStartDate === "string" && body.contractStartDate.trim()
           ? (() => {

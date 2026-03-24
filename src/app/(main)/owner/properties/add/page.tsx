@@ -78,6 +78,8 @@ export default function AddPropertyPage() {
   const [agentLineId, setAgentLineId] = useState("");
   const [contractStartDate, setContractStartDate] = useState("");
   const [lineGroup, setLineGroup] = useState("");
+  const [lineGroupId, setLineGroupId] = useState("");
+  const [rentDueDayOfMonth, setRentDueDayOfMonth] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nameError, setNameError] = useState(false);
   const [priceError, setPriceError] = useState(false);
@@ -225,6 +227,11 @@ export default function AddPropertyPage() {
         agentLineId: agentLineId.trim() || undefined,
         contractStartDate: contractStartDate.trim() || undefined,
         lineGroup: lineGroup.trim() || undefined,
+        lineGroupId: lineGroupId.trim() || undefined,
+        rentDueDayOfMonth: (() => {
+          const n = parseInt(rentDueDayOfMonth.trim(), 10);
+          return !Number.isNaN(n) && n >= 1 && n <= 31 ? n : undefined;
+        })(),
       };
 
       const createRes = await fetch("/api/owner/properties", {
@@ -790,6 +797,36 @@ export default function AddPropertyPage() {
                     value={lineGroup}
                     onChange={(e) => setLineGroup(e.target.value)}
                     placeholder={tEdit("lineGroupPlaceholder")}
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="line-group-id" className="block text-sm text-slate-500 mb-1">
+                    {tEdit("lineGroupIdOptional")}
+                  </label>
+                  <input
+                    id="line-group-id"
+                    type="text"
+                    value={lineGroupId}
+                    onChange={(e) => setLineGroupId(e.target.value)}
+                    placeholder={tEdit("lineGroupIdPlaceholder")}
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3 font-mono text-sm`}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">{tEdit("lineGroupIdHintShort")}</p>
+                </div>
+                <div>
+                  <label htmlFor="rent-due-day" className="block text-sm text-slate-500 mb-1">
+                    {tEdit("rentDueDayOptional")}
+                  </label>
+                  <input
+                    id="rent-due-day"
+                    type="number"
+                    min={1}
+                    max={31}
+                    inputMode="numeric"
+                    value={rentDueDayOfMonth}
+                    onChange={(e) => setRentDueDayOfMonth(e.target.value)}
+                    placeholder={tEdit("rentDueDayPlaceholder")}
                     className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                   />
                 </div>

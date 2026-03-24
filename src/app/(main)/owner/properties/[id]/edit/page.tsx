@@ -98,6 +98,9 @@ type PropertyData = {
   agentInviteSentAt?: string;
   invitedAgentName?: string;
   lineGroup?: string;
+  lineGroupId?: string;
+  rentDueDayOfMonth?: number;
+  lastRentPaidAt?: string;
   contractStartDate?: string;
   openForAgent?: boolean;
   publicListing?: boolean;
@@ -177,6 +180,9 @@ export default function EditPropertyPage() {
   const [invitedAgentName, setInvitedAgentName] = useState("");
   const [contractStartDate, setContractStartDate] = useState("");
   const [lineGroup, setLineGroup] = useState("");
+  const [lineGroupId, setLineGroupId] = useState("");
+  const [rentDueDayOfMonth, setRentDueDayOfMonth] = useState("");
+  const [lastRentPaidDate, setLastRentPaidDate] = useState("");
   const [openForAgent, setOpenForAgent] = useState(false);
   const [publicListing, setPublicListing] = useState(false);
   const [leaseDurationMonths, setLeaseDurationMonths] = useState("");
@@ -268,6 +274,17 @@ export default function EditPropertyPage() {
     // #endregion
     setContractStartDate(p.contractStartDate ?? "");
     setLineGroup(p.lineGroup ?? "");
+    setLineGroupId((p as { lineGroupId?: string }).lineGroupId ?? "");
+    setRentDueDayOfMonth(
+      (p as { rentDueDayOfMonth?: number }).rentDueDayOfMonth != null
+        ? String((p as { rentDueDayOfMonth?: number }).rentDueDayOfMonth)
+        : ""
+    );
+    setLastRentPaidDate(
+      (p as { lastRentPaidAt?: string }).lastRentPaidAt
+        ? String((p as { lastRentPaidAt?: string }).lastRentPaidAt).slice(0, 10)
+        : ""
+    );
     setOpenForAgent((p as { openForAgent?: boolean }).openForAgent ?? false);
     setPublicListing(
       p.listingType === "sale"
@@ -498,6 +515,16 @@ export default function EditPropertyPage() {
         agentLineId: agentLineId.trim() || undefined,
         contractStartDate: contractStartDate.trim() || undefined,
         lineGroup: lineGroup.trim() || undefined,
+        lineGroupId: lineGroupId.trim() || undefined,
+        rentDueDayOfMonth: (() => {
+          const raw = rentDueDayOfMonth.trim();
+          if (!raw) return undefined;
+          const n = parseInt(raw, 10);
+          return !Number.isNaN(n) && n >= 1 && n <= 31 ? n : undefined;
+        })(),
+        lastRentPaidAt: lastRentPaidDate.trim()
+          ? `${lastRentPaidDate.trim()}T12:00:00.000Z`
+          : null,
         openForAgent: openForAgent || undefined,
         publicListing: listingType === "sale" ? true : publicListing || undefined,
         leaseDurationMonths: leaseDurationMonths.trim() ? parseInt(leaseDurationMonths, 10) : undefined,
@@ -1825,6 +1852,49 @@ export default function EditPropertyPage() {
                     placeholder={tEdit("lineGroupPlaceholder")}
                     className={`${inputBase} border border-slate-200 rounded-lg px-3`}
                   />
+                </div>
+                <div>
+                  <label htmlFor="edit-line-group-id" className="block text-sm text-slate-500 mb-1">
+                    {tEdit("lineGroupIdOptional")}
+                  </label>
+                  <input
+                    id="edit-line-group-id"
+                    type="text"
+                    value={lineGroupId}
+                    onChange={(e) => setLineGroupId(e.target.value)}
+                    placeholder={tEdit("lineGroupIdPlaceholder")}
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3 font-mono text-sm`}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">{tEdit("lineGroupIdHintShort")}</p>
+                </div>
+                <div>
+                  <label htmlFor="edit-rent-due-day" className="block text-sm text-slate-500 mb-1">
+                    {tEdit("rentDueDayOptional")}
+                  </label>
+                  <input
+                    id="edit-rent-due-day"
+                    type="number"
+                    min={1}
+                    max={31}
+                    inputMode="numeric"
+                    value={rentDueDayOfMonth}
+                    onChange={(e) => setRentDueDayOfMonth(e.target.value)}
+                    placeholder={tEdit("rentDueDayPlaceholder")}
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="edit-last-rent-paid" className="block text-sm text-slate-500 mb-1">
+                    {tEdit("lastRentPaidOptional")}
+                  </label>
+                  <input
+                    id="edit-last-rent-paid"
+                    type="date"
+                    value={lastRentPaidDate}
+                    onChange={(e) => setLastRentPaidDate(e.target.value)}
+                    className={`${inputBase} border border-slate-200 rounded-lg px-3`}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">{tEdit("lastRentPaidHint")}</p>
                 </div>
               </div>
 

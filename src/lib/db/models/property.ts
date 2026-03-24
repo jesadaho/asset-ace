@@ -33,6 +33,14 @@ export interface IProperty {
   agentInviteSentAt?: Date;
   invitedAgentName?: string;
   lineGroup?: string;
+  /** LINE Messaging API group id (e.g. C...) for bot in group chat; not the invite link hash */
+  lineGroupId?: string;
+  /** Day of month (1–31) rent is due; used with rent reminder cron */
+  rentDueDayOfMonth?: number;
+  /** Last time rent payment was recorded (e.g. slip verified or manual) */
+  lastRentPaidAt?: Date;
+  /** YYYY-MM of the due month we already sent overdue alert for (dedupe) */
+  rentOverdueNotifiedForMonth?: string;
   contractStartDate?: Date;
   openForAgent?: boolean;
   publicListing?: boolean;
@@ -76,6 +84,10 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     agentInviteSentAt: Date,
     invitedAgentName: String,
     lineGroup: String,
+    lineGroupId: String,
+    rentDueDayOfMonth: Number,
+    lastRentPaidAt: Date,
+    rentOverdueNotifiedForMonth: String,
     contractStartDate: Date,
     openForAgent: Boolean,
     publicListing: Boolean,
@@ -91,6 +103,7 @@ const PropertySchema = new mongoose.Schema<IProperty>(
 );
 
 PropertySchema.index({ ownerId: 1 });
+PropertySchema.index({ lineGroupId: 1 }, { unique: true, sparse: true });
 
 export const Property =
   mongoose.models.Property ?? mongoose.model<IProperty>("Property", PropertySchema);

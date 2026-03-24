@@ -48,6 +48,12 @@ function toResponse(doc: PropertyDoc) {
       : undefined,
     invitedAgentName: doc.invitedAgentName,
     lineGroup: doc.lineGroup,
+    lineGroupId: doc.lineGroupId,
+    rentDueDayOfMonth: doc.rentDueDayOfMonth,
+    lastRentPaidAt: doc.lastRentPaidAt
+      ? (doc.lastRentPaidAt as Date).toISOString()
+      : undefined,
+    rentOverdueNotifiedForMonth: doc.rentOverdueNotifiedForMonth,
     contractStartDate: doc.contractStartDate
       ? (doc.contractStartDate as Date).toISOString().slice(0, 10)
       : undefined,
@@ -217,6 +223,39 @@ export async function PATCH(
       if (!property.agentLineId) (property as { agentLineAccountId?: string }).agentLineAccountId = undefined;
     }
     if (typeof body.lineGroup === "string") property.lineGroup = body.lineGroup || undefined;
+    if (typeof body.lineGroupId === "string") {
+      (property as { lineGroupId?: string }).lineGroupId =
+        body.lineGroupId.trim() || undefined;
+    }
+    if (body.rentDueDayOfMonth !== undefined) {
+      const n =
+        typeof body.rentDueDayOfMonth === "number"
+          ? body.rentDueDayOfMonth
+          : typeof body.rentDueDayOfMonth === "string"
+            ? parseInt(String(body.rentDueDayOfMonth), 10)
+            : NaN;
+      if (!Number.isNaN(n) && n >= 1 && n <= 31) {
+        (property as { rentDueDayOfMonth?: number }).rentDueDayOfMonth = n;
+      } else if (body.rentDueDayOfMonth === null || body.rentDueDayOfMonth === "") {
+        (property as { rentDueDayOfMonth?: number }).rentDueDayOfMonth = undefined;
+      }
+    }
+    if (body.lastRentPaidAt !== undefined) {
+      if (typeof body.lastRentPaidAt === "string" && body.lastRentPaidAt.trim()) {
+        const d = new Date(body.lastRentPaidAt);
+        (property as { lastRentPaidAt?: Date }).lastRentPaidAt = Number.isNaN(d.getTime())
+          ? undefined
+          : d;
+      } else if (body.lastRentPaidAt === null || body.lastRentPaidAt === "") {
+        (property as { lastRentPaidAt?: Date }).lastRentPaidAt = undefined;
+      }
+    }
+    if (typeof body.rentOverdueNotifiedForMonth === "string") {
+      (property as { rentOverdueNotifiedForMonth?: string }).rentOverdueNotifiedForMonth =
+        body.rentOverdueNotifiedForMonth.trim() || undefined;
+    } else if (body.rentOverdueNotifiedForMonth === null) {
+      (property as { rentOverdueNotifiedForMonth?: string }).rentOverdueNotifiedForMonth = undefined;
+    }
     if (typeof body.contractStartDate === "string" && body.contractStartDate.trim()) {
       const d = new Date(body.contractStartDate);
       property.contractStartDate = Number.isNaN(d.getTime()) ? undefined : d;

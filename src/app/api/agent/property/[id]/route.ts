@@ -76,6 +76,10 @@ export async function GET(
         agentName?: string;
         agentLineId?: string;
         lineGroup?: string;
+        lineGroupId?: string;
+        rentDueDayOfMonth?: number;
+        lastRentPaidAt?: Date;
+        rentOverdueNotifiedForMonth?: string;
         contractStartDate?: Date;
         leaseDurationMonths?: number;
         contractKey?: string;
@@ -85,6 +89,17 @@ export async function GET(
       if (d.agentName != null) payload.agentName = d.agentName;
       if (d.agentLineId != null) payload.agentLineId = d.agentLineId;
       if (d.lineGroup != null) payload.lineGroup = d.lineGroup;
+      if (d.lineGroupId != null) payload.lineGroupId = d.lineGroupId;
+      if (d.rentDueDayOfMonth != null) payload.rentDueDayOfMonth = d.rentDueDayOfMonth;
+      if (d.lastRentPaidAt != null) {
+        payload.lastRentPaidAt =
+          d.lastRentPaidAt instanceof Date
+            ? d.lastRentPaidAt.toISOString()
+            : new Date(d.lastRentPaidAt).toISOString();
+      }
+      if (d.rentOverdueNotifiedForMonth != null) {
+        payload.rentOverdueNotifiedForMonth = d.rentOverdueNotifiedForMonth;
+      }
       if (d.contractStartDate != null) payload.contractStartDate = d.contractStartDate instanceof Date ? d.contractStartDate.toISOString().slice(0, 10) : String(d.contractStartDate).slice(0, 10);
       if (d.leaseDurationMonths != null) payload.leaseDurationMonths = d.leaseDurationMonths;
       if (d.contractKey != null && d.contractKey.trim() !== "") {
@@ -176,6 +191,33 @@ export async function PATCH(
     if (typeof body.agentName === "string") property.agentName = body.agentName;
     if (typeof body.agentLineId === "string") property.agentLineId = body.agentLineId.trim() || undefined;
     if (typeof body.lineGroup === "string") property.lineGroup = body.lineGroup.trim() || undefined;
+    if (typeof body.lineGroupId === "string") {
+      (property as { lineGroupId?: string }).lineGroupId =
+        body.lineGroupId.trim() || undefined;
+    }
+    if (body.rentDueDayOfMonth !== undefined) {
+      const n =
+        typeof body.rentDueDayOfMonth === "number"
+          ? body.rentDueDayOfMonth
+          : typeof body.rentDueDayOfMonth === "string"
+            ? parseInt(String(body.rentDueDayOfMonth), 10)
+            : NaN;
+      if (!Number.isNaN(n) && n >= 1 && n <= 31) {
+        (property as { rentDueDayOfMonth?: number }).rentDueDayOfMonth = n;
+      } else if (body.rentDueDayOfMonth === null || body.rentDueDayOfMonth === "") {
+        (property as { rentDueDayOfMonth?: number }).rentDueDayOfMonth = undefined;
+      }
+    }
+    if (body.lastRentPaidAt !== undefined) {
+      if (typeof body.lastRentPaidAt === "string" && body.lastRentPaidAt.trim()) {
+        const d = new Date(body.lastRentPaidAt);
+        (property as { lastRentPaidAt?: Date }).lastRentPaidAt = Number.isNaN(d.getTime())
+          ? undefined
+          : d;
+      } else if (body.lastRentPaidAt === null || body.lastRentPaidAt === "") {
+        (property as { lastRentPaidAt?: Date }).lastRentPaidAt = undefined;
+      }
+    }
     if (typeof body.description === "string") property.description = body.description;
     if (Array.isArray(body.amenities)) {
       (property as { amenities?: string[] }).amenities = (body.amenities as unknown[]).filter(
