@@ -83,9 +83,8 @@ export async function POST(request: NextRequest) {
     try {
       const propertyName = (property as { name?: string }).name?.trim() || "ทรัพย์";
       const text =
-        `เรียบร้อยค่ะ! เชื่อมต่อข้อมูล ${propertyName} เข้ากับกลุ่มนี้แล้ว ✅\n\n` +
-        `เรื่องค่าเช่าและการติดตามต่างๆ ปล่อยเป็นหน้าที่นิชาได้เลยนะคะ ` +
-        `จะดูแลให้เต็มที่เลยค่ะ! 💚`;
+        `เชื่อมต่อ ${propertyName} สำเร็จ! ✅\n\n` +
+        `เรื่องค่าเช่าและติดตามทรัพย์ ปล่อยให้นิชาดูแลแทนได้เลยนะคะ!💚`;
       const r = await pushToGroup(groupId, text);
       if (!r.sent) {
         console.warn("[bind-property] pushToGroup failed", r.status, r.message);

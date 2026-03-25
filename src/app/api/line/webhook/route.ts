@@ -467,7 +467,7 @@ async function handleBindCommand(
       (property as { name?: string }).name?.trim() || "ทรัพย์";
     await replyText(
       replyToken,
-      `เรียบร้อยค่ะ! เชื่อมต่อข้อมูล ${propertyName} เข้ากับกลุ่มนี้แล้ว ✅\n\nเรื่องค่าเช่าและการติดตามต่างๆ ปล่อยเป็นหน้าที่นิชาได้เลยนะคะ จะดูแลให้เต็มที่เลยค่ะ! 💚`
+      `เชื่อมต่อ ${propertyName} สำเร็จ! ✅\n\nเรื่องค่าเช่าและติดตามทรัพย์ ปล่อยให้นิชาดูแลแทนได้เลยนะคะ!💚`
     );
   } catch (err) {
     console.error("[line-webhook] bind error", err);

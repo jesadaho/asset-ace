@@ -280,11 +280,6 @@ export default function BindPropertyPage() {
           <p className="text-sm text-slate-700">
             เลือกสินทรัพย์ที่ต้องการผูกกับกลุ่มนี้
           </p>
-          {groupId && (
-            <p className="text-xs break-all text-slate-500">
-              groupId (จาก LIFF): {groupId}
-            </p>
-          )}
           {contextError && (
             <p className="text-sm text-red-600" role="alert">
               {contextError}
