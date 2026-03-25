@@ -429,7 +429,12 @@ async function handleBindCommand(
 
     property.lineGroupId = groupId;
     await property.save();
-    await replyText(replyToken, "ผูกกลุ่มกับทรัพย์สำเร็จแล้ว");
+    const propertyName =
+      (property as { name?: string }).name?.trim() || "ทรัพย์";
+    await replyText(
+      replyToken,
+      `เรียบร้อยค่ะ! เชื่อมต่อข้อมูล ${propertyName} เข้ากับกลุ่มนี้แล้ว ✅\n\nเรื่องค่าเช่าและการติดตามต่างๆ ปล่อยเป็นหน้าที่นิชาได้เลยนะคะ จะดูแลให้เต็มที่เลยค่ะ! 💚`
+    );
   } catch (err) {
     console.error("[line-webhook] bind error", err);
     await replyText(replyToken, "บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง");
