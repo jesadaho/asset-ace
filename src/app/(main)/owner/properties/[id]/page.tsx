@@ -110,6 +110,19 @@ export default function PropertyDetailPage() {
   const [cloneBulkSuccess, setCloneBulkSuccess] = useState<number | null>(null);
   const [rentalHistory, setRentalHistory] = useState<RentalHistoryItem[]>([]);
   const [rentalHistoryLoading, setRentalHistoryLoading] = useState(false);
+  const [rentTransactions, setRentTransactions] = useState<
+    Array<{
+      id: string;
+      slipDate: string;
+      amount: number;
+      status: string;
+      remark?: string;
+      fromName?: string;
+      toName?: string;
+    }>
+  >([]);
+  const [rentTransactionsLoading, setRentTransactionsLoading] = useState(false);
+  const [rentTransactionsHasMore, setRentTransactionsHasMore] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutMoveOutDate, setCheckoutMoveOutDate] = useState(() =>
@@ -211,6 +224,38 @@ export default function PropertyDetailPage() {
       }
     }
     fetchHistory();
+    return () => { cancelled = true; };
+  }, [id, property]);
+
+  useEffect(() => {
+    if (!id || !property) return;
+    let cancelled = false;
+    async function fetchRentTx(limit: number) {
+      setRentTransactionsLoading(true);
+      try {
+        const liff = (await import("@line/liff")).default;
+        const token = liff.getAccessToken();
+        if (!token || cancelled) return;
+        const res = await fetch(
+          `/api/owner/properties/${id}/rent-transactions?limit=${limit}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (cancelled) return;
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setRentTransactions(data.transactions ?? []);
+          setRentTransactionsHasMore(Boolean(data.hasMore));
+        }
+      } catch {
+        if (!cancelled) {
+          setRentTransactions([]);
+          setRentTransactionsHasMore(false);
+        }
+      } finally {
+        if (!cancelled) setRentTransactionsLoading(false);
+      }
+    }
+    fetchRentTx(3);
     return () => { cancelled = true; };
   }, [id, property]);
 
@@ -933,7 +978,7 @@ export default function PropertyDetailPage() {
               </>
             )}
 
-            {activeTab === "rental" && property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.lineGroupId ?? property.rentDueDayOfMonth ?? property.lastRentPaidAt ?? property.contractStartDate) && (
+            {activeTab === "rental" && property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroupId ?? property.rentDueDayOfMonth ?? property.lastRentPaidAt ?? property.contractStartDate) && (
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] flex items-center gap-2 flex-wrap">
                   {t("residentAgent")}
@@ -1011,17 +1056,24 @@ export default function PropertyDetailPage() {
                 )}
 
                 <div className="text-sm text-slate-600 space-y-1">
-                  {property.lineGroup && (
-                    <p>{t("lineGroup")}: {property.lineGroup}</p>
-                  )}
-                  {property.lineGroupId && (
-                    <div className="space-y-0.5">
-                      <p>
-                        {t("lineGroupIdLabel")}:{" "}
-                        <span className="font-mono text-xs break-all">{property.lineGroupId}</span>
-                      </p>
-                      <p className="text-xs text-slate-500">{t("lineGroupIdHint")}</p>
-                    </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-600">สถานะการเชื่อมต่อกลุ่ม</span>
+                    {property.lineGroupId ? (
+                      <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
+                        <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                        เชื่อมต่อแล้ว
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-slate-500 font-medium">
+                        <span className="inline-block h-2 w-2 rounded-full bg-slate-300" />
+                        ยังไม่เชื่อมต่อ
+                      </span>
+                    )}
+                  </div>
+                  {!property.lineGroupId && (
+                    <p className="text-xs text-slate-500">
+                      แนะนำให้ผูกกลุ่มจากใน LINE Group (พิมพ์ “นิชา” → เมนู “ผูกกลุ่มกับสินทรัพย์”)
+                    </p>
                   )}
                   {property.rentDueDayOfMonth != null && (
                     <p>
@@ -1138,7 +1190,7 @@ export default function PropertyDetailPage() {
               </div>
             )}
 
-            {activeTab === "rental" && property.status !== "Available" && (property.tenantLineId ?? property.agentLineId ?? property.lineGroup ?? property.lineGroupId) && (
+            {activeTab === "rental" && property.status !== "Available" && (property.tenantLineId ?? property.agentLineId) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
                   {t("contactCommunity")}
@@ -1165,19 +1217,73 @@ export default function PropertyDetailPage() {
                       </button>
                     </div>
                   )}
-                  {/* Agent Chat is on Connected Agent Card when agentLineId is set; no duplicate here */}
-                  {property.lineGroup && (
-                    <a
-                      href={property.lineGroup.startsWith("http") ? property.lineGroup : `https://line.me/ti/g/${property.lineGroup}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-[#0F172A] font-medium hover:bg-slate-100 hover:border-slate-300 tap-target min-h-[44px]"
-                    >
-                      <Users className="h-5 w-5 shrink-0" aria-hidden />
-                      <span>{t("joinGroupChat")}</span>
-                    </a>
-                  )}
                 </div>
+              </section>
+            )}
+
+            {activeTab === "rental" && (
+              <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
+                  ประวัติการชำระ (ล่าสุด)
+                </h3>
+                {rentTransactionsLoading ? (
+                  <p className="text-sm text-slate-500">{t("loading")}</p>
+                ) : rentTransactions.length === 0 ? (
+                  <p className="text-sm text-slate-500">ยังไม่มีรายการชำระ</p>
+                ) : (
+                  <div className="space-y-3">
+                    <ul className="space-y-3">
+                      {rentTransactions.map((tx) => (
+                        <li
+                          key={tx.id}
+                          className="border-b border-slate-100 pb-3 last:border-0 last:pb-0"
+                        >
+                          <div className="text-sm text-slate-600 space-y-0.5">
+                            <p className="flex items-center justify-between gap-3">
+                              <span className="font-medium text-[#0F172A]">
+                                ฿{tx.amount.toLocaleString()}
+                              </span>
+                              <span className="text-xs text-slate-500">
+                                {new Date(tx.slipDate).toLocaleDateString()}
+                              </span>
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              สถานะ: {tx.status}
+                              {tx.remark ? ` · ${tx.remark}` : ""}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    {rentTransactionsHasMore && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const liff = (await import("@line/liff")).default;
+                            const token = liff.getAccessToken();
+                            if (!token) return;
+                            setRentTransactionsLoading(true);
+                            const res = await fetch(
+                              `/api/owner/properties/${id}/rent-transactions?limit=20`,
+                              { headers: { Authorization: `Bearer ${token}` } }
+                            );
+                            if (res.ok) {
+                              const data = await res.json().catch(() => ({}));
+                              setRentTransactions(data.transactions ?? []);
+                              setRentTransactionsHasMore(Boolean(data.hasMore));
+                            }
+                          } finally {
+                            setRentTransactionsLoading(false);
+                          }
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 tap-target min-h-[44px]"
+                      >
+                        ดูเพิ่มเติม
+                      </button>
+                    )}
+                  </div>
+                )}
               </section>
             )}
 
