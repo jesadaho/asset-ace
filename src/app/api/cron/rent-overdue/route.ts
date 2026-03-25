@@ -83,7 +83,7 @@ function monthKeyForDue(due: Date): string {
 
 export async function GET(request: NextRequest) {
   const startedAt = new Date();
-  console.log("[cron/rent-overdue] start", {
+  console.warn("[cron/rent-overdue] start", {
     at: startedAt.toISOString(),
     graceDays: GRACE_DAYS,
     hasSecret: Boolean(process.env.CRON_SECRET?.trim()),
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
     const todayStart = startOfDay(new Date());
-    console.log("[cron/rent-overdue] connected", {
+    console.warn("[cron/rent-overdue] connected", {
       at: startedAt.toISOString(),
       todayStart: todayStart.toISOString(),
     });
@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log("[cron/rent-overdue] done", {
+    console.warn("[cron/rent-overdue] done", {
       at: startedAt.toISOString(),
       candidates: candidates.length,
       attempted,
