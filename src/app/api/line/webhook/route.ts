@@ -417,12 +417,12 @@ async function handleBindCommand(
 
     const property = await Property.findOne({
       _id: propertyId,
-      ownerId: lineUserId,
+      $or: [{ ownerId: lineUserId }, { agentLineId: lineUserId }],
     });
     if (!property) {
       await replyText(
         replyToken,
-        "ไม่พบทรัพย์หรือคุณไม่ใช่เจ้าของทรัพย์นี้"
+        "ไม่พบทรัพย์หรือคุณไม่มีสิทธิ์ผูกกลุ่มกับทรัพย์นี้"
       );
       return;
     }

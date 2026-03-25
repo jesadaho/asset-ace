@@ -37,10 +37,6 @@ export default function BindPropertyPage() {
   const [selectedId, setSelectedId] = useState<string>("");
   const [binding, setBinding] = useState(false);
   const [bindSuccess, setBindSuccess] = useState(false);
-  const looksLikeMessagingGroupId = useMemo(() => {
-    if (!groupId) return false;
-    return /^C[0-9A-Za-z]{6,}$/.test(groupId);
-  }, [groupId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -207,26 +203,12 @@ export default function BindPropertyPage() {
     setError(null);
     try {
       const liff = (await import("@line/liff")).default;
-      const token = liff.getAccessToken();
-      if (!token) {
-        setError(tAuth("pleaseLogin"));
-        setBinding(false);
-        return;
-      }
-      const res = await fetch("/api/line/bind-property", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ propertyId: selectedId, groupId }),
-      });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { message?: string };
-        setError(data.message ?? `Bind failed (${res.status})`);
-        setBinding(false);
-        return;
-      }
+      const command = `/bind ${selectedId}`;
+
+      // Critical: LIFF groupId is not the Messaging API groupId.
+      // We bind by sending /bind into the group; webhook gets source.groupId (Messaging API) and saves it.
+      await liff.sendMessages([{ type: "text", text: command }]);
+
       setBindSuccess(true);
       setBinding(false);
       try {
@@ -236,7 +218,10 @@ export default function BindPropertyPage() {
         // ignore closeWindow errors
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Bind failed");
+      const msg = e instanceof Error ? e.message : "Bind failed";
+      setError(
+        `${msg}\n\nถ้าส่งข้อความไม่สำเร็จ ให้พิมพ์คำสั่งนี้ในกลุ่มแทน: /bind ${selectedId}`
+      );
       setBinding(false);
     }
   };
@@ -273,13 +258,7 @@ export default function BindPropertyPage() {
             เลือกสินทรัพย์ที่ต้องการผูกกับกลุ่มนี้
           </p>
           {groupId && (
-            <p
-              className={`text-xs break-all ${
-                looksLikeMessagingGroupId
-                  ? "text-emerald-700"
-                  : "text-amber-600"
-              }`}
-            >
+            <p className="text-xs break-all text-slate-500">
               groupId (จาก LIFF): {groupId}
             </p>
           )}
