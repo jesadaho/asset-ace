@@ -121,6 +121,7 @@ export default function PropertyDetailPage() {
   const [reserveContact, setReserveContact] = useState("");
   const [removeAgentModalOpen, setRemoveAgentModalOpen] = useState(false);
   const [removeAgentLoading, setRemoveAgentLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"rental" | "info">("rental");
 
   const copyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text).catch(() => {});
@@ -766,136 +767,173 @@ export default function PropertyDetailPage() {
               </div>
             </div>
 
-            {property.status === "Available" && (
-              <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                {!property.reservedAt ? (
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => setReserveModalOpen(true)}
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm font-medium hover:bg-amber-100 tap-target min-h-[44px]"
-                    >
-                      {t("reserve")}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="warning">{t("reserved")}</Badge>
-                    </div>
-                    {(property.reservedByName || property.reservedByContact) && (
-                      <div className="text-sm text-slate-600 space-y-0.5">
-                        {property.reservedByName && (
-                          <p>{t("reservedByName")}: {property.reservedByName}</p>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1">
+              <div className="grid grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("rental")}
+                  className={
+                    "rounded-lg py-2.5 text-sm font-semibold min-h-[44px] transition-colors " +
+                    (activeTab === "rental"
+                      ? "bg-slate-900 text-white"
+                      : "bg-transparent text-slate-700 hover:bg-slate-50")
+                  }
+                >
+                  การเช่า
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("info")}
+                  className={
+                    "rounded-lg py-2.5 text-sm font-semibold min-h-[44px] transition-colors " +
+                    (activeTab === "info"
+                      ? "bg-slate-900 text-white"
+                      : "bg-transparent text-slate-700 hover:bg-slate-50")
+                  }
+                >
+                  ข้อมูลทรัพย์
+                </button>
+              </div>
+            </div>
+
+            {activeTab === "rental" && (
+              <>
+                {property.status === "Available" && (
+                  <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                    {!property.reservedAt ? (
+                      <div className="space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => setReserveModalOpen(true)}
+                          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm font-medium hover:bg-amber-100 tap-target min-h-[44px]"
+                        >
+                          {t("reserve")}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="warning">{t("reserved")}</Badge>
+                        </div>
+                        {(property.reservedByName || property.reservedByContact) && (
+                          <div className="text-sm text-slate-600 space-y-0.5">
+                            {property.reservedByName && (
+                              <p>{t("reservedByName")}: {property.reservedByName}</p>
+                            )}
+                            {property.reservedByContact && (
+                              <p>{t("reservedByContact")}: {property.reservedByContact}</p>
+                            )}
+                          </div>
                         )}
-                        {property.reservedByContact && (
-                          <p>{t("reservedByContact")}: {property.reservedByContact}</p>
-                        )}
+                        <button
+                          type="button"
+                          onClick={handleClearReservation}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 tap-target min-h-[40px]"
+                        >
+                          {t("clearReservation")}
+                        </button>
                       </div>
                     )}
-                    <button
-                      type="button"
-                      onClick={handleClearReservation}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 tap-target min-h-[40px]"
-                    >
-                      {t("clearReservation")}
-                    </button>
+                  </section>
+                )}
+
+                {reserveModalOpen && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="reserve-title">
+                    <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
+                      <h2 id="reserve-title" className="text-lg font-semibold text-[#0F172A]">{t("reserve")}</h2>
+                      <p className="text-sm text-slate-600">{t("reservedByName")} / {t("reservedByContact")} (optional)</p>
+                      <div>
+                        <label htmlFor="reserve-name" className="block text-sm text-slate-500 mb-1">{t("reservedByName")}</label>
+                        <input
+                          id="reserve-name"
+                          type="text"
+                          value={reserveName}
+                          onChange={(e) => setReserveName(e.target.value)}
+                          placeholder=""
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-[#0F172A] min-h-[44px]"
+                          disabled={reserveLoading}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="reserve-contact" className="block text-sm text-slate-500 mb-1">{t("reservedByContact")}</label>
+                        <input
+                          id="reserve-contact"
+                          type="text"
+                          value={reserveContact}
+                          onChange={(e) => setReserveContact(e.target.value)}
+                          placeholder=""
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-[#0F172A] min-h-[44px]"
+                          disabled={reserveLoading}
+                        />
+                      </div>
+                      <div className="flex gap-3 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => { if (!reserveLoading) setReserveModalOpen(false); }}
+                          className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 min-h-[44px]"
+                          disabled={reserveLoading}
+                        >
+                          {t("cloneCancel")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleReserve}
+                          className="px-4 py-2.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 min-h-[44px] disabled:opacity-60"
+                          disabled={reserveLoading}
+                        >
+                          {reserveLoading ? t("loading") : t("reserve")}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
-              </section>
+              </>
             )}
 
-            {reserveModalOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="reserve-title">
-                <div className="w-full max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-4">
-                  <h2 id="reserve-title" className="text-lg font-semibold text-[#0F172A]">{t("reserve")}</h2>
-                  <p className="text-sm text-slate-600">{t("reservedByName")} / {t("reservedByContact")} (optional)</p>
-                  <div>
-                    <label htmlFor="reserve-name" className="block text-sm text-slate-500 mb-1">{t("reservedByName")}</label>
-                    <input
-                      id="reserve-name"
-                      type="text"
-                      value={reserveName}
-                      onChange={(e) => setReserveName(e.target.value)}
-                      placeholder=""
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-[#0F172A] min-h-[44px]"
-                      disabled={reserveLoading}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="reserve-contact" className="block text-sm text-slate-500 mb-1">{t("reservedByContact")}</label>
-                    <input
-                      id="reserve-contact"
-                      type="text"
-                      value={reserveContact}
-                      onChange={(e) => setReserveContact(e.target.value)}
-                      placeholder=""
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-[#0F172A] min-h-[44px]"
-                      disabled={reserveLoading}
-                    />
-                  </div>
-                  <div className="flex gap-3 justify-end">
-                    <button
-                      type="button"
-                      onClick={() => { if (!reserveLoading) setReserveModalOpen(false); }}
-                      className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-medium text-[#0F172A] hover:bg-slate-50 min-h-[44px]"
-                      disabled={reserveLoading}
-                    >
-                      {t("cloneCancel")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleReserve}
-                      className="px-4 py-2.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 min-h-[44px] disabled:opacity-60"
-                      disabled={reserveLoading}
-                    >
-                      {reserveLoading ? t("loading") : t("reserve")}
-                    </button>
-                  </div>
-                </div>
-              </div>
+            {activeTab === "info" && (
+              <>
+                {(property.description ?? property.bedrooms ?? property.bathrooms ?? property.squareMeters) && (
+                  <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                    <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
+                      {t("details")}
+                    </h3>
+                    <div className="space-y-2 text-sm text-slate-600">
+                      {property.description && (
+                        <p className="whitespace-pre-wrap">{property.description}</p>
+                      )}
+                      <div className="flex flex-wrap gap-3">
+                        {property.bedrooms && (
+                          <span>{t("bedrooms")}: {property.bedrooms}</span>
+                        )}
+                        {property.bathrooms && (
+                          <span>{t("bathrooms")}: {property.bathrooms}</span>
+                        )}
+                        {property.squareMeters && (
+                          <span>{property.squareMeters} m²</span>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {property.amenities && property.amenities.length > 0 && (
+                  <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                    <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
+                      {t("amenities")}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {property.amenities.map((a) => (
+                        <Badge key={a} variant="default">
+                          {a}
+                        </Badge>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </>
             )}
 
-            {(property.description ?? property.bedrooms ?? property.bathrooms ?? property.squareMeters) && (
-              <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
-                  {t("details")}
-                </h3>
-                <div className="space-y-2 text-sm text-slate-600">
-                  {property.description && (
-                    <p className="whitespace-pre-wrap">{property.description}</p>
-                  )}
-                  <div className="flex flex-wrap gap-3">
-                    {property.bedrooms && (
-                      <span>{t("bedrooms")}: {property.bedrooms}</span>
-                    )}
-                    {property.bathrooms && (
-                      <span>{t("bathrooms")}: {property.bathrooms}</span>
-                    )}
-                    {property.squareMeters && (
-                      <span>{property.squareMeters} m²</span>
-                    )}
-                  </div>
-                </div>
-              </section>
-            )}
-
-            {property.amenities && property.amenities.length > 0 && (
-              <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
-                  {t("amenities")}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {property.amenities.map((a) => (
-                    <Badge key={a} variant="default">
-                      {a}
-                    </Badge>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.lineGroupId ?? property.rentDueDayOfMonth ?? property.lastRentPaidAt ?? property.contractStartDate) && (
+            {activeTab === "rental" && property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroup ?? property.lineGroupId ?? property.rentDueDayOfMonth ?? property.lastRentPaidAt ?? property.contractStartDate) && (
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] flex items-center gap-2 flex-wrap">
                   {t("residentAgent")}
@@ -1100,7 +1138,7 @@ export default function PropertyDetailPage() {
               </div>
             )}
 
-            {property.status !== "Available" && (property.tenantLineId ?? property.agentLineId ?? property.lineGroup ?? property.lineGroupId) && (
+            {activeTab === "rental" && property.status !== "Available" && (property.tenantLineId ?? property.agentLineId ?? property.lineGroup ?? property.lineGroupId) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
                   {t("contactCommunity")}
@@ -1143,35 +1181,37 @@ export default function PropertyDetailPage() {
               </section>
             )}
 
-            <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-              <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
-                {t("rentalHistory")}
-              </h3>
-              {rentalHistoryLoading ? (
-                <p className="text-sm text-slate-500">{t("loading")}</p>
-              ) : rentalHistory.length === 0 ? (
-                <p className="text-sm text-slate-500">{t("noRentalHistory")}</p>
-              ) : (
-                <ul className="space-y-3">
-                  {rentalHistory.map((record) => (
-                    <li key={record.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                      <div className="text-sm text-slate-600 space-y-0.5">
-                        <p className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-[#0F172A]">{record.tenantName}</span>
-                          {record.agentName ? <span>· {t("agent")}: {record.agentName}</span> : null}
-                          {record.endDate ? <Badge variant="default">{t("contractCompleted")}</Badge> : null}
-                        </p>
-                        <p>{t("contractStart")}: {record.startDate} {record.endDate ? `– ${record.endDate}` : `(${t("current")})`}</p>
-                        <p>{t("leaseDuration")}: {record.durationMonths} {t("months")} · ฿{record.rentPriceAtThatTime.toLocaleString()}{tProps("perMonth")}</p>
-                        {record.contractUrl && (
-                          <a href={record.contractUrl} target="_blank" rel="noopener noreferrer" className="text-[#10B981] hover:underline text-sm">{t("viewContract")}</a>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+            {activeTab === "rental" && (
+              <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
+                  {t("rentalHistory")}
+                </h3>
+                {rentalHistoryLoading ? (
+                  <p className="text-sm text-slate-500">{t("loading")}</p>
+                ) : rentalHistory.length === 0 ? (
+                  <p className="text-sm text-slate-500">{t("noRentalHistory")}</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {rentalHistory.map((record) => (
+                      <li key={record.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                        <div className="text-sm text-slate-600 space-y-0.5">
+                          <p className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-[#0F172A]">{record.tenantName}</span>
+                            {record.agentName ? <span>· {t("agent")}: {record.agentName}</span> : null}
+                            {record.endDate ? <Badge variant="default">{t("contractCompleted")}</Badge> : null}
+                          </p>
+                          <p>{t("contractStart")}: {record.startDate} {record.endDate ? `– ${record.endDate}` : `(${t("current")})`}</p>
+                          <p>{t("leaseDuration")}: {record.durationMonths} {t("months")} · ฿{record.rentPriceAtThatTime.toLocaleString()}{tProps("perMonth")}</p>
+                          {record.contractUrl && (
+                            <a href={record.contractUrl} target="_blank" rel="noopener noreferrer" className="text-[#10B981] hover:underline text-sm">{t("viewContract")}</a>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
           </div>
           );
         })()}
