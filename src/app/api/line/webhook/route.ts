@@ -449,7 +449,8 @@ function buildOwnerApprovalFlex(args: {
     const isWrongTransfer = reasonCode === "โอนผิด";
     return {
       type: "button",
-      style: isWrongTransfer ? "secondary" : "primary",
+      // Make "โอนผิด" look like a danger action (red bg, white text).
+      style: "primary",
       ...(isWrongTransfer ? { color: "#D32F2F" } : null),
       height: "sm",
       action: {
@@ -479,8 +480,8 @@ function buildOwnerApprovalFlex(args: {
             mkBtn("รวมค่าน้ำ/ไฟ", "รวมค่าน้ำ/ไฟ"),
             mkBtn("หักภาษี 5%", "หักภาษี 5%"),
             mkBtn("จ่ายยอดค้าง", "จ่ายยอดค้าง"),
-            mkBtn("โอนผิด", "โอนผิด"),
             mkBtn("อื่นๆ/อนุมัติเลย", "อื่นๆ/อนุมัติเลย"),
+            mkBtn("โอนผิด", "โอนผิด"),
           ],
         },
       ],
