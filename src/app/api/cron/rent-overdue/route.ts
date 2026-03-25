@@ -17,6 +17,10 @@ function clampDay(year: number, monthIndex: number, day: number): number {
   return Math.min(day, last);
 }
 
+function toYMD(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
 /** Most recent monthly due date that is strictly before `now` (start of day). */
 function getLastDueDateBeforeNow(rentDueDay: number, now: Date): Date {
   const y = now.getFullYear();
@@ -30,6 +34,36 @@ function getLastDueDateBeforeNow(rentDueDay: number, now: Date): Date {
     due = new Date(py, pm, pd);
   }
   return startOfDay(due);
+}
+
+/**
+ * Due date is computed from contractStartDate:
+ * - Every month on the same day-of-month as contractStartDate (clamped to month end).
+ * - Returns the most recent due date strictly before `now` (start of day), never before contractStartDate.
+ */
+function getLastDueDateFromContractStart(contractStartDate: Date, now: Date): Date | null {
+  const start = startOfDay(contractStartDate);
+  if (Number.isNaN(start.getTime())) return null;
+  if (start >= now) return null;
+
+  const startDay = start.getDate();
+
+  // Start from current month and move backwards at most 24 months.
+  let cursorY = now.getFullYear();
+  let cursorM = now.getMonth();
+  for (let i = 0; i < 24; i++) {
+    const d = clampDay(cursorY, cursorM, startDay);
+    const due = startOfDay(new Date(cursorY, cursorM, d));
+    if (due < now && due >= start) return due;
+
+    if (cursorM === 0) {
+      cursorM = 11;
+      cursorY -= 1;
+    } else {
+      cursorM -= 1;
+    }
+  }
+  return null;
 }
 
 function daysBetween(a: Date, b: Date): number {
@@ -57,17 +91,23 @@ export async function GET(request: NextRequest) {
     const candidates = await Property.find({
       status: "Occupied",
       lineGroupId: { $exists: true, $ne: "" },
-      rentDueDayOfMonth: { $gte: 1, $lte: 31 },
+      contractStartDate: { $exists: true, $ne: null },
     }).lean();
 
     let notified = 0;
     let skipped = 0;
 
     for (const doc of candidates) {
-      const rentDueDay = (doc as { rentDueDayOfMonth?: number }).rentDueDayOfMonth;
-      if (rentDueDay == null || rentDueDay < 1 || rentDueDay > 31) continue;
-
-      const due = getLastDueDateBeforeNow(rentDueDay, todayStart);
+      const contractStartDate = (doc as { contractStartDate?: Date }).contractStartDate;
+      if (!contractStartDate) continue;
+      const due = getLastDueDateFromContractStart(
+        contractStartDate instanceof Date ? contractStartDate : new Date(contractStartDate),
+        todayStart
+      );
+      if (!due) {
+        skipped++;
+        continue;
+      }
       if (daysBetween(due, todayStart) < GRACE_DAYS) {
         skipped++;
         continue;
@@ -94,7 +134,7 @@ export async function GET(request: NextRequest) {
       const name = (doc as { name?: string }).name ?? "ทรัพย์";
       const groupId = (doc as { lineGroupId?: string }).lineGroupId?.trim();
       const ownerId = (doc as { ownerId?: string }).ownerId?.trim();
-      const text = `[แจ้งเตือนค่าเช้า] ${name}\nยังไม่พบการชำระสำหรับรอบกำหนดวันที่ ${due.toLocaleDateString("th-TH")} (เลยกำหนด ${GRACE_DAYS} วัน) กรุณาตรวจสอบ`;
+      const text = `[แจ้งเตือนค่าเช้า] ${name}\nยังไม่พบการชำระสำหรับรอบกำหนดวันที่ ${toYMD(due)} (เลยกำหนด ${GRACE_DAYS} วัน) กรุณาตรวจสอบ`;
 
       let sent = false;
       if (groupId) {

@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
 import { getBearerToken, verifyLiffToken } from "@/lib/auth/liff";
 import { pushToGroup } from "@/lib/line/push";
+import { LineBindLog } from "@/lib/db/models/lineBindLog";
 
 type Body = {
   propertyId?: string;
@@ -43,6 +44,18 @@ export async function POST(request: NextRequest) {
     looksLikeMessagingGroupId,
   });
   if (!looksLikeMessagingGroupId) {
+    try {
+      await connectDB();
+      await LineBindLog.create({
+        propertyId: new mongoose.Types.ObjectId(propertyId),
+        groupId,
+        actorLineUserId: lineUserId,
+        source: "api",
+        success: false,
+        message: "groupId not Messaging API format",
+        meta: { looksLikeMessagingGroupId },
+      });
+    } catch {}
     return NextResponse.json(
       {
         message:
@@ -73,6 +86,16 @@ export async function POST(request: NextRequest) {
       $or: [{ ownerId: lineUserId }, { agentLineId: lineUserId }],
     });
     if (!property) {
+      try {
+        await LineBindLog.create({
+          propertyId: new mongoose.Types.ObjectId(propertyId),
+          groupId,
+          actorLineUserId: lineUserId,
+          source: "api",
+          success: false,
+          message: "forbidden",
+        });
+      } catch {}
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
@@ -93,9 +116,31 @@ export async function POST(request: NextRequest) {
       console.error("[bind-property] pushToGroup exception", e);
     }
 
+    try {
+      await LineBindLog.create({
+        propertyId: (property as { _id: mongoose.Types.ObjectId })._id,
+        groupId,
+        actorLineUserId: lineUserId,
+        source: "api",
+        success: true,
+        message: "bound",
+      });
+    } catch {}
+
     return NextResponse.json({ ok: true, groupId, propertyId });
   } catch (err) {
     console.error("[POST /api/line/bind-property]", err);
+    try {
+      await connectDB();
+      await LineBindLog.create({
+        propertyId: new mongoose.Types.ObjectId(propertyId),
+        groupId,
+        actorLineUserId: lineUserId,
+        source: "api",
+        success: false,
+        message: err instanceof Error ? err.message : "Bind failed",
+      });
+    } catch {}
     return NextResponse.json(
       { message: err instanceof Error ? err.message : "Bind failed" },
       { status: 500 }
