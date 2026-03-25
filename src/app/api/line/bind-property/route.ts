@@ -33,6 +33,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "groupId is required" }, { status: 400 });
   }
 
+  // LINE Messaging API groupId usually starts with "C" (e.g. Cxxxxxxxxxx).
+  // If we store a wrong id (e.g. UUID-like), push/webhook lookups will fail.
+  const looksLikeMessagingGroupId = /^C[0-9A-Za-z]{6,}$/.test(groupId);
+  console.log("[bind-property] input", {
+    propertyId,
+    groupId,
+    lineUserId,
+    looksLikeMessagingGroupId,
+  });
+  if (!looksLikeMessagingGroupId) {
+    return NextResponse.json(
+      {
+        message:
+          "groupId จาก LIFF ดูเหมือนจะไม่ใช่ Messaging API groupId (ควรขึ้นต้นด้วย C...)",
+        groupId,
+        hint: "ระหว่างแก้ไขชั่วคราว: พิมพ์ `/bind <propertyId>` ในกลุ่มแทน",
+      },
+      { status: 422 }
+    );
+  }
+
   try {
     await connectDB();
 
@@ -73,7 +94,7 @@ export async function POST(request: NextRequest) {
       console.error("[bind-property] pushToGroup exception", e);
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, groupId, propertyId });
   } catch (err) {
     console.error("[POST /api/line/bind-property]", err);
     return NextResponse.json(

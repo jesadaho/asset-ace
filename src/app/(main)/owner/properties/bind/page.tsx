@@ -37,6 +37,10 @@ export default function BindPropertyPage() {
   const [selectedId, setSelectedId] = useState<string>("");
   const [binding, setBinding] = useState(false);
   const [bindSuccess, setBindSuccess] = useState(false);
+  const looksLikeMessagingGroupId = useMemo(() => {
+    if (!groupId) return false;
+    return /^C[0-9A-Za-z]{6,}$/.test(groupId);
+  }, [groupId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -267,6 +271,17 @@ export default function BindPropertyPage() {
           <p className="text-sm text-slate-700">
             เลือกสินทรัพย์ที่ต้องการผูกกับกลุ่มนี้
           </p>
+          {groupId && (
+            <p
+              className={`text-xs break-all ${
+                looksLikeMessagingGroupId
+                  ? "text-emerald-700"
+                  : "text-amber-600"
+              }`}
+            >
+              groupId (จาก LIFF): {groupId}
+            </p>
+          )}
           {contextError && (
             <p className="text-sm text-red-600" role="alert">
               {contextError}
