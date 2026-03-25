@@ -230,7 +230,8 @@ export default function BindPropertyPage() {
       setBindSuccess(true);
       setBinding(false);
       try {
-        if (liff.isInClient()) liff.closeWindow();
+        // Close immediately after successful bind (LINE LIFF UX).
+        liff.closeWindow();
       } catch {
         // ignore closeWindow errors
       }
