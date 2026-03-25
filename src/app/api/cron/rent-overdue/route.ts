@@ -174,8 +174,9 @@ export async function GET(request: NextRequest) {
       const groupId = (doc as { lineGroupId?: string }).lineGroupId?.trim();
       const ownerId = (doc as { ownerId?: string }).ownerId?.trim();
       const text =
-        `แจ้งเตือนค่าเช่า: ${name} 🏠\n\n` +
-        `ครบกำหนดชำระแล้วค่ะ (${formatThaiDate(due)})\n` +
+        `อย่าลืมชำระค่าเช่าด้วยนะ \n` +
+        `[${name}] 🏠\n\n` +
+        `ครบกำหนดชำระแล้ว (${formatThaiDate(due)})\n` +
         `(ขออภัยหากชำระเรียบร้อยแล้วค่ะ) 🙏 💚`;
 
       let sent = false;
