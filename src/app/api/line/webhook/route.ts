@@ -456,7 +456,9 @@ function buildOwnerApprovalFlex(args: {
         type: "postback",
         label,
         data: `nicha_rent_approve|tx=${txId}|reason=${encodeURIComponent(reasonCode)}`,
-        displayText: isWrongTransfer ? `ไม่อนุมัติ: ${label}` : `อนุมัติ: ${label}`,
+        displayText: isWrongTransfer
+          ? `อนุมัติ: ${label} (ไม่อนุมัติ)`
+          : `อนุมัติ: ${label}`,
       },
     };
   };
@@ -764,7 +766,7 @@ export async function POST(request: NextRequest) {
           );
 
           if (isWrongTransfer) {
-            await replyText(event.replyToken, "รับทราบค่ะ นิชาจะยังไม่อนุมัติรายการนี้นะคะ ✅");
+            await replyText(event.replyToken, "รับทราบค่ะ นิชาจะยังไม่อนุมัติรายการนี้นะคะ ⛔️");
             if (groupToNotify) {
               await pushToGroup(
                 groupToNotify,
