@@ -87,6 +87,23 @@ function isContractEnded(contractStartDate: string, leaseDurationMonths: number)
   return today >= end;
 }
 
+function monthsRemainingLabel(contractStartDate?: string, leaseDurationMonths?: number): string | null {
+  if (!contractStartDate || leaseDurationMonths == null) return null;
+  const start = new Date(contractStartDate);
+  if (Number.isNaN(start.getTime())) return null;
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + leaseDurationMonths);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  if (today >= end) return "ครบสัญญาแล้ว";
+
+  const months =
+    (end.getFullYear() - today.getFullYear()) * 12 + (end.getMonth() - today.getMonth());
+  const rounded = Math.max(0, months);
+  return `เหลืออีก ${rounded} เดือน`;
+}
+
 export default function PropertyDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -992,89 +1009,80 @@ export default function PropertyDetailPage() {
                   <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
                     <h4 className="text-sm font-medium text-[#0F172A] mb-1">{t("tenantSection")}</h4>
                     <p className="text-sm text-slate-600">
-                      {property.tenantName ?? t("noValue")}
+                      {(() => {
+                        const name = property.tenantName ?? t("noValue");
+                        const label = monthsRemainingLabel(property.contractStartDate, property.leaseDurationMonths);
+                        return label ? `${name} (${label})` : name;
+                      })()}
                       {property.tenantLineId && (
                         <span className="text-slate-500"> (LINE: {property.tenantLineId})</span>
                       )}
                     </p>
+                    {(property.contractStartDate || property.leaseDurationMonths != null) && (
+                      <div className="mt-2 text-xs text-slate-500 space-y-0.5">
+                        {property.contractStartDate && (
+                          <p>{t("contractStart")}: {property.contractStartDate}</p>
+                        )}
+                        {property.leaseDurationMonths != null && (
+                          <p>{t("leaseDuration")}: {property.leaseDurationMonths} {t("months")}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Agent: Connected Card or plain + Invite */}
-                {(property.agentName || property.agentLineId) && (
+                {property.agentLineId?.trim() ? (
                   <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
                     <h4 className="text-sm font-medium text-[#0F172A] mb-3">{t("agentSection")}</h4>
-                    {property.agentLineId?.trim() ? (
-                      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 rounded-full bg-slate-200 flex items-center justify-center text-sm font-semibold text-slate-600 shrink-0">
-                            {(property.agentName || "A").trim().slice(0, 2).toUpperCase()}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-[#0F172A] truncate">{property.agentName?.trim() || t("agent")}</p>
-                            <p className="flex items-center gap-1 text-xs text-emerald-600">
-                              <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                              {t("connected")}
-                            </p>
-                          </div>
+                    <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-full bg-slate-200 flex items-center justify-center text-sm font-semibold text-slate-600 shrink-0">
+                          {(property.agentName || "A").trim().slice(0, 2).toUpperCase()}
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {property.agentLineAccountId ? (
-                            <a
-                              href={`https://line.me/ti/p/~${property.agentLineAccountId.replace(/^@/, "")}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/10 tap-target min-h-[44px]"
-                            >
-                              <MessageCircle className="h-4 w-4" aria-hidden />
-                              {t("chat")}
-                            </a>
-                          ) : (
-                            <span
-                              role="button"
-                              aria-disabled="true"
-                              title={t("agentSetLineIdHint")}
-                              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-medium text-sm cursor-not-allowed min-h-[44px]"
-                            >
-                              <MessageCircle className="h-4 w-4" aria-hidden />
-                              {t("chat")}
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => setRemoveAgentModalOpen(true)}
-                            className="text-sm text-red-600 hover:underline"
-                          >
-                            {t("removeAgent")}
-                          </button>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-[#0F172A] truncate">{property.agentName?.trim() || t("agent")}</p>
+                          <p className="flex items-center gap-1 text-xs text-emerald-600">
+                            <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                            {t("connected")}
+                          </p>
                         </div>
                       </div>
-                    ) : (
-                      <p className="text-sm text-slate-600">{property.agentName ?? t("noValue")}</p>
-                    )}
+                      <div className="flex flex-wrap gap-2">
+                        {property.agentLineAccountId ? (
+                          <a
+                            href={`https://line.me/ti/p/~${property.agentLineAccountId.replace(/^@/, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#06C755] bg-transparent text-[#06C755] font-medium text-sm hover:bg-[#06C755]/10 tap-target min-h-[44px]"
+                          >
+                            <MessageCircle className="h-4 w-4" aria-hidden />
+                            {t("chat")}
+                          </a>
+                        ) : (
+                          <span
+                            role="button"
+                            aria-disabled="true"
+                            title={t("agentSetLineIdHint")}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-medium text-sm cursor-not-allowed min-h-[44px]"
+                          >
+                            <MessageCircle className="h-4 w-4" aria-hidden />
+                            {t("chat")}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setRemoveAgentModalOpen(true)}
+                          className="text-sm text-red-600 hover:underline"
+                        >
+                          {t("removeAgent")}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                )}
+                ) : null}
 
                 <div className="text-sm text-slate-600 space-y-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-600">สถานะการเชื่อมต่อกลุ่ม</span>
-                    {property.lineGroupId ? (
-                      <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
-                        <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-                        เชื่อมต่อแล้ว
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-slate-500 font-medium">
-                        <span className="inline-block h-2 w-2 rounded-full bg-slate-300" />
-                        ยังไม่เชื่อมต่อ
-                      </span>
-                    )}
-                  </div>
-                  {!property.lineGroupId && (
-                    <p className="text-xs text-slate-500">
-                      แนะนำให้ผูกกลุ่มจากใน LINE Group (พิมพ์ “นิชา” → เมนู “ผูกกลุ่มกับสินทรัพย์”)
-                    </p>
-                  )}
                   {property.rentDueDayOfMonth != null && (
                     <p>
                       {t("rentDueDayLabel")}: {property.rentDueDayOfMonth}
@@ -1085,12 +1093,6 @@ export default function PropertyDetailPage() {
                       {t("lastRentPaidLabel")}:{" "}
                       {new Date(property.lastRentPaidAt).toLocaleDateString()}
                     </p>
-                  )}
-                  {property.contractStartDate && (
-                    <p>{t("contractStart")}: {property.contractStartDate}</p>
-                  )}
-                  {property.leaseDurationMonths != null && (
-                    <p>{t("leaseDuration")}: {property.leaseDurationMonths} {t("months")}</p>
                   )}
                   {property.contractUrl && (
                     <a
@@ -1118,7 +1120,7 @@ export default function PropertyDetailPage() {
                         setCheckoutMoveOutDate(new Date().toISOString().slice(0, 10));
                         setCheckoutModalOpen(true);
                       }}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100 text-sm"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-red-700 font-medium hover:bg-red-100 text-sm"
                       >
                         {t("checkout")}
                       </button>
@@ -1154,7 +1156,7 @@ export default function PropertyDetailPage() {
                     <button
                       type="button"
                       onClick={handleCheckout}
-                      className="px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 disabled:opacity-50"
+                      className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50"
                       disabled={checkoutLoading}
                     >
                       {checkoutLoading ? t("loading") : t("checkout")}
@@ -1192,10 +1194,33 @@ export default function PropertyDetailPage() {
 
             {activeTab === "rental" && property.status !== "Available" && (property.tenantLineId ?? property.agentLineId) && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
-                  {t("contactCommunity")}
-                </h3>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h3 className="text-sm font-semibold text-[#0F172A]">
+                    {t("contactCommunity")}
+                  </h3>
+                  <span
+                    className={
+                      "inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium " +
+                      (property.lineGroupId
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-slate-50 text-slate-600 border border-slate-200")
+                    }
+                  >
+                    <span
+                      className={
+                        "inline-block h-2 w-2 rounded-full " +
+                        (property.lineGroupId ? "bg-emerald-500" : "bg-slate-300")
+                      }
+                    />
+                    {property.lineGroupId ? "กลุ่มเชื่อมต่อแล้ว" : "ยังไม่ผูกกลุ่ม"}
+                  </span>
+                </div>
                 <div className="space-y-3">
+                  {!property.lineGroupId && (
+                    <p className="text-xs text-slate-500">
+                      แนะนำให้ผูกกลุ่มจากใน LINE Group (พิมพ์ “นิชา” → เมนู “ผูกกลุ่มกับสินทรัพย์”)
+                    </p>
+                  )}
                   {property.tenantLineId && (
                     <div className="flex flex-col sm:flex-row gap-2 w-full">
                       <a
@@ -1224,7 +1249,7 @@ export default function PropertyDetailPage() {
             {activeTab === "rental" && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
-                  ประวัติการชำระ (ล่าสุด)
+                  รายการรับชำระเงิน
                 </h3>
                 {rentTransactionsLoading ? (
                   <p className="text-sm text-slate-500">{t("loading")}</p>
@@ -1300,9 +1325,16 @@ export default function PropertyDetailPage() {
                   <ul className="space-y-3">
                     {rentalHistory.map((record) => (
                       <li key={record.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                        <div className="text-sm text-slate-600 space-y-0.5">
+                        <div
+                          className={
+                            "text-sm space-y-0.5 " +
+                            (record.endDate ? "text-slate-400" : "text-slate-600")
+                          }
+                        >
                           <p className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-[#0F172A]">{record.tenantName}</span>
+                            <span className={"font-medium " + (record.endDate ? "text-slate-500" : "text-[#0F172A]")}>
+                              {record.tenantName}
+                            </span>
                             {record.agentName ? <span>· {t("agent")}: {record.agentName}</span> : null}
                             {record.endDate ? <Badge variant="default">{t("contractCompleted")}</Badge> : null}
                           </p>
