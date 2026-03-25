@@ -19,6 +19,57 @@ type PropertyListItem = {
 const cardBase =
   "w-full rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-slate-300 transition-colors";
 
+function BindPropertyListSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <div className="space-y-3" aria-hidden>
+      {Array.from({ length: count }, (_, i) => (
+        <div
+          key={i}
+          className="rounded-xl border border-slate-200 bg-white p-4"
+        >
+          <div className="flex items-start gap-3">
+            <div className="h-12 w-12 shrink-0 rounded-lg bg-slate-200 animate-pulse" />
+            <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+              <div className="h-4 w-3/4 rounded bg-slate-200 animate-pulse" />
+              <div className="h-3 w-full rounded bg-slate-100 animate-pulse" />
+              <div className="h-3 w-1/3 rounded bg-slate-100 animate-pulse" />
+            </div>
+            <div className="mt-1 h-6 w-6 shrink-0 rounded-full bg-slate-200 animate-pulse" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BindPageFullSkeleton() {
+  return (
+    <div className="min-h-dvh bg-slate-50" role="status" aria-busy="true">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white safe-area-top">
+        <div className="flex max-w-lg mx-auto items-center gap-2 px-4 py-3">
+          <div className="h-10 w-10 shrink-0 rounded-lg bg-slate-200 animate-pulse" />
+          <div className="mx-6 h-6 flex-1 rounded-lg bg-slate-200 animate-pulse" />
+          <div className="w-9 shrink-0" aria-hidden />
+        </div>
+      </header>
+      <main className="max-w-lg mx-auto space-y-4 px-4 py-6 pb-28">
+        <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+          <div className="h-4 w-2/3 rounded bg-slate-200 animate-pulse" />
+          <div className="h-3 w-full rounded bg-slate-100 animate-pulse" />
+        </div>
+        <div className="flex gap-2">
+          <div className="h-11 min-h-[44px] flex-1 rounded-xl bg-slate-200 animate-pulse" />
+          <div className="h-11 w-24 shrink-0 rounded-xl bg-slate-200 animate-pulse" />
+        </div>
+        <BindPropertyListSkeleton count={3} />
+      </main>
+      <div className="safe-area-bottom fixed bottom-0 left-0 right-0 z-30 mx-auto max-w-lg border-t border-slate-100 bg-white p-4">
+        <div className="h-12 w-full rounded-xl bg-slate-200 animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
 export default function BindPropertyPage() {
   const router = useRouter();
   const tCommon = useTranslations("common");
@@ -251,9 +302,10 @@ export default function BindPropertyPage() {
 
   if (accessGate === "checking") {
     return (
-      <div className="min-h-dvh bg-slate-50 flex items-center justify-center px-4">
-        <p className="text-slate-500 text-sm">{tCommon("loading")}</p>
-      </div>
+      <>
+        <span className="sr-only">{tCommon("loading")}</span>
+        <BindPageFullSkeleton />
+      </>
     );
   }
 
@@ -316,9 +368,10 @@ export default function BindPropertyPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-sm text-slate-500">{tCommon("loading")}</p>
-          </div>
+          <>
+            <span className="sr-only">{tCommon("loading")}</span>
+            <BindPropertyListSkeleton count={3} />
+          </>
         ) : properties.length === 0 ? (
           <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
             <p className="text-sm text-slate-700">

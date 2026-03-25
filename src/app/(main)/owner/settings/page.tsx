@@ -162,15 +162,55 @@ export default function OwnerSettingsPage() {
 
   if (!isReady || loading) {
     return (
-      <div className="min-h-full bg-[#F8FAFC] p-4">
-        <div className="max-w-lg mx-auto flex flex-col gap-4">
-          <div className="flex items-center gap-2 py-4">
-            <div
-              className="h-5 w-5 shrink-0 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin"
-              aria-hidden
-            />
-            <p className="text-slate-600 text-sm">{tCommon("loading")}</p>
+      <div className="min-h-full bg-[#F8FAFC] p-4 pb-8" role="status" aria-busy="true">
+        <span className="sr-only">{tCommon("loading")}</span>
+        <div className="mx-auto flex max-w-lg flex-col gap-6">
+          <div className="flex items-center gap-2 py-1">
+            <div className="h-10 w-10 shrink-0 rounded-lg bg-slate-200 animate-pulse" />
+            <div className="mx-6 h-6 flex-1 rounded-lg bg-slate-200 animate-pulse" />
+            <div className="w-9 shrink-0" aria-hidden />
           </div>
+
+          <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="h-4 w-24 rounded bg-slate-200 animate-pulse" />
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 shrink-0 rounded-full bg-slate-200 animate-pulse" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-3 w-20 rounded bg-slate-100 animate-pulse" />
+                <div className="h-5 w-36 rounded bg-slate-200 animate-pulse" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 w-32 rounded bg-slate-100 animate-pulse" />
+              <div className="h-11 w-full rounded-xl bg-slate-200 animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 w-28 rounded bg-slate-100 animate-pulse" />
+              <div className="h-11 w-full rounded-xl bg-slate-200 animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 w-24 rounded bg-slate-100 animate-pulse" />
+              <div className="h-11 w-full rounded-xl bg-slate-200 animate-pulse" />
+            </div>
+          </section>
+
+          <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="h-4 w-28 rounded bg-slate-200 animate-pulse" />
+            <div className="h-24 w-full rounded-xl bg-slate-100 animate-pulse" />
+          </section>
+
+          <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="h-4 w-20 rounded bg-slate-200 animate-pulse" />
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-4 w-36 rounded bg-slate-200 animate-pulse" />
+                <div className="h-3 max-w-xs rounded bg-slate-100 animate-pulse" />
+              </div>
+              <div className="h-7 w-12 shrink-0 rounded-full bg-slate-200 animate-pulse" />
+            </div>
+          </section>
+
+          <div className="h-12 w-full rounded-xl bg-slate-200 animate-pulse" />
         </div>
       </div>
     );
