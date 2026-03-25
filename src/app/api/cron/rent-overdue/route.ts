@@ -21,6 +21,13 @@ function toYMD(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+function formatThaiDate(d: Date): string {
+  const day = d.getDate();
+  const month = d.getMonth() + 1;
+  const year = d.getFullYear();
+  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+}
+
 /** Most recent monthly due date that is strictly before `now` (start of day). */
 function getLastDueDateBeforeNow(rentDueDay: number, now: Date): Date {
   const y = now.getFullYear();
@@ -134,7 +141,10 @@ export async function GET(request: NextRequest) {
       const name = (doc as { name?: string }).name ?? "ทรัพย์";
       const groupId = (doc as { lineGroupId?: string }).lineGroupId?.trim();
       const ownerId = (doc as { ownerId?: string }).ownerId?.trim();
-      const text = `[แจ้งเตือนค่าเช้า] ${name}\nยังไม่พบการชำระสำหรับรอบกำหนดวันที่ ${toYMD(due)} (เลยกำหนด ${GRACE_DAYS} วัน) กรุณาตรวจสอบ`;
+      const text =
+        `แจ้งเตือนค่าเช่า: ${name} 🏠\n\n` +
+        `ครบกำหนดชำระแล้วค่ะ (${formatThaiDate(due)})\n` +
+        `(ขออภัยหากชำระเรียบร้อยแล้วค่ะ) 🙏 💚`;
 
       let sent = false;
       if (groupId) {
