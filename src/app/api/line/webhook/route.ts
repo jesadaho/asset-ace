@@ -173,7 +173,7 @@ function webAppUrl(): string {
 
 /** ไอคอนขาว-ดำ (PNG ใน public/nicha-menu/) — สไตล์เส้น outline คล้ายเมนู LINE แบบขุนทอง */
 function nichaMenuIconUrl(
-  name: "bind" | "bill" | "building" | "add" | "help"
+  name: "bind" | "bill" | "building" | "add" | "help" | "due"
 ): string {
   const base = webAppUrl().replace(/\/$/, "");
   return `${base}/nicha-menu/${name}.png`;
@@ -228,6 +228,12 @@ function getNichaQuickReplyItems(): NichaQuickReplyItem[] {
       label: "เพิ่มสินทรัพย์",
       uri: buildLiffPathUri("/owner/properties/add"),
       imageUrl: nichaMenuIconUrl("add"),
+    },
+    {
+      kind: "message",
+      label: "เช็กวันจ่ายค่าเช่า",
+      text: "#เช็กวันจ่ายค่าเช่า",
+      imageUrl: nichaMenuIconUrl("due"),
     },
     {
       kind: "message",

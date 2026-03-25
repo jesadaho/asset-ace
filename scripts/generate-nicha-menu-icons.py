@@ -61,6 +61,16 @@ def draw_help(d: ImageDraw.ImageDraw) -> None:
     d.arc((34, 32, 62, 52), 200, 340, fill=LINE, width=W_STROKE)
     d.ellipse((44, 59, 52, 67), fill=LINE)
 
+def draw_due(d: ImageDraw.ImageDraw) -> None:
+    # Calendar icon
+    d.rectangle((22, 28, 74, 74), outline=LINE, width=W_STROKE)
+    d.line((22, 40, 74, 40), fill=LINE, width=W_STROKE)
+    d.line((34, 22, 34, 34), fill=LINE, width=W_STROKE)
+    d.line((62, 22, 62, 34), fill=LINE, width=W_STROKE)
+    # Small date dots
+    for x in (34, 48, 62):
+        for y in (52, 64):
+            d.ellipse((x - 3, y - 3, x + 3, y + 3), fill=LINE)
 
 def main() -> None:
     save("bind", draw_bind)
@@ -68,6 +78,7 @@ def main() -> None:
     save("building", draw_building)
     save("add", draw_add)
     save("help", draw_help)
+    save("due", draw_due)
 
 
 if __name__ == "__main__":
