@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
 import { getBearerToken, verifyLiffToken } from "@/lib/auth/liff";
+import { pushToGroup } from "@/lib/line/push";
 
 type Body = {
   propertyId?: string;
@@ -56,6 +57,21 @@ export async function POST(request: NextRequest) {
 
     (property as { lineGroupId?: string }).lineGroupId = groupId;
     await property.save();
+
+    // Notify the group that the bind succeeded.
+    try {
+      const propertyName = (property as { name?: string }).name?.trim() || "ทรัพย์";
+      const text =
+        `เรียบร้อยค่ะ! เชื่อมต่อข้อมูล ${propertyName} เข้ากับกลุ่มนี้แล้ว ✅\n\n` +
+        `เรื่องค่าเช่าและการติดตามต่างๆ ปล่อยเป็นหน้าที่นิชาได้เลยนะคะ ` +
+        `จะดูแลให้เต็มที่เลยค่ะ! 💚`;
+      const r = await pushToGroup(groupId, text);
+      if (!r.sent) {
+        console.warn("[bind-property] pushToGroup failed", r.status, r.message);
+      }
+    } catch (e) {
+      console.error("[bind-property] pushToGroup exception", e);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
