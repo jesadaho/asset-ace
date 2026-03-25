@@ -198,6 +198,22 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    if (attempted === 0) {
+      // Surface clearly in Vercel logs (Error/Fatal filters) that nothing was sent.
+      console.error("[cron/rent-overdue] no-outgoing-requests", {
+        at: startedAt.toISOString(),
+        candidates: candidates.length,
+        attempted,
+        notified,
+        skipped,
+        skippedNoContract,
+        skippedNoDue,
+        skippedGrace,
+        skippedPaid,
+        skippedAlreadyNotified,
+      });
+    }
+
     console.warn("[cron/rent-overdue] done", {
       at: startedAt.toISOString(),
       candidates: candidates.length,
