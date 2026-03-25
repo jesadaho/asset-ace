@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/rent-overdue",
-      "schedule": "0 16 * * *"
+      "schedule": "0 2 * * *"
     }
   ]
 }
