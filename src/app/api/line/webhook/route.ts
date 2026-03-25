@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
+import { BindCode } from "@/lib/db/models/bindCode";
 
 type LineSource = {
   type: string;
@@ -180,7 +181,7 @@ function getNichaQuickReplyItems(): NichaQuickReplyItem[] {
 /** คีย์หลักใช้รูปแบบ #คำสั่ง (ตรงกับข้อความที่ Quick Reply ส่ง) */
 const NICHCHA_MENU_HINTS: Record<string, string> = {
   "#ผูกกลุ่มกับสินทรัพย์":
-    "เจ้าของทรัพย์พิมพ์ `/bind ` ตามด้วยรหัสทรัพย์ 24 ตัว (คัดลอกจากหน้าแก้ไขทรัพย์ในแอป)\nตัวอย่าง: `/bind 674a1b2c3d4e5f678901234`",
+    "ผูกกลุ่มได้ 2 วิธี:\n1) กดเมนู “ผูกกลุ่มกับสินทรัพย์” แล้วเลือกทรัพย์ในแอป (แนะนำ)\n2) พิมพ์ `/bind` ตามด้วยรหัสทรัพย์ 24 ตัว\nตัวอย่าง: `/bind 674a1b2c3d4e5f678901234`",
   "#ดูบิลทั้งหมด":
     "ฟีเจอร์นี้พัฒนาอยู่ — เปิดดูจากแอปได้ที่ " + webAppUrl(),
   "#ดูสินทรัพย์ทั้งหมด":
@@ -390,24 +391,57 @@ async function handleBindCommand(
   groupId: string,
   lineUserId: string
 ): Promise<void> {
-  const m = text.trim().match(/^\/bind\s+([a-fA-F0-9]{24})$/);
-  if (!m) {
+  const trimmed = text.trim();
+  const mObjectId = trimmed.match(/^\/bind\s+([a-fA-F0-9]{24})$/);
+  const mCode = trimmed.match(/^\/bind\s+(\d{6})$/);
+  if (!mObjectId && !mCode) {
     await replyText(
       replyToken,
-      "รูปแบบ: /bind ตามด้วยรหัสทรัพย์ (จากหน้าแก้ไขทรัพย์ในแอป)"
+      "รูปแบบ: /bind ตามด้วยรหัสทรัพย์ (24 ตัว) หรือโค้ด 6 หลัก (จากหน้า bind ในแอป)"
     );
     return;
   }
-  const propertyId = m[1];
-  if (!mongoose.Types.ObjectId.isValid(propertyId)) {
-    await replyText(replyToken, "รหัสทรัพย์ไม่ถูกต้อง");
-    return;
-  }
+  const propertyId = mObjectId?.[1];
+  const code = mCode?.[1];
 
   try {
     await connectDB();
+    let resolvedPropertyId: string | null = null;
+    if (propertyId) {
+      if (!mongoose.Types.ObjectId.isValid(propertyId)) {
+        await replyText(replyToken, "รหัสทรัพย์ไม่ถูกต้อง");
+        return;
+      }
+      resolvedPropertyId = propertyId;
+    } else if (code) {
+      const token = await BindCode.findOne({ code, usedAt: { $exists: false } });
+      if (!token) {
+        await replyText(replyToken, "โค้ดนี้ใช้ไม่ได้แล้วหรือหมดอายุแล้ว");
+        return;
+      }
+      const expiresAt = (token as { expiresAt?: Date }).expiresAt;
+      if (!expiresAt || expiresAt.getTime() < Date.now()) {
+        await replyText(replyToken, "โค้ดนี้หมดอายุแล้ว");
+        return;
+      }
+      // Only the creator (owner/agent) can use their own code.
+      const createdBy = (token as { createdByLineUserId?: string }).createdByLineUserId;
+      if (createdBy && createdBy !== lineUserId) {
+        await replyText(replyToken, "โค้ดนี้ไม่ใช่ของคุณ");
+        return;
+      }
+      resolvedPropertyId = (token as { propertyId: mongoose.Types.ObjectId }).propertyId.toString();
+      await BindCode.updateOne(
+        { _id: (token as { _id: mongoose.Types.ObjectId })._id },
+        { $set: { usedAt: new Date(), usedByLineUserId: lineUserId } }
+      );
+    }
+    if (!resolvedPropertyId) {
+      await replyText(replyToken, "ไม่สามารถผูกกลุ่มได้ (missing property)");
+      return;
+    }
     const taken = await Property.findOne({ lineGroupId: groupId }).lean();
-    if (taken && taken._id.toString() !== propertyId) {
+    if (taken && taken._id.toString() !== resolvedPropertyId) {
       await replyText(
         replyToken,
         "กลุ่ม LINE นี้ผูกกับทรัพย์อื่นแล้ว กรุณาแก้ไขในแอปก่อน"
@@ -416,7 +450,7 @@ async function handleBindCommand(
     }
 
     const property = await Property.findOne({
-      _id: propertyId,
+      _id: resolvedPropertyId,
       $or: [{ ownerId: lineUserId }, { agentLineId: lineUserId }],
     });
     if (!property) {

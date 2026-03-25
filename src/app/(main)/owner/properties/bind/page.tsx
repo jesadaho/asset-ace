@@ -203,10 +203,33 @@ export default function BindPropertyPage() {
     setError(null);
     try {
       const liff = (await import("@line/liff")).default;
-      const command = `/bind ${selectedId}`;
+      const token = liff.getAccessToken();
+      if (!token) {
+        setError(tAuth("pleaseLogin"));
+        setBinding(false);
+        return;
+      }
+      const codeRes = await fetch("/api/line/bind-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ propertyId: selectedId }),
+      });
+      const codeData = (await codeRes.json().catch(() => ({}))) as {
+        code?: string;
+        message?: string;
+      };
+      if (!codeRes.ok || !codeData.code) {
+        setError(codeData.message ?? `สร้างโค้ดไม่สำเร็จ (${codeRes.status})`);
+        setBinding(false);
+        return;
+      }
 
-      // Critical: LIFF groupId is not the Messaging API groupId.
-      // We bind by sending /bind into the group; webhook gets source.groupId (Messaging API) and saves it.
+      const command = `/bind ${codeData.code}`;
+
+      // Send a friendly short code into the group; webhook resolves code → propertyId and binds via source.groupId.
       await liff.sendMessages([{ type: "text", text: command }]);
 
       setBindSuccess(true);
@@ -220,7 +243,7 @@ export default function BindPropertyPage() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Bind failed";
       setError(
-        `${msg}\n\nถ้าส่งข้อความไม่สำเร็จ ให้พิมพ์คำสั่งนี้ในกลุ่มแทน: /bind ${selectedId}`
+        `${msg}\n\nถ้าส่งข้อความไม่สำเร็จ ให้เปิดใหม่แล้วลองอีกครั้ง`
       );
       setBinding(false);
     }
