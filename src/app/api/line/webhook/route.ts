@@ -445,17 +445,21 @@ function buildOwnerApprovalFlex(args: {
     `💵 ยอดในสลิป: ${formatBaht(slipAmount)}\n\n` +
     `พี่${ownerName ? ` ${ownerName}` : ""} ช่วยระบุเหตุผลและกดอนุมัติให้นิชาหน่อยนะคะ:`;
 
-  const mkBtn = (label: string, reasonCode: string) => ({
-    type: "button",
-    style: "primary",
-    height: "sm",
-    action: {
-      type: "postback",
-      label,
-      data: `nicha_rent_approve|tx=${txId}|reason=${encodeURIComponent(reasonCode)}`,
-      displayText: `อนุมัติ: ${label}`,
-    },
-  });
+  const mkBtn = (label: string, reasonCode: string) => {
+    const isWrongTransfer = reasonCode === "โอนผิด";
+    return {
+      type: "button",
+      style: isWrongTransfer ? "secondary" : "primary",
+      ...(isWrongTransfer ? { color: "#D32F2F" } : null),
+      height: "sm",
+      action: {
+        type: "postback",
+        label,
+        data: `nicha_rent_approve|tx=${txId}|reason=${encodeURIComponent(reasonCode)}`,
+        displayText: isWrongTransfer ? `ไม่อนุมัติ: ${label}` : `อนุมัติ: ${label}`,
+      },
+    };
+  };
 
   const contents = {
     type: "bubble",
