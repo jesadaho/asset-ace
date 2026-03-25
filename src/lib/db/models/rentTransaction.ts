@@ -5,6 +5,7 @@ export type RentTransactionStatus =
   | "rejected"
   | "duplicate"
   | "mismatch"
+  | "pending_owner_approve"
   | "unbound"
   | "error";
 
@@ -19,6 +20,10 @@ export interface IRentTransaction {
   /** YYYY-MM key for the rent period this payment is applied to */
   periodKey: string;
   status: RentTransactionStatus;
+  /** Owner-selected remark/reason (e.g. water/electric, tax, arrears, etc.) */
+  remark?: string;
+  approvedAt?: Date;
+  approvedByLineUserId?: string;
   reason?: string;
   raw?: Record<string, unknown>;
   createdAt?: Date;
@@ -36,6 +41,9 @@ const RentTransactionSchema = new mongoose.Schema<IRentTransaction>(
     toName: String,
     periodKey: { type: String, required: true, index: true },
     status: { type: String, required: true, index: true },
+    remark: String,
+    approvedAt: Date,
+    approvedByLineUserId: String,
     reason: String,
     raw: { type: mongoose.Schema.Types.Mixed },
   },

@@ -6,6 +6,8 @@ import { Property } from "@/lib/db/models/property";
 import { BindCode } from "@/lib/db/models/bindCode";
 import { RentTransaction } from "@/lib/db/models/rentTransaction";
 import { periodKeyFromSlipDate } from "@/lib/rent/period";
+import { User } from "@/lib/db/models/user";
+import { pushMessages, pushToGroup } from "@/lib/line/push";
 
 type LineSource = {
   type: string;
@@ -22,6 +24,9 @@ type LineWebhookEvent = {
     id?: string;
     type?: string;
     text?: string;
+  };
+  postback?: {
+    data?: string;
   };
 };
 
@@ -422,6 +427,67 @@ function toCents(x: number): number {
   return Math.round(x * 100);
 }
 
+function formatBaht(x: number): string {
+  return `${x.toLocaleString("th-TH")}.–`;
+}
+
+function buildOwnerApprovalFlex(args: {
+  txId: string;
+  propertyName: string;
+  expectedRent: number;
+  slipAmount: number;
+  ownerName?: string;
+}) {
+  const { txId, propertyName, expectedRent, slipAmount, ownerName } = args;
+  const headerText =
+    `🏠 ทรัพย์: ${propertyName}\n` +
+    `💰 ยอดที่ตั้งไว้: ${formatBaht(expectedRent)}\n` +
+    `💵 ยอดในสลิป: ${formatBaht(slipAmount)}\n\n` +
+    `พี่${ownerName ? ` ${ownerName}` : ""} ช่วยระบุเหตุผลและกดอนุมัติให้นิชาหน่อยนะคะ:`;
+
+  const mkBtn = (label: string, reasonCode: string) => ({
+    type: "button",
+    style: "primary",
+    height: "sm",
+    action: {
+      type: "postback",
+      label,
+      data: `nicha_rent_approve|tx=${txId}|reason=${encodeURIComponent(reasonCode)}`,
+      displayText: `อนุมัติ: ${label}`,
+    },
+  });
+
+  const contents = {
+    type: "bubble",
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "md",
+      contents: [
+        { type: "text", text: headerText, wrap: true, size: "sm" },
+        {
+          type: "box",
+          layout: "vertical",
+          spacing: "sm",
+          contents: [
+            mkBtn("รวมค่าน้ำ/ไฟ", "รวมค่าน้ำ/ไฟ"),
+            mkBtn("หักภาษี 5%", "หักภาษี 5%"),
+            mkBtn("จ่ายยอดค้าง", "จ่ายยอดค้าง"),
+            mkBtn("โอนผิด", "โอนผิด"),
+            mkBtn("อื่นๆ/อนุมัติเลย", "อื่นๆ/อนุมัติเลย"),
+          ],
+        },
+      ],
+    },
+  };
+
+  return {
+    type: "flex" as const,
+    altText: `ขออนุมัติยอดค่าเช่า: ${propertyName}`,
+    contents,
+  };
+}
+
 function formatEasySlipResult(bodyText: string): string {
   try {
     const parsed = JSON.parse(bodyText) as EasySlipSuccessResponse;
@@ -636,12 +702,88 @@ export async function POST(request: NextRequest) {
 
   const events = payload.events ?? [];
   for (const event of events) {
-    if (event.type !== "message" || !event.replyToken) continue;
+    if (!event.replyToken) continue;
 
     const source = event.source;
     const groupId =
       source?.type === "group" && source.groupId ? source.groupId : undefined;
     const lineUserId = source?.userId;
+
+    if (event.type === "postback" && event.postback?.data && lineUserId) {
+      const data = event.postback.data;
+      if (data.startsWith("nicha_rent_approve|")) {
+        const parts = data.split("|").slice(1);
+        const kv: Record<string, string> = {};
+        for (const p of parts) {
+          const [k, ...rest] = p.split("=");
+          if (!k) continue;
+          kv[k] = rest.join("=") ?? "";
+        }
+        const txId = kv.tx;
+        const reason = kv.reason ? decodeURIComponent(kv.reason) : "";
+        if (!txId || !mongoose.Types.ObjectId.isValid(txId)) {
+          await replyText(event.replyToken, "ข้อมูลการอนุมัติไม่ถูกต้องค่ะ 💚");
+          continue;
+        }
+        try {
+          await connectDB();
+          const tx = await RentTransaction.findById(txId).lean();
+          if (!tx) {
+            await replyText(event.replyToken, "ไม่พบรายการนี้แล้วค่ะ 💚");
+            continue;
+          }
+          const propertyId = (tx as { propertyId: mongoose.Types.ObjectId }).propertyId;
+          const prop = await Property.findById(propertyId)
+            .select("ownerId name lineGroupId")
+            .lean();
+          const ownerId = (prop as { ownerId?: string } | null)?.ownerId?.trim();
+          if (!ownerId || ownerId !== lineUserId) {
+            await replyText(event.replyToken, "ขอโทษค่ะ รายการนี้อนุมัติได้เฉพาะเจ้าของทรัพย์เท่านั้น 💚");
+            continue;
+          }
+          const propName = (prop as { name?: string } | null)?.name?.trim() || "ทรัพย์";
+          const groupToNotify = (tx as { lineGroupId?: string }).lineGroupId?.trim()
+            || (prop as { lineGroupId?: string } | null)?.lineGroupId?.trim();
+
+          await RentTransaction.updateOne(
+            { _id: (tx as { _id: mongoose.Types.ObjectId })._id },
+            {
+              $set: {
+                status: "accepted",
+                remark: reason || undefined,
+                approvedAt: new Date(),
+                approvedByLineUserId: lineUserId,
+              },
+            }
+          );
+
+          // Align property payment timestamp with slip date.
+          const slipDate = (tx as { slipDate?: Date }).slipDate;
+          if (slipDate) {
+            await Property.updateOne(
+              { _id: propertyId },
+              { $set: { lastRentPaidAt: slipDate instanceof Date ? slipDate : new Date(slipDate) } }
+            );
+          }
+
+          await replyText(event.replyToken, "อนุมัติเรียบร้อยค่ะ ✅");
+
+          if (groupToNotify) {
+            const remarkText = reason ? ` (บันทึกเพิ่มเติม: ${reason})` : "";
+            await pushToGroup(
+              groupToNotify,
+              `ได้รับยอดชำระของ ${propName} เรียบร้อยแล้วค่ะ ✅${remarkText} ขอบคุณมากนะคะ 💚`
+            );
+          }
+        } catch (e) {
+          console.error("[line-webhook] postback approve", e);
+          await replyText(event.replyToken, "ระบบขัดข้อง ลองใหม่ภายหลังนะคะ 💚");
+        }
+        continue;
+      }
+    }
+
+    if (event.type !== "message") continue;
 
     if (event.message?.type === "text" && event.message.text != null) {
       const incoming = event.message.text.trim();
@@ -860,7 +1002,7 @@ export async function POST(request: NextRequest) {
           }
 
           if (toCents(slipAmount) !== toCents(rent)) {
-            await RentTransaction.create({
+            const tx = await RentTransaction.create({
               propertyId: groupProperty._id,
               lineGroupId: groupId,
               lineMessageId: event.message.id,
@@ -869,14 +1011,52 @@ export async function POST(request: NextRequest) {
               fromName,
               toName,
               periodKey,
-              status: "mismatch",
+              status: "pending_owner_approve",
               reason: `amount-mismatch expected=${rent} got=${slipAmount}`,
               raw: parsed?.data?.rawSlip ? { rawSlip: parsed.data.rawSlip } : undefined,
             });
+
+            // 1) Notify group (tenant-facing) without asking tenant to act.
             await replyText(
               event.replyToken,
-              `ยอดในสลิปไม่ตรงกับค่าเช่าค่ะ\nคาดว่า: ${rent.toLocaleString("th-TH")} บาท\nในสลิป: ${slipAmount.toLocaleString("th-TH")} บาท\n\nหากเป็นการโอนบางส่วน/หลายครั้ง แจ้งนิชาเพิ่มเติมได้เลยนะคะ 💚`
+              `นิชาตรวจพบยอดเงินไม่ตรงกับค่าเช่าค่ะ! 🧐\n\n` +
+                `🏠 ทรัพย์: ${groupProperty.name?.trim() || "ทรัพย์"}\n` +
+                `💰 ยอดที่ตั้งไว้: ${formatBaht(rent)}\n` +
+                `💵 ยอดในสลิป: ${formatBaht(slipAmount)}`
             );
+
+            // 2) DM owner with approval buttons.
+            try {
+              const ownerLineUserId = (await Property.findById(groupProperty._id)
+                .select("ownerId")
+                .lean()) as { ownerId?: string } | null;
+              const ownerId = ownerLineUserId?.ownerId?.trim();
+              if (ownerId) {
+                const owner = await User.findOne({ lineUserId: ownerId })
+                  .select("name")
+                  .lean();
+                const ownerName = (owner as { name?: string } | null)?.name?.trim();
+
+                await pushMessages(ownerId, [
+                  {
+                    type: "text",
+                    text:
+                      `🏠 ทรัพย์: ${groupProperty.name?.trim() || "ทรัพย์"}\n` +
+                      `💰 ยอดที่ตั้งไว้: ${formatBaht(rent)}\n` +
+                      `💵 ยอดในสลิป: ${formatBaht(slipAmount)}`,
+                  },
+                  buildOwnerApprovalFlex({
+                    txId: (tx as { _id: mongoose.Types.ObjectId })._id.toString(),
+                    propertyName: groupProperty.name?.trim() || "ทรัพย์",
+                    expectedRent: rent,
+                    slipAmount,
+                    ownerName,
+                  }),
+                ]);
+              }
+            } catch (e) {
+              console.error("[line-webhook] owner approve DM", e);
+            }
             continue;
           }
 
