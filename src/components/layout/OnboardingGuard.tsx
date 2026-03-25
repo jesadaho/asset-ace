@@ -8,6 +8,7 @@ import {
   getRoleDashboardPath,
 } from "@/lib/api/onboarding";
 import { getDeepLinkTargetFromSearchParams } from "@/lib/deep-link";
+import { LiffLoadingAnimation } from "@/components/LiffLoadingAnimation";
 
 const ONBOARDING_PATH = "/onboarding";
 const ADD_FRIEND_REQUIRED_PATH = "/add-friend-required";
@@ -172,7 +173,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   if (showLoading) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-white">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#10B981] border-t-transparent" />
+        <LiffLoadingAnimation size={168} />
       </div>
     );
   }
