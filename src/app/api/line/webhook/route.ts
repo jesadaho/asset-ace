@@ -745,11 +745,13 @@ export async function POST(request: NextRequest) {
           const groupToNotify = (tx as { lineGroupId?: string }).lineGroupId?.trim()
             || (prop as { lineGroupId?: string } | null)?.lineGroupId?.trim();
 
+          const isWrongTransfer = reason.trim() === "โอนผิด";
+
           await RentTransaction.updateOne(
             { _id: (tx as { _id: mongoose.Types.ObjectId })._id },
             {
               $set: {
-                status: "accepted",
+                status: isWrongTransfer ? "rejected" : "accepted",
                 remark: reason || undefined,
                 approvedAt: new Date(),
                 approvedByLineUserId: lineUserId,
@@ -757,23 +759,33 @@ export async function POST(request: NextRequest) {
             }
           );
 
-          // Align property payment timestamp with slip date.
-          const slipDate = (tx as { slipDate?: Date }).slipDate;
-          if (slipDate) {
-            await Property.updateOne(
-              { _id: propertyId },
-              { $set: { lastRentPaidAt: slipDate instanceof Date ? slipDate : new Date(slipDate) } }
-            );
-          }
+          if (isWrongTransfer) {
+            await replyText(event.replyToken, "รับทราบค่ะ นิชาจะยังไม่อนุมัติรายการนี้นะคะ ✅");
+            if (groupToNotify) {
+              await pushToGroup(
+                groupToNotify,
+                `อัปเดตจากเจ้าของห้อง: รายการสลิปของ ${propName} “โอนผิด” จึงยังไม่ถูกบันทึกเป็นค่าเช่านะคะ 💚`
+              );
+            }
+          } else {
+            // Align property payment timestamp with slip date.
+            const slipDate = (tx as { slipDate?: Date }).slipDate;
+            if (slipDate) {
+              await Property.updateOne(
+                { _id: propertyId },
+                { $set: { lastRentPaidAt: slipDate instanceof Date ? slipDate : new Date(slipDate) } }
+              );
+            }
 
-          await replyText(event.replyToken, "อนุมัติเรียบร้อยค่ะ ✅");
+            await replyText(event.replyToken, "อนุมัติเรียบร้อยค่ะ ✅");
 
-          if (groupToNotify) {
-            const remarkText = reason ? ` (บันทึกเพิ่มเติม: ${reason})` : "";
-            await pushToGroup(
-              groupToNotify,
-              `ได้รับยอดชำระของ ${propName} เรียบร้อยแล้วค่ะ ✅${remarkText} ขอบคุณมากนะคะ 💚`
-            );
+            if (groupToNotify) {
+              const remarkText = reason ? ` (บันทึกเพิ่มเติม: ${reason})` : "";
+              await pushToGroup(
+                groupToNotify,
+                `ได้รับยอดชำระของ ${propName} เรียบร้อยแล้วค่ะ ✅${remarkText} ขอบคุณมากนะคะ 💚`
+              );
+            }
           }
         } catch (e) {
           console.error("[line-webhook] postback approve", e);
