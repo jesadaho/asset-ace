@@ -1022,7 +1022,8 @@ export async function POST(request: NextRequest) {
               `นิชาตรวจพบยอดเงินไม่ตรงกับค่าเช่าค่ะ! 🧐\n\n` +
                 `🏠 ทรัพย์: ${groupProperty.name?.trim() || "ทรัพย์"}\n` +
                 `💰 ยอดที่ตั้งไว้: ${formatBaht(rent)}\n` +
-                `💵 ยอดในสลิป: ${formatBaht(slipAmount)}`
+                `💵 ยอดในสลิป: ${formatBaht(slipAmount)}\n\n` +
+                `รบกวนพี่เจ้าของห้องช่วยระบุเหตุผลและกดอนุมัติให้นิชาทาง DM หน่อยนะคะ`
             );
 
             // 2) DM owner with approval buttons.
@@ -1041,9 +1042,11 @@ export async function POST(request: NextRequest) {
                   {
                     type: "text",
                     text:
+                      `นิชาตรวจพบยอดเงินไม่ตรงกับค่าเช่าค่ะ! 🧐\n\n` +
                       `🏠 ทรัพย์: ${groupProperty.name?.trim() || "ทรัพย์"}\n` +
                       `💰 ยอดที่ตั้งไว้: ${formatBaht(rent)}\n` +
-                      `💵 ยอดในสลิป: ${formatBaht(slipAmount)}`,
+                      `💵 ยอดในสลิป: ${formatBaht(slipAmount)}\n\n` +
+                      `รบกวนพี่เจ้าของห้องช่วยระบุเหตุผลและกดอนุมัติให้นิชาหน่อยนะคะ`,
                   },
                   buildOwnerApprovalFlex({
                     txId: (tx as { _id: mongoose.Types.ObjectId })._id.toString(),
