@@ -12,7 +12,7 @@ import {
   getInferredSalePrice,
   getPrimaryDisplayPrice,
 } from "@/lib/property-pricing";
-import { LiffLoadingBlock } from "@/components/LiffLoadingAnimation";
+import { LiffLoadingAnimation, LiffLoadingBlock } from "@/components/LiffLoadingAnimation";
 
 type PropertyType = "Condo" | "House" | "Apartment";
 type PropertyStatus = "Available" | "Occupied" | "Draft" | "Paused" | "Archived";
@@ -246,8 +246,8 @@ export default function OwnerPropertiesPage() {
 
   if (accessGate === "checking") {
     return (
-      <div className="min-h-full bg-slate-50 p-4 flex items-center justify-center min-h-[50vh]">
-        <LiffLoadingBlock label={tCommon("loading")} size={128} />
+      <div className="min-h-dvh flex items-center justify-center bg-white">
+        <LiffLoadingAnimation size={168} />
       </div>
     );
   }

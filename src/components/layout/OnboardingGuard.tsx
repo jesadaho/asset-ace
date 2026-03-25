@@ -38,6 +38,12 @@ function getIntendedPathFromQuery(): string | null {
   );
 }
 
+function hasDeepLinkSearchParams(): boolean {
+  if (typeof window === "undefined") return false;
+  const sp = new URLSearchParams(window.location.search);
+  return sp.has("path") || sp.has("redirect") || sp.has("liff.state");
+}
+
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -64,16 +70,6 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const isInviteAcceptJob = Boolean(invitePropId?.trim());
 
   const canRedirect = isReady && (!liffId || isLoggedIn === false || profile !== null || error !== null);
-
-  // Redirect based on liff.state/path/redirect only after LIFF state is resolved (skip when user must add friend first)
-  useEffect(() => {
-    if (!canRedirect) return;
-    if (isLoggedIn === true && isFriend === false && pathname !== ADD_FRIEND_REQUIRED_PATH) return;
-    const queryPath = getIntendedPathFromQuery();
-    if (queryPath && pathname !== queryPath) {
-      router.replace(queryPath);
-    }
-  }, [canRedirect, isLoggedIn, isFriend, pathname, router]);
 
   useEffect(() => {
     if (!canRedirect) {
@@ -126,9 +122,9 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
           fetch('http://127.0.0.1:7803/ingest/908fb44a-4012-43fd-b36e-e6f74cb458a6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d6e810'},body:JSON.stringify({sessionId:'d6e810',hypothesisId:'H_invite',location:'OnboardingGuard.tsx',message:'Invite accept-job: redirect to onboarding',data:{onboardingUrl,invitePropId},timestamp:Date.now()})}).catch(()=>{});
           // #endregion
           router.replace(onboardingUrl);
-        } else {
-          setChecked(true);
+          return;
         }
+        setChecked(true);
         return;
       }
 
@@ -153,9 +149,14 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
 
       if (targetPath && pathname !== targetPath) {
         router.replace(targetPath);
-      } else if (queryPath && typeof window !== "undefined" && window.location.search) {
-        router.replace(pathname);
+        return;
       }
+
+      if (hasDeepLinkSearchParams()) {
+        router.replace(pathname);
+        return;
+      }
+
       setChecked(true);
     }
 
@@ -163,7 +164,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [canRedirect, isLoggedIn, isFriend, pathname, router, invitePropId, isInviteAcceptJob]);
+  }, [canRedirect, isLoggedIn, isFriend, pathname, router, invitePropId, isInviteAcceptJob, searchParams]);
 
   /** On /invite always show loading until run() has decided (avoids flash when searchParams not ready on first paint). */
   const showLoading =
