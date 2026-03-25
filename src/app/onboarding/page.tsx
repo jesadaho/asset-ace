@@ -13,6 +13,7 @@ import {
 } from "@/lib/api/onboarding";
 import { User, Building2, Home } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
+import { LiffLoadingAnimation } from "@/components/LiffLoadingAnimation";
 
 type PropertySummary = { name: string; address: string; type?: string };
 
@@ -126,8 +127,8 @@ export default function OnboardingPage() {
 
   if (isAgentInviteLoading) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-white">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#10B981] border-t-transparent" />
+      <div className="min-h-dvh flex items-center justify-center bg-white p-6">
+        <LiffLoadingAnimation size={144} />
       </div>
     );
   }

@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/Badge";
 import { uploadFilesWithProgress } from "@/lib/uploadWithProgress";
 import { useToast } from "@/components/ui/Toast";
 import { useTranslations } from "next-intl";
+import { LiffLoadingBlock, LiffLoadingInline } from "@/components/LiffLoadingAnimation";
 
 const MAX_PHOTOS = 10;
 
@@ -821,8 +822,8 @@ export default function EditPropertyPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-slate-500 text-sm">{t("loading")}</p>
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <LiffLoadingBlock label={t("loading")} size={128} />
       </div>
     );
   }
@@ -1953,7 +1954,7 @@ export default function EditPropertyPage() {
               {t("rentalHistory")}
             </h2>
             {rentalHistoryLoading ? (
-              <p className="text-sm text-slate-500">{t("loading")}</p>
+              <LiffLoadingInline label={t("loading")} size={36} />
             ) : rentalHistory.length === 0 ? (
               <p className="text-sm text-slate-500">{t("noRentalHistory")}</p>
             ) : (

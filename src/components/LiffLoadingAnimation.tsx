@@ -9,7 +9,7 @@ const DotLottieReact = dynamic(
     ssr: false,
     loading: () => (
       <div
-        className="h-10 w-10 animate-spin rounded-full border-2 border-[#10B981] border-t-transparent"
+        className="h-full w-full rounded-xl bg-slate-100 animate-pulse"
         aria-hidden
       />
     ),
@@ -31,12 +31,57 @@ export function LiffLoadingAnimation({ size = 160, className }: Props) {
       aria-label="Loading"
       style={{ width: size, height: size }}
     >
-      <DotLottieReact
-        src="/lottie/sandy-loading.lottie"
-        loop
-        autoplay
-        style={{ width: size, height: size }}
-      />
+      <div className="h-full w-full overflow-hidden rounded-xl">
+        <DotLottieReact
+          src="/lottie/sandy-loading.lottie"
+          loop
+          autoplay
+          style={{ width: size, height: size }}
+        />
+      </div>
+    </div>
+  );
+}
+
+type BlockProps = {
+  label?: string;
+  size?: number;
+  className?: string;
+};
+
+/** Centered Sandy + optional caption (full-screen gates, access checks, list fetch). */
+export function LiffLoadingBlock({ label, size = 128, className }: BlockProps) {
+  return (
+    <div
+      className={`flex flex-col items-center justify-center gap-3 ${className ?? ""}`}
+    >
+      <LiffLoadingAnimation size={size} />
+      {label ? (
+        <p className="text-slate-600 text-sm text-center">{label}</p>
+      ) : null}
+    </div>
+  );
+}
+
+/** Compact row for section-level loading (e.g. รายการส่วนเสริม). */
+export function LiffLoadingInline({
+  label,
+  size = 40,
+  className,
+}: {
+  label?: string;
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`inline-flex items-center gap-2 ${className ?? ""}`}
+      role="status"
+    >
+      <LiffLoadingAnimation size={size} />
+      {label ? (
+        <span className="text-sm text-slate-500">{label}</span>
+      ) : null}
     </div>
   );
 }
