@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
 import { pushMessage, pushToGroup } from "@/lib/line/push";
 
-const GRACE_DAYS = 30;
+const GRACE_DAYS = Number(process.env.RENT_OVERDUE_GRACE_DAYS ?? 30);
 
 function startOfDay(d: Date): Date {
   const x = new Date(d);
