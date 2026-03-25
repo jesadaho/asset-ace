@@ -47,6 +47,66 @@ type EasySlipSuccessResponse = {
   };
 };
 
+function startOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function clampDay(year: number, monthIndex: number, day: number): number {
+  const last = new Date(year, monthIndex + 1, 0).getDate();
+  return Math.min(day, last);
+}
+
+function daysBetween(a: Date, b: Date): number {
+  return Math.floor((b.getTime() - a.getTime()) / (86400 * 1000));
+}
+
+const TH_MONTHS_SHORT = [
+  "ม.ค.",
+  "ก.พ.",
+  "มี.ค.",
+  "เม.ย.",
+  "พ.ค.",
+  "มิ.ย.",
+  "ก.ค.",
+  "ส.ค.",
+  "ก.ย.",
+  "ต.ค.",
+  "พ.ย.",
+  "ธ.ค.",
+];
+
+function formatThaiDayMonth(d: Date): string {
+  const day = d.getDate();
+  const m = TH_MONTHS_SHORT[d.getMonth()] ?? "";
+  return `${day} ${m}`;
+}
+
+/** Next due date computed from contractStartDate day-of-month (clamped). */
+function getNextDueDateFromContractStart(
+  contractStartDate: Date,
+  now: Date
+): Date | null {
+  const start = startOfDay(contractStartDate);
+  if (Number.isNaN(start.getTime())) return null;
+  const today = startOfDay(now);
+  if (today < start) return start;
+
+  const dueDay = start.getDate();
+  const y = today.getFullYear();
+  const m = today.getMonth();
+  const dThis = clampDay(y, m, dueDay);
+  let due = startOfDay(new Date(y, m, dThis));
+  if (due <= today) {
+    const nm = m === 11 ? 0 : m + 1;
+    const ny = m === 11 ? y + 1 : y;
+    const dNext = clampDay(ny, nm, dueDay);
+    due = startOfDay(new Date(ny, nm, dNext));
+  }
+  return due < start ? start : due;
+}
+
 function verifySignature(
   rawBody: string,
   signature: string,
@@ -475,6 +535,59 @@ async function handleBindCommand(
   }
 }
 
+async function handleRentDueInquiry(
+  replyToken: string,
+  groupId: string
+): Promise<void> {
+  try {
+    await connectDB();
+    const prop = await Property.findOne({ lineGroupId: groupId }).lean();
+    if (!prop) {
+      await replyText(
+        replyToken,
+        "กลุ่มนี้ยังไม่ได้ผูกกับสินทรัพย์ค่ะ กดเมนู “ผูกกลุ่มกับสินทรัพย์” ก่อนนะคะ 💚"
+      );
+      return;
+    }
+    const name = (prop as { name?: string }).name?.trim() || "ทรัพย์";
+    const contractStartDate = (prop as { contractStartDate?: Date }).contractStartDate;
+    const monthlyRent = (prop as { monthlyRent?: number }).monthlyRent;
+    if (!contractStartDate) {
+      await replyText(
+        replyToken,
+        `รายการค่าเช่า: ${name} 🏠\n\nยังไม่มีวันเริ่มสัญญาในระบบค่ะ กรุณาตั้ง “วันเริ่มสัญญา” ในหน้าแก้ไขทรัพย์ก่อนนะคะ 💚`
+      );
+      return;
+    }
+    const due = getNextDueDateFromContractStart(
+      contractStartDate instanceof Date ? contractStartDate : new Date(contractStartDate),
+      new Date()
+    );
+    if (!due) {
+      await replyText(
+        replyToken,
+        `รายการค่าเช่า: ${name} 🏠\n\nไม่สามารถคำนวณวันครบกำหนดได้ค่ะ กรุณาตรวจสอบวันเริ่มสัญญาอีกครั้ง 💚`
+      );
+      return;
+    }
+    const today = startOfDay(new Date());
+    const remaining = Math.max(0, daysBetween(today, due));
+    const amount = typeof monthlyRent === "number" && !Number.isNaN(monthlyRent) ? monthlyRent : 0;
+
+    await replyText(
+      replyToken,
+      `รายการค่าเช่า: ${name} 🏠\n\n` +
+        `🗓 วันครบกำหนด: ${formatThaiDayMonth(due)}\n` +
+        `💰 ยอดชำระ: ${amount.toLocaleString("th-TH")} บาท\n` +
+        `⏳ สถานะ: เหลืออีก ${remaining} วัน\n\n` +
+        `หากชำระแล้ว สามารถส่งสลิปแจ้งนิชาในกลุ่มนี้ได้เลยนะคะ 💚`
+    );
+  } catch (e) {
+    console.error("[line-webhook] rent due inquiry", e);
+    await replyText(replyToken, "ระบบขัดข้อง ลองใหม่ภายหลังนะคะ 💚");
+  }
+}
+
 export async function GET() {
   return NextResponse.json({ ok: true, message: "LINE webhook is running" });
 }
@@ -535,6 +648,10 @@ export async function POST(request: NextRequest) {
             NICHCHA_INTRO,
             getNichaQuickReplyItems()
           );
+          continue;
+        }
+        if (incoming === "#เช็กวันจ่ายค่าเช่า" || incoming === "เช็กวันจ่ายค่าเช่า") {
+          await handleRentDueInquiry(event.replyToken, groupId);
           continue;
         }
         const menuHint = getNichaMenuHint(incoming);
