@@ -164,8 +164,10 @@ export default function BindPropertyPage() {
           status: p.status ?? "",
           imageUrl: p.imageUrl,
         }));
-        setProperties(list);
-        if (list.length === 1) setSelectedId(list[0].id);
+        // Spec: show only "occupied" (สถานะเช่าอยู่) so user binds correct assets.
+        const occupiedOnly = list.filter((p) => p.status === "Occupied");
+        setProperties(occupiedOnly);
+        if (occupiedOnly.length === 1) setSelectedId(occupiedOnly[0].id);
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "โหลดรายการทรัพย์ไม่สำเร็จ");
@@ -184,6 +186,15 @@ export default function BindPropertyPage() {
   const canBind = useMemo(() => {
     return !!groupId && !!selectedId && !binding;
   }, [binding, groupId, selectedId]);
+
+  const handleAddProperty = () => {
+    // Fix: when user presses browser back from Add page, they should land on My Property page.
+    // We replace current history entry (bind) with /owner/properties, then push add page.
+    router.replace("/owner/properties");
+    setTimeout(() => {
+      router.push("/owner/properties/add");
+    }, 0);
+  };
 
   const handleBind = async () => {
     if (!canBind || !groupId) return;
@@ -274,13 +285,14 @@ export default function BindPropertyPage() {
         </div>
 
         <div className="flex gap-2">
-          <Link
-            href="/owner/properties/add"
+          <button
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-[#0F172A] hover:bg-slate-50 tap-target min-h-[44px]"
+            type="button"
+            onClick={handleAddProperty}
           >
             <Plus className="h-4 w-4" aria-hidden />
             เพิ่มสินทรัพย์
-          </Link>
+          </button>
           <button
             type="button"
             onClick={() => router.refresh()}
@@ -297,7 +309,7 @@ export default function BindPropertyPage() {
         ) : properties.length === 0 ? (
           <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
             <p className="text-sm text-slate-700">
-              ยังไม่มีสินทรัพย์ให้เลือก
+              ยังไม่มีสินทรัพย์สถานะเช่าอยู่ให้เลือก
             </p>
             <p className="text-xs text-slate-500">
               กด “เพิ่มสินทรัพย์” เพื่อสร้างรายการใหม่ แล้วกลับมาเลือกเพื่อผูกกลุ่ม
