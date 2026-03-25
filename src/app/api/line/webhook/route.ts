@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
 import { BindCode } from "@/lib/db/models/bindCode";
+import { RentTransaction } from "@/lib/db/models/rentTransaction";
+import { periodKeyFromSlipDate } from "@/lib/rent/period";
 
 type LineSource = {
   type: string;
@@ -406,13 +408,18 @@ async function verifySlipWithEasySlip(
     });
 
     const bodyText = await res.text().catch(() => "");
-    return { ok: res.ok, status: res.status, bodyText: bodyText.slice(0, 1200) };
+    // Avoid truncating JSON; webhook needs full body to parse slip details reliably.
+    return { ok: res.ok, status: res.status, bodyText: bodyText.slice(0, 20_000) };
   } catch (err) {
     return {
       ok: false,
       bodyText: err instanceof Error ? err.message : String(err),
     };
   }
+}
+
+function toCents(x: number): number {
+  return Math.round(x * 100);
 }
 
 function formatEasySlipResult(bodyText: string): string {
@@ -692,21 +699,30 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      let propertyIdForPayment: string | undefined;
+      let groupProperty:
+        | {
+            _id: mongoose.Types.ObjectId;
+            name?: string;
+            monthlyRent?: number;
+            contractStartDate?: Date;
+          }
+        | undefined;
       if (groupId) {
         try {
           await connectDB();
           const prop = await Property.findOne({ lineGroupId: groupId })
-            .select("_id")
+            .select("_id name monthlyRent contractStartDate")
             .lean();
           if (!prop) {
-            await replyText(
-              event.replyToken,
-              "ยังไม่ได้ผูกกลุ่มกับทรัพย์ พิมพ์ /bind ตามด้วยรหัสทรัพย์ (จากแอป)"
-            );
-            continue;
+            groupProperty = undefined;
+          } else {
+            groupProperty = prop as {
+              _id: mongoose.Types.ObjectId;
+              name?: string;
+              monthlyRent?: number;
+              contractStartDate?: Date;
+            };
           }
-          propertyIdForPayment = (prop as { _id: mongoose.Types.ObjectId })._id.toString();
         } catch (e) {
           console.error("[line-webhook] group property lookup", e);
           await replyText(event.replyToken, "ระบบขัดข้อง ลองใหม่ภายหลัง");
@@ -728,20 +744,170 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      if (
-        propertyIdForPayment &&
-        verifyResult.ok &&
-        isEasySlipSuccessJson(verifyResult.bodyText)
-      ) {
+      const isSuccess = isEasySlipSuccessJson(verifyResult.bodyText);
+
+      if (groupId && isSuccess) {
+        if (!groupProperty) {
+          await replyText(
+            event.replyToken,
+            "ยังไม่ได้ผูกกลุ่มกับสินทรัพย์ค่ะ กดเมนู “ผูกกลุ่มกับสินทรัพย์” ก่อนนะคะ 💚"
+          );
+          continue;
+        }
+
+        let parsed: EasySlipSuccessResponse | null = null;
+        try {
+          parsed = JSON.parse(verifyResult.bodyText) as EasySlipSuccessResponse;
+        } catch {
+          parsed = null;
+        }
+
+        const slipAmount = parsed?.data?.amountInSlip;
+        const slipDateRaw = parsed?.data?.rawSlip?.date;
+        const fromName =
+          parsed?.data?.rawSlip?.sender?.account?.name?.th ||
+          parsed?.data?.rawSlip?.sender?.account?.name?.en ||
+          undefined;
+        const toName =
+          parsed?.data?.rawSlip?.receiver?.account?.name?.th ||
+          parsed?.data?.rawSlip?.receiver?.account?.name?.en ||
+          undefined;
+
+        const rent = groupProperty.monthlyRent;
+        const contractStartDate = groupProperty.contractStartDate;
+        const slipDate = slipDateRaw ? new Date(slipDateRaw) : null;
+
+        if (
+          typeof rent !== "number" ||
+          Number.isNaN(rent) ||
+          !contractStartDate ||
+          !slipDate ||
+          Number.isNaN(slipDate.getTime()) ||
+          typeof slipAmount !== "number" ||
+          Number.isNaN(slipAmount)
+        ) {
+          try {
+            await connectDB();
+            await RentTransaction.create({
+              propertyId: groupProperty._id,
+              lineGroupId: groupId,
+              lineMessageId: event.message.id,
+              slipDate: slipDate && !Number.isNaN(slipDate.getTime()) ? slipDate : new Date(),
+              amount: typeof slipAmount === "number" ? slipAmount : 0,
+              fromName,
+              toName,
+              periodKey: "unknown",
+              status: "error",
+              reason: "missing-config-or-slip-fields",
+              raw: parsed?.data?.rawSlip ? { rawSlip: parsed.data.rawSlip } : undefined,
+            });
+          } catch (e) {
+            console.error("[line-webhook] rent tx error record", e);
+          }
+
+          await replyText(
+            event.replyToken,
+            "ตรวจสลิปได้ แต่ยังตั้งค่าทรัพย์ไม่ครบค่ะ (ต้องมีวันเริ่มสัญญาและค่าเช่ารายเดือน) กรุณาตั้งค่าในหน้าแก้ไขทรัพย์ก่อนนะคะ 💚"
+          );
+          continue;
+        }
+
+        const periodKey = periodKeyFromSlipDate(contractStartDate, slipDate);
+        if (!periodKey) {
+          await replyText(
+            event.replyToken,
+            "ไม่สามารถระบุรอบค่าเช่าจากวันเริ่มสัญญาได้ค่ะ กรุณาตรวจสอบวันเริ่มสัญญาอีกครั้ง 💚"
+          );
+          continue;
+        }
+
         try {
           await connectDB();
+
+          const existingByMessage = await RentTransaction.findOne({
+            lineMessageId: event.message.id,
+          })
+            .select("_id status")
+            .lean();
+          if (existingByMessage) {
+            await replyText(event.replyToken, "สลิปนี้เคยส่งแล้วค่ะ 💚");
+            continue;
+          }
+
+          const alreadyPaid = await RentTransaction.findOne({
+            propertyId: groupProperty._id,
+            periodKey,
+            status: "accepted",
+          })
+            .select("_id")
+            .lean();
+          if (alreadyPaid) {
+            await RentTransaction.create({
+              propertyId: groupProperty._id,
+              lineGroupId: groupId,
+              lineMessageId: event.message.id,
+              slipDate,
+              amount: slipAmount,
+              fromName,
+              toName,
+              periodKey,
+              status: "duplicate",
+              reason: "already-paid-period",
+              raw: parsed?.data?.rawSlip ? { rawSlip: parsed.data.rawSlip } : undefined,
+            });
+            await replyText(event.replyToken, "เดือนนี้มีการบันทึกการชำระแล้วค่ะ 💚");
+            continue;
+          }
+
+          if (toCents(slipAmount) !== toCents(rent)) {
+            await RentTransaction.create({
+              propertyId: groupProperty._id,
+              lineGroupId: groupId,
+              lineMessageId: event.message.id,
+              slipDate,
+              amount: slipAmount,
+              fromName,
+              toName,
+              periodKey,
+              status: "mismatch",
+              reason: `amount-mismatch expected=${rent} got=${slipAmount}`,
+              raw: parsed?.data?.rawSlip ? { rawSlip: parsed.data.rawSlip } : undefined,
+            });
+            await replyText(
+              event.replyToken,
+              `ยอดในสลิปไม่ตรงกับค่าเช่าค่ะ\nคาดว่า: ${rent.toLocaleString("th-TH")} บาท\nในสลิป: ${slipAmount.toLocaleString("th-TH")} บาท\n\nหากเป็นการโอนบางส่วน/หลายครั้ง แจ้งนิชาเพิ่มเติมได้เลยนะคะ 💚`
+            );
+            continue;
+          }
+
+          await RentTransaction.create({
+            propertyId: groupProperty._id,
+            lineGroupId: groupId,
+            lineMessageId: event.message.id,
+            slipDate,
+            amount: slipAmount,
+            fromName,
+            toName,
+            periodKey,
+            status: "accepted",
+            raw: parsed?.data?.rawSlip ? { rawSlip: parsed.data.rawSlip } : undefined,
+          });
+
           await Property.updateOne(
-            { _id: propertyIdForPayment },
-            { $set: { lastRentPaidAt: new Date() } }
+            { _id: groupProperty._id },
+            { $set: { lastRentPaidAt: slipDate } }
           );
         } catch (e) {
-          console.error("[line-webhook] lastRentPaidAt update", e);
+          console.error("[line-webhook] rent tx persist", e);
+          await replyText(event.replyToken, "ระบบบันทึกข้อมูลขัดข้อง ลองใหม่ภายหลังนะคะ 💚");
+          continue;
         }
+
+        await replyText(
+          event.replyToken,
+          `${formatEasySlipResult(verifyResult.bodyText || "OK")}\n\nสถานะ: บันทึกค่าเช่าเรียบร้อย ✅`
+        );
+        continue;
       }
 
       await replyText(
