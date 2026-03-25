@@ -11,7 +11,6 @@ import {
   getInferredMonthlyRent,
   getPrimaryDisplayPrice,
 } from "@/lib/property-pricing";
-import { LiffLoadingBlock, LiffLoadingInline } from "@/components/LiffLoadingAnimation";
 
 type PropertyType = "Condo" | "House" | "Apartment";
 type PropertyStatus = "Available" | "Occupied" | "Draft" | "Paused" | "Archived";
@@ -694,9 +693,7 @@ export default function PropertyDetailPage() {
             aria-busy="true"
             aria-live="polite"
           >
-            <div className="flex flex-col items-center pb-2">
-              <LiffLoadingBlock label={t("loading")} size={120} />
-            </div>
+            <span className="sr-only">{t("loading")}</span>
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="aspect-[4/3] bg-slate-200 animate-pulse" />
               <div className="p-4 space-y-3">
@@ -1280,7 +1277,7 @@ export default function PropertyDetailPage() {
                   )}
                 </div>
                 {rentTransactionsLoading ? (
-                  <LiffLoadingInline label={t("loading")} size={36} />
+                  <p className="text-sm text-slate-500">{t("loading")}</p>
                 ) : rentTransactions.length === 0 ? (
                   <p className="text-sm text-slate-500">ยังไม่มีรายการชำระ</p>
                 ) : (
@@ -1346,7 +1343,7 @@ export default function PropertyDetailPage() {
                   {t("rentalHistory")}
                 </h3>
                 {rentalHistoryLoading ? (
-                  <LiffLoadingInline label={t("loading")} size={36} />
+                  <p className="text-sm text-slate-500">{t("loading")}</p>
                 ) : rentalHistory.length === 0 ? (
                   <p className="text-sm text-slate-500">{t("noRentalHistory")}</p>
                 ) : (

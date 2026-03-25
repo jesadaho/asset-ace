@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { uploadFilesWithProgress } from "@/lib/uploadWithProgress";
-import { LiffLoadingBlock } from "@/components/LiffLoadingAnimation";
 
 const MAX_PHOTOS = 10;
 
@@ -317,8 +316,8 @@ export default function AddPropertyPage() {
 
   if (accessGate === "checking") {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6">
-        <LiffLoadingBlock label={tCommon("loading")} size={128} />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-slate-500 text-sm">{tCommon("loading")}</p>
       </div>
     );
   }

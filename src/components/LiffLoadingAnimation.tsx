@@ -22,7 +22,10 @@ type Props = {
   className?: string;
 };
 
-/** Sandy loading animation for LIFF / onboarding gate (DotLottie from `public/lottie/sandy-loading.lottie`). */
+/**
+ * Sandy DotLottie — use only while LIFF is opening (OnboardingGuard).
+ * Other screens should use the green spinner or skeletons.
+ */
 export function LiffLoadingAnimation({ size = 160, className }: Props) {
   return (
     <div
@@ -39,49 +42,6 @@ export function LiffLoadingAnimation({ size = 160, className }: Props) {
           style={{ width: size, height: size }}
         />
       </div>
-    </div>
-  );
-}
-
-type BlockProps = {
-  label?: string;
-  size?: number;
-  className?: string;
-};
-
-/** Centered Sandy + optional caption (full-screen gates, access checks, list fetch). */
-export function LiffLoadingBlock({ label, size = 128, className }: BlockProps) {
-  return (
-    <div
-      className={`flex flex-col items-center justify-center gap-3 ${className ?? ""}`}
-    >
-      <LiffLoadingAnimation size={size} />
-      {label ? (
-        <p className="text-slate-600 text-sm text-center">{label}</p>
-      ) : null}
-    </div>
-  );
-}
-
-/** Compact row for section-level loading (e.g. รายการส่วนเสริม). */
-export function LiffLoadingInline({
-  label,
-  size = 40,
-  className,
-}: {
-  label?: string;
-  size?: number;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`inline-flex items-center gap-2 ${className ?? ""}`}
-      role="status"
-    >
-      <LiffLoadingAnimation size={size} />
-      {label ? (
-        <span className="text-sm text-slate-500">{label}</span>
-      ) : null}
     </div>
   );
 }

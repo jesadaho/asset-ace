@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Check, Plus } from "lucide-react";
-import { LiffLoadingBlock } from "@/components/LiffLoadingAnimation";
 
 type Role = "owner" | "agent" | "tenant";
 
@@ -253,7 +252,7 @@ export default function BindPropertyPage() {
   if (accessGate === "checking") {
     return (
       <div className="min-h-dvh bg-slate-50 flex items-center justify-center px-4">
-        <LiffLoadingBlock label={tCommon("loading")} size={128} />
+        <p className="text-slate-500 text-sm">{tCommon("loading")}</p>
       </div>
     );
   }
@@ -317,8 +316,8 @@ export default function BindPropertyPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-6 flex justify-center">
-            <LiffLoadingBlock label={tCommon("loading")} size={96} />
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-sm text-slate-500">{tCommon("loading")}</p>
           </div>
         ) : properties.length === 0 ? (
           <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">

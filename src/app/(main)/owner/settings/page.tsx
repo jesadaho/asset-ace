@@ -8,7 +8,6 @@ import { ArrowLeft } from "lucide-react";
 import { useLiff } from "@/providers/LiffProvider";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { LiffLoadingBlock } from "@/components/LiffLoadingAnimation";
 
 const PHONE_REGEX = /^[\d\s\-+()]{8,20}$/;
 
@@ -164,8 +163,14 @@ export default function OwnerSettingsPage() {
   if (!isReady || loading) {
     return (
       <div className="min-h-full bg-[#F8FAFC] p-4">
-        <div className="max-w-lg mx-auto flex min-h-[50vh] flex-col items-center justify-center py-12">
-          <LiffLoadingBlock label={tCommon("loading")} size={112} />
+        <div className="max-w-lg mx-auto flex flex-col gap-4">
+          <div className="flex items-center gap-2 py-4">
+            <div
+              className="h-5 w-5 shrink-0 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin"
+              aria-hidden
+            />
+            <p className="text-slate-600 text-sm">{tCommon("loading")}</p>
+          </div>
         </div>
       </div>
     );
