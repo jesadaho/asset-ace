@@ -995,7 +995,7 @@ export default function PropertyDetailPage() {
               </>
             )}
 
-            {activeTab === "rental" && property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroupId ?? property.rentDueDayOfMonth ?? property.lastRentPaidAt ?? property.contractStartDate) && (
+            {activeTab === "rental" && property.status !== "Available" && (property.tenantName ?? property.tenantLineId ?? property.agentName ?? property.agentLineId ?? property.lineGroupId ?? property.rentDueDayOfMonth ?? property.contractStartDate) && (
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold text-[#0F172A] flex items-center gap-2 flex-wrap">
                   {t("residentAgent")}
@@ -1006,18 +1006,22 @@ export default function PropertyDetailPage() {
 
                 {/* Tenant section */}
                 {(property.tenantName || property.tenantLineId) && (
-                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
-                    <h4 className="text-sm font-medium text-[#0F172A] mb-1">{t("tenantSection")}</h4>
-                    <p className="text-sm text-slate-600">
-                      {(() => {
-                        const name = property.tenantName ?? t("noValue");
-                        const label = monthsRemainingLabel(property.contractStartDate, property.leaseDurationMonths);
-                        return label ? `${name} (${label})` : name;
-                      })()}
-                      {property.tenantLineId && (
-                        <span className="text-slate-500"> (LINE: {property.tenantLineId})</span>
-                      )}
-                    </p>
+                  <div className="rounded-xl bg-white shadow-sm border border-slate-200 p-4">
+                    <h4 className="text-sm font-medium text-[#0F172A] mb-2">{t("tenantSection")}</h4>
+                    <div className="text-sm text-slate-600 space-y-1">
+                      <p>
+                        <span className="font-medium text-[#0F172A]">
+                          {(() => {
+                            const name = property.tenantName ?? t("noValue");
+                            const label = monthsRemainingLabel(property.contractStartDate, property.leaseDurationMonths);
+                            return label ? `${name} (${label})` : name;
+                          })()}
+                        </span>
+                        {property.tenantLineId && (
+                          <span className="text-slate-500"> (LINE: {property.tenantLineId})</span>
+                        )}
+                      </p>
+                    </div>
                     {(property.contractStartDate || property.leaseDurationMonths != null) && (
                       <div className="mt-2 text-xs text-slate-500 space-y-0.5">
                         {property.contractStartDate && (
@@ -1086,12 +1090,6 @@ export default function PropertyDetailPage() {
                   {property.rentDueDayOfMonth != null && (
                     <p>
                       {t("rentDueDayLabel")}: {property.rentDueDayOfMonth}
-                    </p>
-                  )}
-                  {property.lastRentPaidAt && (
-                    <p>
-                      {t("lastRentPaidLabel")}:{" "}
-                      {new Date(property.lastRentPaidAt).toLocaleDateString()}
                     </p>
                   )}
                   {property.contractUrl && (
@@ -1220,6 +1218,17 @@ export default function PropertyDetailPage() {
                     <p className="text-xs text-slate-500">
                       แนะนำให้ผูกกลุ่มจากใน LINE Group (พิมพ์ “นิชา” → เมนู “ผูกกลุ่มกับสินทรัพย์”)
                     </p>
+                  )}
+                  {property.lineGroup && (
+                    <a
+                      href={property.lineGroup.startsWith("http") ? property.lineGroup : `https://line.me/ti/g/${property.lineGroup}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-[#0F172A] font-medium hover:bg-slate-100 hover:border-slate-300 tap-target min-h-[44px]"
+                    >
+                      <Users className="h-5 w-5 shrink-0" aria-hidden />
+                      <span>เปิด Group chat</span>
+                    </a>
                   )}
                   {property.tenantLineId && (
                     <div className="flex flex-col sm:flex-row gap-2 w-full">
