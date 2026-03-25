@@ -145,9 +145,9 @@ type NichaQuickReplyItem =
 function getNichaQuickReplyItems(): NichaQuickReplyItem[] {
   return [
     {
-      kind: "message",
+      kind: "uri",
       label: "ผูกกลุ่มกับสินทรัพย์",
-      text: "#ผูกกลุ่มกับสินทรัพย์",
+      uri: buildLiffPathUri("/owner/properties/bind"),
       imageUrl: nichaMenuIconUrl("bind"),
     },
     {

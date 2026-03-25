@@ -9,6 +9,7 @@ const ALLOWED_DEEP_LINK_PATHS = new Set([
   ADD_PROPERTY_PATH,
   /** Owner “ทรัพย์ของฉัน” list (LINE นิชาเมนู / LIFF ?path=) */
   "/owner/properties",
+  "/owner/properties/bind",
   "/owners",
   "/agents",
   "/tenants",
