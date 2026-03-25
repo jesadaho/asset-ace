@@ -104,6 +104,13 @@ function monthsRemainingLabel(contractStartDate?: string, leaseDurationMonths?: 
   return `เหลืออีก ${rounded} เดือน`;
 }
 
+function formatDMY(d: Date): string {
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export default function PropertyDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -1257,9 +1264,16 @@ export default function PropertyDetailPage() {
 
             {activeTab === "rental" && (
               <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
-                  รายการรับชำระเงิน
-                </h3>
+                <div className="mb-3">
+                  <h3 className="text-sm font-semibold text-[#0F172A]">
+                    รายการรับชำระเงิน
+                  </h3>
+                  {property.lastRentPaidAt && !Number.isNaN(new Date(property.lastRentPaidAt).getTime()) && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      (ล่าสุดเมื่อ {formatDMY(new Date(property.lastRentPaidAt))})
+                    </p>
+                  )}
+                </div>
                 {rentTransactionsLoading ? (
                   <p className="text-sm text-slate-500">{t("loading")}</p>
                 ) : rentTransactions.length === 0 ? (
