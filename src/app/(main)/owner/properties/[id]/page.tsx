@@ -1013,32 +1013,34 @@ export default function PropertyDetailPage() {
 
                 {/* Tenant section */}
                 {(property.tenantName || property.tenantLineId) && (
-                  <div className="rounded-xl bg-white shadow-sm border border-slate-200 p-4">
-                    <h4 className="text-sm font-medium text-[#0F172A] mb-2">{t("tenantSection")}</h4>
-                    <div className="text-sm text-slate-600 space-y-1">
-                      <p>
-                        <span className="font-medium text-[#0F172A]">
-                          {(() => {
-                            const name = property.tenantName ?? t("noValue");
-                            const label = monthsRemainingLabel(property.contractStartDate, property.leaseDurationMonths);
-                            return label ? `${name} (${label})` : name;
-                          })()}
-                        </span>
-                        {property.tenantLineId && (
-                          <span className="text-slate-500"> (LINE: {property.tenantLineId})</span>
-                        )}
-                      </p>
-                    </div>
-                    {(property.contractStartDate || property.leaseDurationMonths != null) && (
-                      <div className="mt-2 text-xs text-slate-500 space-y-0.5">
-                        {property.contractStartDate && (
-                          <p>{t("contractStart")}: {property.contractStartDate}</p>
-                        )}
-                        {property.leaseDurationMonths != null && (
-                          <p>{t("leaseDuration")}: {property.leaseDurationMonths} {t("months")}</p>
-                        )}
+                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                    <h4 className="text-sm font-medium text-[#0F172A] mb-3">{t("tenantSection")}</h4>
+                    <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-2">
+                      <div className="text-sm text-slate-600">
+                        <p>
+                          <span className="font-medium text-[#0F172A]">
+                            {(() => {
+                              const name = property.tenantName ?? t("noValue");
+                              const label = monthsRemainingLabel(property.contractStartDate, property.leaseDurationMonths);
+                              return label ? `${name} (${label})` : name;
+                            })()}
+                          </span>
+                          {property.tenantLineId && (
+                            <span className="text-slate-500"> (LINE: {property.tenantLineId})</span>
+                          )}
+                        </p>
                       </div>
-                    )}
+                      {(property.contractStartDate || property.leaseDurationMonths != null) && (
+                        <div className="text-xs text-slate-500 space-y-0.5">
+                          {property.contractStartDate && (
+                            <p>{t("contractStart")}: {property.contractStartDate}</p>
+                          )}
+                          {property.leaseDurationMonths != null && (
+                            <p>{t("leaseDuration")}: {property.leaseDurationMonths} {t("months")}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -1233,8 +1235,8 @@ export default function PropertyDetailPage() {
                       rel="noopener noreferrer"
                       className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-[#0F172A] font-medium hover:bg-slate-100 hover:border-slate-300 tap-target min-h-[44px]"
                     >
-                      <Users className="h-5 w-5 shrink-0" aria-hidden />
-                      <span>เปิด Group chat</span>
+                      <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
+                      <span>เปิดแชทกลุ่ม</span>
                     </a>
                   )}
                   {property.tenantLineId && (

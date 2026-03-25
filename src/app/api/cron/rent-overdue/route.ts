@@ -82,11 +82,25 @@ function monthKeyForDue(due: Date): string {
 }
 
 export async function GET(request: NextRequest) {
+  const startedAt = new Date();
+  console.log("[cron/rent-overdue] start", {
+    at: startedAt.toISOString(),
+    graceDays: GRACE_DAYS,
+    hasSecret: Boolean(process.env.CRON_SECRET?.trim()),
+    hasKeyParam: Boolean(request.nextUrl.searchParams.get("key")),
+    hasAuthHeader: Boolean(request.headers.get("authorization")),
+  });
+
   const secret = process.env.CRON_SECRET?.trim();
   if (secret) {
     const authHeader = request.headers.get("authorization");
     const key = request.nextUrl.searchParams.get("key");
     if (authHeader !== `Bearer ${secret}` && key !== secret) {
+      console.warn("[cron/rent-overdue] unauthorized", {
+        at: startedAt.toISOString(),
+        hasKeyParam: Boolean(key),
+        hasAuthHeader: Boolean(authHeader),
+      });
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
   }
@@ -94,6 +108,10 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
     const todayStart = startOfDay(new Date());
+    console.log("[cron/rent-overdue] connected", {
+      at: startedAt.toISOString(),
+      todayStart: todayStart.toISOString(),
+    });
 
     const candidates = await Property.find({
       status: "Occupied",
@@ -103,19 +121,31 @@ export async function GET(request: NextRequest) {
 
     let notified = 0;
     let skipped = 0;
+    let skippedNoDue = 0;
+    let skippedGrace = 0;
+    let skippedPaid = 0;
+    let skippedAlreadyNotified = 0;
+    let skippedNoContract = 0;
+    let attempted = 0;
 
     for (const doc of candidates) {
       const contractStartDate = (doc as { contractStartDate?: Date }).contractStartDate;
-      if (!contractStartDate) continue;
+      if (!contractStartDate) {
+        skippedNoContract++;
+        skipped++;
+        continue;
+      }
       const due = getLastDueDateFromContractStart(
         contractStartDate instanceof Date ? contractStartDate : new Date(contractStartDate),
         todayStart
       );
       if (!due) {
+        skippedNoDue++;
         skipped++;
         continue;
       }
       if (daysBetween(due, todayStart) < GRACE_DAYS) {
+        skippedGrace++;
         skipped++;
         continue;
       }
@@ -126,6 +156,7 @@ export async function GET(request: NextRequest) {
         startOfDay(lastPaid instanceof Date ? lastPaid : new Date(lastPaid)) >= due;
 
       if (paidForPeriod) {
+        skippedPaid++;
         skipped++;
         continue;
       }
@@ -134,6 +165,7 @@ export async function GET(request: NextRequest) {
       const already = (doc as { rentOverdueNotifiedForMonth?: string })
         .rentOverdueNotifiedForMonth;
       if (already === mk) {
+        skippedAlreadyNotified++;
         skipped++;
         continue;
       }
@@ -147,6 +179,7 @@ export async function GET(request: NextRequest) {
         `(ขออภัยหากชำระเรียบร้อยแล้วค่ะ) 🙏 💚`;
 
       let sent = false;
+      attempted++;
       if (groupId) {
         const r = await pushToGroup(groupId, text);
         sent = r.sent;
@@ -165,11 +198,30 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    console.log("[cron/rent-overdue] done", {
+      at: startedAt.toISOString(),
+      candidates: candidates.length,
+      attempted,
+      notified,
+      skipped,
+      skippedNoContract,
+      skippedNoDue,
+      skippedGrace,
+      skippedPaid,
+      skippedAlreadyNotified,
+    });
+
     return NextResponse.json({
       ok: true,
       candidates: candidates.length,
+      attempted,
       notified,
       skipped,
+      skippedNoContract,
+      skippedNoDue,
+      skippedGrace,
+      skippedPaid,
+      skippedAlreadyNotified,
     });
   } catch (err) {
     console.error("[GET /api/cron/rent-overdue]", err);
