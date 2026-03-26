@@ -1,4 +1,4 @@
-# Asset Ace
+# Nicha by AssetHub
 
 A professional multi-tenant property management platform. Target users: **Asset Owners**, **Agents**, and **Tenants**. Built for LINE LIFF with a clean, high-end, mobile-optimized UI.
 
@@ -71,7 +71,7 @@ npm start
 
 1. **Register a LIFF app** in the LINE Developers Console
 2. **Set the endpoint URL** to your deployed HTTPS URL (e.g. `https://yourdomain.com`)
-3. **Hide the top bar (Asset Ace + URL)** – In the LIFF app settings, set **Size** to **Full**. That makes the app full-screen without the LINE browser header. (Tall = bar visible, Compact = smaller bar, Full = no bar.)
+3. **Hide the top bar (Nicha by AssetHub + URL)** – In the LIFF app settings, set **Size** to **Full**. That makes the app full-screen without the LINE browser header. (Tall = bar visible, Compact = smaller bar, Full = no bar.)
 4. **Deploy** – LIFF requires HTTPS in production
 5. **LIFF browser vs external** – In the LINE app, users get LIFF features (profile, share). In an external browser, basic web app behavior applies.
 

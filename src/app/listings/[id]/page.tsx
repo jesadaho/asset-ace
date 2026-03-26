@@ -83,7 +83,7 @@ export default function PublicListingPage() {
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b border-slate-200 py-4 px-4">
         <h1 className="text-lg font-semibold text-[#0F172A] text-center max-w-lg mx-auto">
-          Asset Ace
+          Nicha by AssetHub
         </h1>
       </header>
       <main className="max-w-lg mx-auto px-4 py-6 pb-12">

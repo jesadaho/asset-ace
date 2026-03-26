@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Asset Ace",
+    "appName": "Nicha by AssetHub",
     "viewAll": "View All",
     "addProperty": "Add property",
     "loading": "Loading...",
@@ -26,7 +26,7 @@
     "lineConfigMissing": "LINE OA is not configured for this page yet."
   },
   "onboarding": {
-    "welcomeTitle": "Welcome to Asset Ace",
+    "welcomeTitle": "Welcome to Nicha by AssetHub",
     "chooseRole": "Choose your role to continue",
     "completeProfile": "Complete your profile",
     "logInWithLine": "Log in with LINE",

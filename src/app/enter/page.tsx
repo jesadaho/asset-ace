@@ -34,7 +34,7 @@ function SplashView() {
           <Building2 className="h-8 w-8" aria-hidden />
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
-          Asset Ace
+          Nicha by AssetHub
         </h1>
         <div
           className="h-6 w-6 rounded-full border-2 border-[#10B981]/30 border-t-[#10B981] animate-spin"
@@ -51,7 +51,7 @@ function RoleSelectionView() {
       <div className="max-w-lg mx-auto px-4 py-12">
         <header className="text-center mb-12">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A] mb-2">
-            Asset Ace
+            Nicha by AssetHub
           </h1>
           <p className="text-[#0F172A]/70 text-base sm:text-lg">
             Professional multi-tenant property management

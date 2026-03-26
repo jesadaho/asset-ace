@@ -232,7 +232,7 @@ export default function AdminDashboardPage() {
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Super Admin Dashboard</h1>
         <p className="text-slate-600 mt-1">
-          Overview of the Asset Ace ecosystem
+          Overview of the Nicha by AssetHub ecosystem
         </p>
       </header>
 

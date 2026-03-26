@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Asset Ace",
+    "appName": "Nicha by AssetHub",
     "viewAll": "ดูทั้งหมด",
     "addProperty": "เพิ่มทรัพย์สิน",
     "loading": "กำลังโหลด...",
@@ -26,7 +26,7 @@
     "lineConfigMissing": "ยังไม่ได้ตั้งค่า LINE OA สำหรับหน้านี้"
   },
   "onboarding": {
-    "welcomeTitle": "ยินดีต้อนรับสู่ Asset Ace",
+    "welcomeTitle": "ยินดีต้อนรับสู่ Nicha by AssetHub",
     "chooseRole": "เลือกบทบาทเพื่อดำเนินการต่อ",
     "completeProfile": "กรอกข้อมูลโปรไฟล์",
     "logInWithLine": "เข้าสู่ด้วย LINE",

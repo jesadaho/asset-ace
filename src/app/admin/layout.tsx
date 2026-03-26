@@ -136,7 +136,7 @@ export default function AdminLayout({
           {sidebarOpen && (
             <span className="font-semibold text-slate-800 flex items-center gap-2">
               <Building2 className="h-5 w-5 text-emerald-600" />
-              Asset Ace
+              Nicha by AssetHub
             </span>
           )}
           <button

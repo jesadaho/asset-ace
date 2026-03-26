@@ -48,7 +48,7 @@ export function AssetHubLandingPage() {
             className="h-6 w-6 shrink-0 object-contain"
             aria-hidden
           />
-            Porjai by AssetHub
+            Nicha by AssetHub
           </Link>
           <div className="hidden items-center gap-6 md:flex">
             <a href="#features" className="text-sm text-slate-600 hover:text-slate-900">
@@ -653,7 +653,7 @@ export function AssetHubLandingPage() {
               </div>
             </div>
             <p className="mt-12 border-t border-slate-200 pt-8 text-center text-sm text-slate-500">
-              © {new Date().getFullYear()} Porjai by AssetHub. All rights reserved.
+              © {new Date().getFullYear()} Nicha by AssetHub. All rights reserved.
             </p>
           </div>
         </motion.footer>

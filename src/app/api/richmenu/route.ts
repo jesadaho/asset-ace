@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         body = {
           size,
           selected: true,
-          name: is1200 ? "Asset Ace Owner Menu 1200" : "Asset Ace Owner Menu",
+          name: is1200 ? "Nicha by AssetHub Owner Menu 1200" : "Nicha by AssetHub Owner Menu",
           chatBarText: "Owner Menu",
           areas: areas.map((a) => ({ bounds: a.bounds, action: { type: "uri" as const, label: a.label, uri: a.uri } })),
         };

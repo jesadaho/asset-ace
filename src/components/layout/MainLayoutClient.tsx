@@ -61,7 +61,7 @@ export function MainLayoutClient({
             href="/"
             className="block py-3 px-4 text-lg font-semibold text-[#0F172A] max-w-lg mx-auto"
           >
-            Asset Ace
+            Nicha by AssetHub
           </Link>
         </header>
       )}
