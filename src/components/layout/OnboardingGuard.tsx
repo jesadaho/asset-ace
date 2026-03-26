@@ -152,15 +152,10 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // If LIFF passes deep-link params but points to the same page,
-      // don't call `router.replace()` (avoids logo "flicker" / remount).
-      // Only replace when the resolved deep link would navigate elsewhere.
-      if (hasDeepLinkSearchParams()) {
-        if (deepLinkTarget && deepLinkTarget !== normalizedPathname) {
-          router.replace(pathname);
-          return;
-        }
-      }
+      // Note: don't "clean up" deep-link query via `router.replace(pathname)` here.
+      // LIFF often mutates `path` / `redirect` / `liff.state` which can remount this
+      // guard and re-trigger the logo loader. Real navigation decisions are handled
+      // by the `targetPath` logic above.
 
       setChecked(true);
     }
