@@ -245,13 +245,27 @@ export default function OwnerPropertiesPage() {
 
   if (accessGate === "checking") {
     return (
-      <div className="min-h-full bg-slate-50 p-4 flex items-center justify-center min-h-[50vh]">
-        <div className="flex items-center gap-2">
-          <div
-            className="h-5 w-5 shrink-0 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin"
-            aria-hidden
-          />
-          <p className="text-slate-500 text-sm">{tCommon("loading")}</p>
+      <div className="min-h-full bg-slate-50 p-4 pb-24" role="status" aria-busy="true">
+        <span className="sr-only">{tCommon("loading")}</span>
+        <div className="mb-4 h-7 w-40 rounded bg-slate-200 animate-pulse" aria-hidden />
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+              aria-hidden
+            >
+              <div className="aspect-[4/3] bg-slate-200 animate-pulse" />
+              <div className="p-4 space-y-2">
+                <div className="h-5 w-3/4 rounded bg-slate-200 animate-pulse" />
+                <div className="h-4 w-full rounded bg-slate-200 animate-pulse" />
+                <div className="flex items-center justify-between mt-3">
+                  <div className="h-5 w-24 rounded bg-slate-200 animate-pulse" />
+                  <div className="h-4 w-20 rounded bg-slate-200 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
