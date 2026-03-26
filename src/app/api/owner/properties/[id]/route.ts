@@ -14,6 +14,7 @@ import {
   getPrimaryDisplayPrice,
   getStoredPrimaryPrice,
 } from "@/lib/property-pricing";
+import { sanitizeRentReceiveBankKey } from "@/lib/bank-logo";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
 const STATUSES = ["Available", "Occupied", "Draft", "Paused", "Archived"] as const;
@@ -67,6 +68,9 @@ function toResponse(doc: PropertyDoc) {
     reservedByName: doc.reservedByName,
     reservedByContact: doc.reservedByContact,
     showOnAssetHub: doc.showOnAssetHub,
+    rentReceiveBankKey: doc.rentReceiveBankKey,
+    rentReceiveAccountNumber: doc.rentReceiveAccountNumber,
+    rentReceiveAccountName: doc.rentReceiveAccountName,
     createdAt: doc.createdAt,
   };
 }
@@ -301,6 +305,25 @@ export async function PATCH(
       property.leaseDurationMonths = leaseDurationMonths;
     }
     if (typeof body.contractKey === "string") property.contractKey = body.contractKey || undefined;
+
+    if (typeof body.rentReceiveBankKey === "string") {
+      const k = sanitizeRentReceiveBankKey(body.rentReceiveBankKey);
+      (property as IProperty).rentReceiveBankKey = k ?? undefined;
+    } else if (body.rentReceiveBankKey === null || body.rentReceiveBankKey === "") {
+      (property as IProperty).rentReceiveBankKey = undefined;
+    }
+    if (typeof body.rentReceiveAccountNumber === "string") {
+      (property as IProperty).rentReceiveAccountNumber =
+        body.rentReceiveAccountNumber.trim() || undefined;
+    } else if (body.rentReceiveAccountNumber === null || body.rentReceiveAccountNumber === "") {
+      (property as IProperty).rentReceiveAccountNumber = undefined;
+    }
+    if (typeof body.rentReceiveAccountName === "string") {
+      (property as IProperty).rentReceiveAccountName =
+        body.rentReceiveAccountName.trim() || undefined;
+    } else if (body.rentReceiveAccountName === null || body.rentReceiveAccountName === "") {
+      (property as IProperty).rentReceiveAccountName = undefined;
+    }
 
     await property.save();
 

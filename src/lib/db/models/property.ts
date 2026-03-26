@@ -53,6 +53,13 @@ export interface IProperty {
   vacancyNotified30DayAt?: Date;
   /** When true or unset, listing is shown on Asset Hub (e.g. after move-out). Default true. */
   showOnAssetHub?: boolean;
+  /**
+   * Rent payout display on bill / future owner settings: bank logo key (e.g. kbank, scb)
+   * matching `public/bank-logos/{key}.svg`.
+   */
+  rentReceiveBankKey?: string;
+  rentReceiveAccountNumber?: string;
+  rentReceiveAccountName?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -98,6 +105,9 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     reservedByContact: String,
     vacancyNotified30DayAt: Date,
     showOnAssetHub: { type: Boolean, default: true },
+    rentReceiveBankKey: String,
+    rentReceiveAccountNumber: String,
+    rentReceiveAccountName: String,
   },
   { timestamps: true }
 );

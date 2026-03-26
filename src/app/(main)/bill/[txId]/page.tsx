@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Landmark } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useLiff } from "@/providers/LiffProvider";
 
 const TEAL = "#55BEB0";
+
+/** safe-area + minimum top padding (avoid globals .safe-area-top overriding Tailwind pt-*) */
+const HEADER_PAD_TOP =
+  "pt-[max(2.25rem,env(safe-area-inset-top,0px))]";
 
 type BillPayload = {
   propertyName: string;
@@ -16,11 +20,17 @@ type BillPayload = {
   cycleLabel: string | null;
   fromName?: string;
   toName?: string;
+  payerBankId?: string;
+  payerBankName?: string;
+  payerBankShort?: string;
+  payerBankLogoUrl?: string | null;
   receiverAccountName?: string;
   receiverBankName?: string;
   receiverBankCode?: string;
   receiverAccountNumber?: string;
-  receiverBankLogoUrl?: string | null;
+  /** Always set: bank from owner settings, slip, or default asset */
+  receiverBankLogoUrl: string;
+  receiverBankLogoSource?: "owner" | "slip" | "default";
 };
 
 function CycleLine({ text }: { text: string }) {
@@ -32,6 +42,90 @@ function CycleLine({ text }: { text: string }) {
       <span className="border-b-2 border-emerald-600 font-medium">{m[2]}</span>
       {m[3]}
     </>
+  );
+}
+
+function shimmerClass(lightOnTeal?: boolean): string {
+  return lightOnTeal
+    ? "animate-pulse rounded-md bg-white/25"
+    : "animate-pulse rounded-md bg-slate-200/90";
+}
+
+function BillPageSkeleton({ showBackButton }: { showBackButton: boolean }) {
+  return (
+    <div
+      className="min-h-dvh bg-[#F0F4F4] pb-8"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <span className="sr-only">กำลังโหลดบิล</span>
+      <div
+        className={`px-5 pb-8 ${HEADER_PAD_TOP}`}
+        style={{ backgroundColor: TEAL }}
+      >
+        <div className="flex items-start gap-4">
+          <div className="min-w-0 flex-1">
+            {showBackButton ? (
+              <div
+                className={`mb-3 h-5 w-16 ${shimmerClass(true)}`}
+                aria-hidden
+              />
+            ) : (
+              <div className="mb-3 h-5" aria-hidden />
+            )}
+            <div
+              className={`h-6 max-w-[min(72%,14rem)] ${shimmerClass(true)}`}
+              aria-hidden
+            />
+            <div
+              className={`mt-3 h-10 w-36 ${shimmerClass(true)}`}
+              aria-hidden
+            />
+          </div>
+          <div
+            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-2xl bg-white/20 animate-pulse"
+            aria-hidden
+          />
+        </div>
+      </div>
+
+      <div className="-mt-2 bg-[#F0F4F4] px-4">
+        <div className="rounded-b-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-100/80">
+          <div className={`h-4 max-w-[12rem] ${shimmerClass()}`} aria-hidden />
+        </div>
+      </div>
+
+      <div className="space-y-4 px-4 pt-4">
+        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+          <div className={`mb-3 h-4 w-28 ${shimmerClass()}`} aria-hidden />
+          <div className="flex items-center gap-3">
+            <div
+              className="h-12 w-12 shrink-0 rounded-full bg-slate-200/90 animate-pulse"
+              aria-hidden
+            />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className={`h-4 max-w-[9rem] ${shimmerClass()}`} aria-hidden />
+              <div className={`h-3 max-w-[6rem] ${shimmerClass()}`} aria-hidden />
+            </div>
+            <div className={`h-7 w-20 shrink-0 ${shimmerClass()}`} aria-hidden />
+          </div>
+        </div>
+
+        <div>
+          <div className={`mb-2 h-4 w-32 ${shimmerClass()}`} aria-hidden />
+          <div className="flex gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+            <div
+              className="h-11 w-11 shrink-0 rounded-xl bg-slate-200/90 animate-pulse"
+              aria-hidden
+            />
+            <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+              <div className={`h-4 max-w-[11rem] ${shimmerClass()}`} aria-hidden />
+              <div className={`h-3 max-w-full ${shimmerClass()}`} aria-hidden />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -88,11 +182,7 @@ export default function BillPage() {
     });
 
   if (loading) {
-    return (
-      <div className="min-h-dvh flex items-center justify-center bg-[#F8FAFC] text-slate-600">
-        กำลังโหลด...
-      </div>
-    );
+    return <BillPageSkeleton showBackButton={showBackButton} />;
   }
 
   if (error || !data) {
@@ -132,7 +222,7 @@ export default function BillPage() {
   return (
     <div className="min-h-dvh bg-[#F0F4F4] pb-8">
       <div
-        className="px-5 pt-6 pb-8 text-white safe-area-top"
+        className={`px-5 pb-8 text-white ${HEADER_PAD_TOP}`}
         style={{ backgroundColor: TEAL }}
       >
         <div className="flex gap-4 items-start">
@@ -174,14 +264,34 @@ export default function BillPage() {
       <div className="px-4 pt-4 space-y-4">
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
           <p className="text-sm font-medium text-slate-800">จ่ายแล้ว! 🎉</p>
+          <p className="mt-1 text-[11px] leading-snug text-slate-500">
+            โลโก้/ธนาคารด้านล่างคือฝั่งผู้โอน (ต้นทาง) ตามสลิป — ไม่ใช่ธนาคารของผู้รับเงิน
+          </p>
           <div className="mt-3 flex items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-600">
-              {(data.fromName ?? "?").slice(0, 1)}
-            </div>
+            {data.payerBankLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- local SVG from API
+              <img
+                src={data.payerBankLogoUrl}
+                alt=""
+                width={48}
+                height={48}
+                className="h-12 w-12 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-slate-100"
+              />
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-600">
+                {(data.fromName ?? "?").slice(0, 1)}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-slate-900 truncate">
                 {data.fromName ?? "ผู้จ่าย"}
               </p>
+              {data.payerBankShort || data.payerBankName ? (
+                <p className="text-xs font-medium text-slate-600 truncate">
+                  <span className="text-slate-500">โอนผ่าน </span>
+                  {data.payerBankShort ?? data.payerBankName}
+                </p>
+              ) : null}
               {slipLabel ? (
                 <p className="text-xs text-slate-500">วันที่สลิป {slipLabel}</p>
               ) : null}
@@ -194,26 +304,22 @@ export default function BillPage() {
 
         {showReceiver ? (
           <div>
-            <p className="mb-2 text-sm font-medium text-slate-600">บัญชีรับเงิน</p>
+            <p className="mb-0.5 text-sm font-medium text-slate-600">
+              บัญชีรับเงิน (ปลายทาง)
+            </p>
+            <p className="mb-2 text-[11px] leading-snug text-slate-500">
+              โลโก้ปลายทาง: ข้อมูลทรัพย์ → สลิป → โลโก้เริ่มต้น (ตั้งค่าได้ในหน้าแก้ไขทรัพย์ภายหลัง)
+            </p>
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
               <div className="flex items-start gap-3">
-                {data.receiverBankLogoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- small local SVG badge
-                  <img
-                    src={data.receiverBankLogoUrl}
-                    alt=""
-                    width={44}
-                    height={44}
-                    className="h-11 w-11 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-slate-100"
-                  />
-                ) : (
-                  <div
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 ring-1 ring-slate-200"
-                    aria-hidden
-                  >
-                    <Landmark className="h-6 w-6" strokeWidth={1.75} />
-                  </div>
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element -- local SVG from API */}
+                <img
+                  src={data.receiverBankLogoUrl}
+                  alt=""
+                  width={44}
+                  height={44}
+                  className="h-11 w-11 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-slate-100"
+                />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-900">
                     {data.receiverAccountName ?? data.toName ?? "—"}
@@ -225,6 +331,21 @@ export default function BillPage() {
                         .join(" ")}
                     </p>
                   )}
+                  {data.receiverBankLogoSource === "default" ? (
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      โลโก้เริ่มต้น — ตั้งค่าธนาคารรับค่าเช่าในหน้าแก้ไขทรัพย์ได้ภายหลัง
+                    </p>
+                  ) : null}
+                  {data.receiverBankLogoSource === "owner" ? (
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      ธนาคารจากข้อมูลทรัพย์ที่คุณตั้งค่า
+                    </p>
+                  ) : null}
+                  {data.receiverBankLogoSource === "slip" ? (
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      ธนาคารจากข้อมูลในสลิป (ถ้ามี)
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </div>
