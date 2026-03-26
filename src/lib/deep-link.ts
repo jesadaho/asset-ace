@@ -27,10 +27,16 @@ export function getDeepLinkTargetFromSearchParams(
     if (liffState) {
       try {
         const decoded = decodeURIComponent(liffState);
-        const stateParams = new URLSearchParams(
-          decoded.startsWith("?") ? decoded.slice(1) : decoded
-        );
-        path = stateParams.get("path") ?? stateParams.get("redirect") ?? null;
+        // LIFF may encode the target as a raw path: `/owner/properties`
+        // OR encode it as a querystring-like blob: `?path=/owner/properties`
+        if (decoded.startsWith("/")) {
+          path = decoded;
+        } else {
+          const stateParams = new URLSearchParams(
+            decoded.startsWith("?") ? decoded.slice(1) : decoded
+          );
+          path = stateParams.get("path") ?? stateParams.get("redirect") ?? null;
+        }
       } catch {
         path = null;
       }

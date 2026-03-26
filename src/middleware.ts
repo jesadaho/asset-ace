@@ -28,6 +28,9 @@ export function middleware(request: NextRequest) {
       next.pathname = deep;
       next.searchParams.delete("path");
       next.searchParams.delete("redirect");
+      // LIFF sometimes passes the target via `liff.state=/target/path`.
+      // Remove it to avoid the app re-parsing and triggering another redirect.
+      next.searchParams.delete("liff.state");
       return NextResponse.redirect(next, 307);
     }
   }
