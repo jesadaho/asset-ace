@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getDueDateOnOrBefore, periodKeyFromSlipDate } from "./period";
+import {
+  billCycleDescription,
+  dueDateInPeriodMonth,
+  getDueDateOnOrBefore,
+  periodKeyFromSlipDate,
+} from "./period";
 
 function d(y: number, m1: number, day: number): Date {
   // Use noon local time to avoid DST edge cases in tests.
@@ -49,3 +54,19 @@ describe("getDueDateOnOrBefore", () => {
   });
 });
 
+describe("dueDateInPeriodMonth / billCycleDescription", () => {
+  it("returns due day in the period month from contract cycle", () => {
+    const contractStart = d(2026, 1, 26);
+    const due = dueDateInPeriodMonth(contractStart, "2026-02");
+    expect(due?.getFullYear()).toBe(2026);
+    expect(due?.getMonth()).toBe(1);
+    expect(due?.getDate()).toBe(26);
+  });
+
+  it("formats Thai bill cycle label", () => {
+    const contractStart = d(2026, 1, 26);
+    expect(billCycleDescription(contractStart, "2026-02")).toBe(
+      "รอบวันที่ 26 ก.พ. (เก็บทุกเดือน)"
+    );
+  });
+});

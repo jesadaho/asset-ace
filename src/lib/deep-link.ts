@@ -48,7 +48,9 @@ export function getDeepLinkTargetFromSearchParams(
 
   if (!path || !path.startsWith("/")) return null;
   const normalized = path.split("?")[0];
-  return ALLOWED_DEEP_LINK_PATHS.has(normalized) ? normalized : null;
+  if (ALLOWED_DEEP_LINK_PATHS.has(normalized)) return normalized;
+  if (/^\/bill\/[a-fA-F0-9]{24}$/.test(normalized)) return normalized;
+  return null;
 }
 
 /** Build URLSearchParams from Next.js `searchParams` page prop (string or string[]). */

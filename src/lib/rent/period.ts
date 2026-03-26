@@ -89,3 +89,51 @@ export function periodKeyFromSlipDate(
   return monthKey(due);
 }
 
+const TH_MONTHS_SHORT = [
+  "ม.ค.",
+  "ก.พ.",
+  "มี.ค.",
+  "เม.ย.",
+  "พ.ค.",
+  "มิ.ย.",
+  "ก.ค.",
+  "ส.ค.",
+  "ก.ย.",
+  "ต.ค.",
+  "พ.ย.",
+  "ธ.ค.",
+] as const;
+
+/**
+ * Due calendar day in the month of `periodKey` (YYYY-MM), using the same
+ * day-of-month rule as the rent cycle (clamped to month length).
+ */
+export function dueDateInPeriodMonth(
+  contractStartDate: Date,
+  periodKey: string
+): Date | null {
+  const m = /^(\d{4})-(\d{2})$/.exec(periodKey);
+  if (!m) return null;
+  const y = Number(m[1]);
+  const monthIndex = Number(m[2]) - 1;
+  if (Number.isNaN(y) || monthIndex < 0 || monthIndex > 11) return null;
+  const start = startOfDay(contractStartDate);
+  if (Number.isNaN(start.getTime())) return null;
+  const day = start.getDate();
+  const d = clampDay(y, monthIndex, day);
+  const due = startOfDay(new Date(y, monthIndex, d));
+  return Number.isNaN(due.getTime()) ? null : due;
+}
+
+/** Thai label e.g. "รอบวันที่ 26 ก.พ. (เก็บทุกเดือน)" for bill UI. */
+export function billCycleDescription(
+  contractStartDate: Date,
+  periodKey: string
+): string | null {
+  const due = dueDateInPeriodMonth(contractStartDate, periodKey);
+  if (!due) return null;
+  const day = due.getDate();
+  const label = TH_MONTHS_SHORT[due.getMonth()];
+  if (!label) return null;
+  return `รอบวันที่ ${day} ${label} (เก็บทุกเดือน)`;
+}

@@ -34,23 +34,32 @@ type LineWebhookBody = {
   events?: LineWebhookEvent[];
 };
 
+type EasySlipRawSlip = {
+  date?: string;
+  sender?: {
+    account?: {
+      name?: { th?: string; en?: string };
+      bank?: { name?: { th?: string; en?: string } | string };
+      number?: string;
+    };
+  };
+  receiver?: {
+    account?: {
+      name?: { th?: string; en?: string };
+      bank?: { name?: { th?: string; en?: string } | string };
+      number?: string;
+    };
+  };
+  channel?: string;
+  transChannel?: string;
+  sendingBank?: string;
+};
+
 type EasySlipSuccessResponse = {
   success?: boolean;
   data?: {
     amountInSlip?: number;
-    rawSlip?: {
-      date?: string;
-      sender?: {
-        account?: {
-          name?: { th?: string; en?: string };
-        };
-      };
-      receiver?: {
-        account?: {
-          name?: { th?: string; en?: string };
-        };
-      };
-    };
+    rawSlip?: EasySlipRawSlip;
   };
 };
 
@@ -160,6 +169,44 @@ async function replyText(replyToken: string, text: string): Promise<void> {
   }
 }
 
+type ReplyMessage =
+  | { type: "text"; text: string }
+  | { type: "flex"; altText: string; contents: unknown };
+
+async function replyMessages(
+  replyToken: string,
+  messages: ReplyMessage[]
+): Promise<void> {
+  const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
+  if (!accessToken) {
+    console.warn(
+      "[line-webhook] LINE_CHANNEL_ACCESS_TOKEN missing, skip reply"
+    );
+    return;
+  }
+
+  const res = await fetch("https://api.line.me/v2/bot/message/reply", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      replyToken,
+      messages: messages.slice(0, 5),
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(
+      "[line-webhook] reply (multi) API failed:",
+      res.status,
+      body.slice(0, 300)
+    );
+  }
+}
+
 /** LINE quick reply label max 20 chars (Messaging API). */
 function clipLabel(label: string): string {
   return Array.from(label).slice(0, 20).join("");
@@ -256,7 +303,8 @@ const NICHCHA_MENU_HINTS: Record<string, string> = {
   "#ผูกกลุ่มกับสินทรัพย์":
     "ผูกกลุ่มได้ 2 วิธี:\n1) กดเมนู “ผูกกลุ่มกับสินทรัพย์” แล้วเลือกทรัพย์ในแอป (แนะนำ)\n2) พิมพ์ `/bind` ตามด้วยรหัสทรัพย์ 24 ตัว\nตัวอย่าง: `/bind 674a1b2c3d4e5f678901234`",
   "#ดูบิลทั้งหมด":
-    "ฟีเจอร์นี้พัฒนาอยู่ — เปิดดูจากแอปได้ที่ " + webAppUrl(),
+    "หลังโอนค่าเช่าและนิชายืนยันสลิปแล้ว จะมีลิงก์บิลในแชท — หรือเปิดดูประวัติที่หน้าทรัพย์ในแอป: " +
+    buildLiffPathUri("/owner/properties"),
   "#ดูสินทรัพย์ทั้งหมด":
     "กดปุ่มเมนู \"ดูสินทรัพย์ทั้งหมด\" เพื่อเปิดหน้าทรัพย์ของฉันในแอป หรือพิมพ์คำสั่งนี้ หรือเข้า: " +
     webAppUrl() +
@@ -429,6 +477,145 @@ function toCents(x: number): number {
 
 function formatBaht(x: number): string {
   return `${x.toLocaleString("th-TH")}.–`;
+}
+
+function slipPaymentChannelLabel(rawSlip: EasySlipRawSlip | undefined): string {
+  if (!rawSlip) return "โอนเงิน";
+  const r = rawSlip as Record<string, unknown>;
+  for (const key of ["channel", "transChannel", "sendingBank", "appName"]) {
+    const v = r[key];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  const bank = rawSlip.sender?.account?.bank?.name;
+  if (typeof bank === "string" && bank.trim()) return bank.trim();
+  if (bank && typeof bank === "object") {
+    const th = (bank as { th?: string }).th;
+    const en = (bank as { en?: string }).en;
+    if (th?.trim()) return th.trim();
+    if (en?.trim()) return en.trim();
+  }
+  return "โอนเงิน";
+}
+
+function formatSlipAmountLine(x: number): string {
+  return `${x.toLocaleString("th-TH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function buildPaidRentFlex(args: {
+  propertyName: string;
+  payerLabel: string;
+  amount: number;
+  billUri: string;
+}) {
+  const { propertyName, payerLabel, amount, billUri } = args;
+  const amountCompact = amount.toLocaleString("th-TH", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+
+  const contents = {
+    type: "bubble",
+    header: {
+      type: "box",
+      layout: "horizontal",
+      spacing: "md",
+      paddingAll: "16px",
+      backgroundColor: "#55BEB0",
+      contents: [
+        {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: propertyName.slice(0, 120),
+              weight: "bold",
+              color: "#FFFFFF",
+              size: "sm",
+              wrap: true,
+            },
+            {
+              type: "text",
+              text: "จ่ายครบแล้ว",
+              weight: "bold",
+              color: "#FFFFFF",
+              size: "xl",
+              margin: "sm",
+            },
+          ],
+          flex: 1,
+        },
+        {
+          type: "text",
+          text: "🎉",
+          size: "3xl",
+          flex: 0,
+          gravity: "center",
+        },
+      ],
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "md",
+      paddingAll: "16px",
+      contents: [
+        {
+          type: "box",
+          layout: "horizontal",
+          spacing: "md",
+          contents: [
+            { type: "text", text: "🥇", flex: 0, size: "lg" },
+            {
+              type: "text",
+              text: payerLabel.slice(0, 60),
+              weight: "bold",
+              size: "md",
+              flex: 1,
+              wrap: true,
+            },
+            {
+              type: "text",
+              text: amountCompact,
+              weight: "bold",
+              size: "lg",
+              flex: 0,
+              align: "end",
+              color: "#0F172A",
+            },
+          ],
+        },
+      ],
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      spacing: "sm",
+      paddingAll: "12px",
+      contents: [
+        {
+          type: "button",
+          style: "primary",
+          color: "#55BEB0",
+          height: "md",
+          action: {
+            type: "uri",
+            label: "ดูรายละเอียด",
+            uri: billUri,
+          },
+        },
+      ],
+    },
+  };
+
+  return {
+    type: "flex" as const,
+    altText: `จ่ายครบแล้ว: ${propertyName} ${amountCompact} บาท`,
+    contents,
+  };
 }
 
 function buildOwnerApprovalFlex(args: {
@@ -953,6 +1140,7 @@ export async function POST(request: NextRequest) {
               propertyId: groupProperty._id,
               lineGroupId: groupId,
               lineMessageId: event.message.id,
+              submittedByLineUserId: lineUserId,
               slipDate: slipDate && !Number.isNaN(slipDate.getTime()) ? slipDate : new Date(),
               amount: typeof slipAmount === "number" ? slipAmount : 0,
               fromName,
@@ -982,6 +1170,7 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        let paidBillTxId: string | null = null;
         try {
           await connectDB();
 
@@ -1007,6 +1196,7 @@ export async function POST(request: NextRequest) {
               propertyId: groupProperty._id,
               lineGroupId: groupId,
               lineMessageId: event.message.id,
+              submittedByLineUserId: lineUserId,
               slipDate,
               amount: slipAmount,
               fromName,
@@ -1025,6 +1215,7 @@ export async function POST(request: NextRequest) {
               propertyId: groupProperty._id,
               lineGroupId: groupId,
               lineMessageId: event.message.id,
+              submittedByLineUserId: lineUserId,
               slipDate,
               amount: slipAmount,
               fromName,
@@ -1082,10 +1273,11 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
-          await RentTransaction.create({
+          const txDoc = await RentTransaction.create({
             propertyId: groupProperty._id,
             lineGroupId: groupId,
             lineMessageId: event.message.id,
+            submittedByLineUserId: lineUserId,
             slipDate,
             amount: slipAmount,
             fromName,
@@ -1094,6 +1286,7 @@ export async function POST(request: NextRequest) {
             status: "accepted",
             raw: parsed?.data?.rawSlip ? { rawSlip: parsed.data.rawSlip } : undefined,
           });
+          paidBillTxId = txDoc._id.toString();
 
           await Property.updateOne(
             { _id: groupProperty._id },
@@ -1105,10 +1298,24 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        await replyText(
-          event.replyToken,
-          `${formatEasySlipResult(verifyResult.bodyText || "OK")}\n\nสถานะ: บันทึกค่าเช่าเรียบร้อย ✅`
-        );
+        if (paidBillTxId) {
+          const propTitle = groupProperty.name?.trim() || "ทรัพย์";
+          const payer = fromName?.trim() || "ผู้จ่าย";
+          const receiver = toName?.trim() || "ผู้รับ";
+          const channel = slipPaymentChannelLabel(parsed?.data?.rawSlip);
+          const line1 = `${payer} จ่ายแล้ว ${formatSlipAmountLine(slipAmount)} บาท ให้ ${receiver} โดย ${channel}`;
+          const line2 = `🥇 บิล "${propTitle}" จ่ายแล้ว`;
+          const billUri = buildLiffPathUri(`/bill/${paidBillTxId}`);
+          await replyMessages(event.replyToken, [
+            { type: "text", text: `${line1}\n${line2}` },
+            buildPaidRentFlex({
+              propertyName: propTitle,
+              payerLabel: payer,
+              amount: slipAmount,
+              billUri,
+            }),
+          ]);
+        }
         continue;
       }
 

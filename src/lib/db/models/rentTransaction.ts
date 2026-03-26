@@ -13,6 +13,8 @@ export interface IRentTransaction {
   propertyId: mongoose.Types.ObjectId;
   lineGroupId?: string;
   lineMessageId?: string;
+  /** LINE user who sent the slip image in the group (for bill access). */
+  submittedByLineUserId?: string;
   slipDate: Date;
   amount: number;
   fromName?: string;
@@ -35,6 +37,7 @@ const RentTransactionSchema = new mongoose.Schema<IRentTransaction>(
     propertyId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
     lineGroupId: { type: String, index: true },
     lineMessageId: { type: String },
+    submittedByLineUserId: { type: String, index: true, sparse: true },
     slipDate: { type: Date, required: true, index: true },
     amount: { type: Number, required: true },
     fromName: String,
