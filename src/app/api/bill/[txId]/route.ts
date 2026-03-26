@@ -5,12 +5,16 @@ import { RentTransaction } from "@/lib/db/models/rentTransaction";
 import { Property } from "@/lib/db/models/property";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { billCycleDescription } from "@/lib/rent/period";
+import { bankLogoPath, inferBankLogoKey } from "@/lib/bank-logo";
 
 type RawSlipShape = {
   receiver?: {
     account?: {
       name?: { th?: string; en?: string };
-      bank?: { name?: { th?: string; en?: string } | string };
+      bank?: {
+        name?: { th?: string; en?: string } | string;
+        code?: string;
+      };
       number?: string;
     };
   };
@@ -27,15 +31,19 @@ function bankNameFromField(
 function receiverFromTxRaw(raw: Record<string, unknown> | undefined): {
   accountName?: string;
   bankName?: string;
+  bankCode?: string;
   accountNumber?: string;
 } {
   if (!raw) return {};
   const slip = raw.rawSlip as RawSlipShape | undefined;
   const acc = slip?.receiver?.account;
   const accountName = acc?.name?.th?.trim() || acc?.name?.en?.trim();
+  const bankCode =
+    typeof acc?.bank?.code === "string" ? acc.bank.code.trim() : undefined;
   return {
     accountName,
     bankName: bankNameFromField(acc?.bank?.name),
+    bankCode,
     accountNumber:
       typeof acc?.number === "string" ? acc.number.trim() : undefined,
   };
@@ -90,6 +98,10 @@ export async function GET(
       ? (tx.raw as Record<string, unknown>)
       : undefined;
   const recv = receiverFromTxRaw(raw);
+  const logoKey =
+    inferBankLogoKey(recv.bankName, recv.bankCode) ||
+    inferBankLogoKey(tx.toName, null);
+  const receiverBankLogoUrl = logoKey ? bankLogoPath(logoKey) : null;
 
   const contractStart = property.contractStartDate;
   let cycleLabel: string | null = null;
@@ -112,6 +124,8 @@ export async function GET(
     toName: tx.toName,
     receiverAccountName: recv.accountName ?? tx.toName,
     receiverBankName: recv.bankName,
+    receiverBankCode: recv.bankCode,
     receiverAccountNumber: recv.accountNumber,
+    receiverBankLogoUrl,
   });
 }

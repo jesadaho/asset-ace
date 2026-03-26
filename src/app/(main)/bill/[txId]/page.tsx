@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Landmark } from "lucide-react";
+import { useLiff } from "@/providers/LiffProvider";
 
 const TEAL = "#55BEB0";
 
@@ -17,7 +18,9 @@ type BillPayload = {
   toName?: string;
   receiverAccountName?: string;
   receiverBankName?: string;
+  receiverBankCode?: string;
   receiverAccountNumber?: string;
+  receiverBankLogoUrl?: string | null;
 };
 
 function CycleLine({ text }: { text: string }) {
@@ -35,6 +38,9 @@ function CycleLine({ text }: { text: string }) {
 export default function BillPage() {
   const params = useParams();
   const router = useRouter();
+  const { isInClient, isReady } = useLiff();
+  /** เปิดจาก Flex/LIFF ใน LINE ไม่โชว์ปุ่มกลับ */
+  const showBackButton = isReady && !isInClient;
   const txId = typeof params.txId === "string" ? params.txId : "";
   const [data, setData] = useState<BillPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -92,14 +98,16 @@ export default function BillPage() {
   if (error || !data) {
     return (
       <div className="min-h-dvh flex flex-col bg-[#F8FAFC] px-4 py-6">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mb-4 flex items-center gap-2 text-sm text-slate-600 tap-target"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          กลับ
-        </button>
+        {showBackButton ? (
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="mb-4 flex items-center gap-2 text-sm text-slate-600 tap-target"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            กลับ
+          </button>
+        ) : null}
         <p className="text-center text-slate-700">{error ?? "ไม่พบข้อมูล"}</p>
       </div>
     );
@@ -127,18 +135,32 @@ export default function BillPage() {
         className="px-5 pt-6 pb-8 text-white safe-area-top"
         style={{ backgroundColor: TEAL }}
       >
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mb-4 flex items-center gap-2 text-sm text-white/90 tap-target -ml-1"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          กลับ
-        </button>
-        <h1 className="text-lg font-medium leading-snug">{data.propertyName}</h1>
-        <p className="mt-3 text-3xl font-bold tracking-tight">
-          ฿ {formatMoney(data.amount)}
-        </p>
+        <div className="flex gap-4 items-start">
+          <div className="min-w-0 flex-1">
+            {showBackButton ? (
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="mb-3 flex items-center gap-2 text-sm text-white/90 tap-target -ml-1"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                กลับ
+              </button>
+            ) : null}
+            <h1 className="text-lg font-medium leading-snug">
+              {data.propertyName}
+            </h1>
+            <p className="mt-3 text-3xl font-bold tracking-tight">
+              ฿ {formatMoney(data.amount)}
+            </p>
+          </div>
+          <div
+            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center select-none"
+            aria-hidden
+          >
+            <span className="text-[2.75rem] leading-none drop-shadow-sm">📆</span>
+          </div>
+        </div>
       </div>
 
       {data.cycleLabel ? (
@@ -174,16 +196,37 @@ export default function BillPage() {
           <div>
             <p className="mb-2 text-sm font-medium text-slate-600">บัญชีรับเงิน</p>
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-              <p className="font-semibold text-slate-900">
-                {data.receiverAccountName ?? data.toName ?? "—"}
-              </p>
-              {(data.receiverBankName || data.receiverAccountNumber) && (
-                <p className="mt-1 text-sm text-slate-600">
-                  {[data.receiverBankName, data.receiverAccountNumber]
-                    .filter(Boolean)
-                    .join(" ")}
-                </p>
-              )}
+              <div className="flex items-start gap-3">
+                {data.receiverBankLogoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- small local SVG badge
+                  <img
+                    src={data.receiverBankLogoUrl}
+                    alt=""
+                    width={44}
+                    height={44}
+                    className="h-11 w-11 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-slate-100"
+                  />
+                ) : (
+                  <div
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 ring-1 ring-slate-200"
+                    aria-hidden
+                  >
+                    <Landmark className="h-6 w-6" strokeWidth={1.75} />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-slate-900">
+                    {data.receiverAccountName ?? data.toName ?? "—"}
+                  </p>
+                  {(data.receiverBankName || data.receiverAccountNumber) && (
+                    <p className="mt-1 text-sm text-slate-600">
+                      {[data.receiverBankName, data.receiverAccountNumber]
+                        .filter(Boolean)
+                        .join(" ")}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         ) : null}
