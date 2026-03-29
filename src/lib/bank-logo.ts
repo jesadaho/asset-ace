@@ -157,7 +157,8 @@ export function payerBankLogoKeyFromSenderBank(bank: {
   const idNorm =
     bank.id != null &&
     (typeof bank.id === "string" || typeof bank.id === "number")
-      ? normalizeNumericBankId(bank.id) ?? String(bank.id).trim() || null
+      ? normalizeNumericBankId(bank.id) ??
+        (String(bank.id).trim() || null)
       : null;
 
   return (
