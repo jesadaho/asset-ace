@@ -1225,7 +1225,7 @@ export default function PropertyDetailPage() {
                 <div className="space-y-3">
                   {!property.lineGroupId && (
                     <p className="text-xs text-slate-500">
-                      แนะนำให้ผูกกลุ่มจากใน LINE Group (พิมพ์ “นิชา” → เมนู “ผูกกลุ่มกับสินทรัพย์”)
+                      แนะนำให้ผูกแชทกลุ่มจากใน LINE Group (พิมพ์ “นิชา” → เมนู “ผูกแชทกลุ่มกับสินทรัพย์”)
                     </p>
                   )}
                   {property.lineGroup && (

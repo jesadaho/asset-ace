@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Check, Plus } from "lucide-react";
+import { useLiff } from "@/providers/LiffProvider";
 
 type Role = "owner" | "agent" | "tenant";
 
@@ -46,10 +47,8 @@ function BindPageFullSkeleton() {
   return (
     <div className="min-h-dvh bg-slate-50" role="status" aria-busy="true">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white safe-area-top">
-        <div className="flex max-w-lg mx-auto items-center gap-2 px-4 py-3">
-          <div className="h-10 w-10 shrink-0 rounded-lg bg-slate-200 animate-pulse" />
-          <div className="mx-6 h-6 flex-1 rounded-lg bg-slate-200 animate-pulse" />
-          <div className="w-9 shrink-0" aria-hidden />
+        <div className="relative mx-auto flex max-w-lg min-h-[52px] items-center justify-center px-4 py-3">
+          <div className="h-6 w-48 max-w-[70%] rounded-lg bg-slate-200 animate-pulse" />
         </div>
       </header>
       <main className="max-w-lg mx-auto space-y-4 px-4 py-6 pb-28">
@@ -72,8 +71,12 @@ function BindPageFullSkeleton() {
 
 export default function BindPropertyPage() {
   const router = useRouter();
+  const { isReady, isInClient } = useLiff();
+  /** เปิดจาก Flex/LIFF ใน LINE — ไม่โชว์ปุ่มกลับ (ใช้ปิดหน้าต่างของ LINE) */
+  const showBackButton = isReady && !isInClient;
   const tCommon = useTranslations("common");
   const tAuth = useTranslations("auth");
+  const tEdit = useTranslations("propertyEdit");
 
   const [accessGate, setAccessGate] = useState<"checking" | "allowed">(
     "checking"
@@ -312,18 +315,19 @@ export default function BindPropertyPage() {
   return (
     <div className="min-h-dvh bg-slate-50">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white safe-area-top">
-        <div className="flex max-w-lg mx-auto items-center gap-2 px-4 py-3">
-          <Link
-            href="/owner/properties"
-            className="shrink-0 flex items-center justify-center p-2 -m-2 text-[#0F172A] hover:text-[#003366] tap-target min-h-[44px] min-w-[44px]"
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" aria-hidden />
-          </Link>
-          <h1 className="min-w-0 flex-1 text-lg font-semibold text-[#0F172A] text-center truncate">
-            ผูกกลุ่มกับสินทรัพย์
+        <div className="relative mx-auto flex max-w-lg min-h-[52px] items-center justify-center px-4 py-3">
+          {showBackButton ? (
+            <Link
+              href="/owner/properties"
+              className="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-[#0F172A] hover:text-[#003366] tap-target"
+              aria-label={tEdit("backAria")}
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden />
+            </Link>
+          ) : null}
+          <h1 className="max-w-[min(100%,18rem)] truncate px-10 text-center text-lg font-semibold text-[#0F172A]">
+            ผูกแชทกลุ่มกับสินทรัพย์
           </h1>
-          <span className="w-9" aria-hidden />
         </div>
       </header>
 
