@@ -104,6 +104,33 @@ const TH_MONTHS_SHORT = [
   "ธ.ค.",
 ] as const;
 
+const TH_MONTHS_FULL = [
+  "มกราคม",
+  "กุมภาพันธ์",
+  "มีนาคม",
+  "เมษายน",
+  "พฤษภาคม",
+  "มิถุนายน",
+  "กรกฎาคม",
+  "สิงหาคม",
+  "กันยายน",
+  "ตุลาคม",
+  "พฤศจิกายน",
+  "ธันวาคม",
+] as const;
+
+/** e.g. periodKey "2026-03" → "มีนาคม 2569" */
+export function rentPeriodThaiMonthYear(periodKey: string): string | null {
+  const m = /^(\d{4})-(\d{2})$/.exec(periodKey.trim());
+  if (!m) return null;
+  const y = Number(m[1]);
+  const monthIndex = Number(m[2]) - 1;
+  if (Number.isNaN(y) || monthIndex < 0 || monthIndex > 11) return null;
+  const name = TH_MONTHS_FULL[monthIndex];
+  if (!name) return null;
+  return `${name} ${y + 543}`;
+}
+
 /**
  * Due calendar day in the month of `periodKey` (YYYY-MM), using the same
  * day-of-month rule as the rent cycle (clamped to month length).

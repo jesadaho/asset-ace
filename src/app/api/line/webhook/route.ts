@@ -5,7 +5,7 @@ import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
 import { BindCode } from "@/lib/db/models/bindCode";
 import { RentTransaction } from "@/lib/db/models/rentTransaction";
-import { periodKeyFromSlipDate } from "@/lib/rent/period";
+import { periodKeyFromSlipDate, rentPeriodThaiMonthYear } from "@/lib/rent/period";
 import { User } from "@/lib/db/models/user";
 import { pushMessages, pushToGroup } from "@/lib/line/push";
 
@@ -504,6 +504,61 @@ function formatSlipAmountLine(x: number): string {
   })}`;
 }
 
+/** Last token single letter → add period (Thai slip initials). */
+function polishTrailingInitial(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  const last = parts[parts.length - 1];
+  if (last.length === 1 && !last.endsWith(".")) {
+    parts[parts.length - 1] = `${last}.`;
+  }
+  return parts.join(" ");
+}
+
+function stripLeadingThaiHonorific(s: string): string {
+  return s.replace(/^\s*(นางสาว|นาง|นาย|ด\.ช\.|ด\.ญ\.)\s+/u, "").trim();
+}
+
+function formatPayerPartyForReceipt(fromName: string): string {
+  const core = polishTrailingInitial(stripLeadingThaiHonorific(fromName));
+  if (!core) return "คุณผู้จ่าย";
+  return `คุณ${core}`;
+}
+
+function formatReceiverPartyForReceipt(toName: string): string {
+  const t = toName.trim();
+  if (!t) return "ผู้รับเงิน";
+  const polished = polishTrailingInitial(t);
+  if (/^(นาย|นางสาว|นาง)\s/u.test(polished)) {
+    return polished.replace(/\s+/g, " ");
+  }
+  const core = polishTrailingInitial(stripLeadingThaiHonorific(t));
+  return core ? `คุณ${core}` : polished;
+}
+
+function buildPaidRentConfirmationText(args: {
+  propertyName: string;
+  periodKey: string;
+  fromName?: string;
+  toName?: string;
+  slipAmount: number;
+}): string {
+  const { propertyName, periodKey, fromName, toName, slipAmount } = args;
+  const periodLabel =
+    rentPeriodThaiMonthYear(periodKey) ?? periodKey;
+  const payer = formatPayerPartyForReceipt(fromName?.trim() || "");
+  const receiver = formatReceiverPartyForReceipt(toName?.trim() || "");
+  return [
+    "ยืนยันการรับชำระเงินสำเร็จ ✨",
+    "",
+    `🏢 ${propertyName}`,
+    `🗓️ ค่าเช่ารอบเดือน: ${periodLabel}`,
+    `👤 ${payer} ➔ ${receiver}`,
+    `💰 ยอดโอน: ${formatSlipAmountLine(slipAmount)} บาท`,
+    "✅ สถานะ: ชำระเรียบร้อยแล้วค่ะ",
+  ].join("\n");
+}
+
 function buildPaidRentFlex(args: {
   propertyName: string;
   payerLabel: string;
@@ -539,7 +594,7 @@ function buildPaidRentFlex(args: {
             },
             {
               type: "text",
-              text: "จ่ายครบแล้ว",
+              text: "ชำระเรียบร้อย",
               weight: "bold",
               color: "#FFFFFF",
               size: "xl",
@@ -568,7 +623,7 @@ function buildPaidRentFlex(args: {
           layout: "horizontal",
           spacing: "md",
           contents: [
-            { type: "text", text: "🥇", flex: 0, size: "lg" },
+            { type: "text", text: "👤", flex: 0, size: "lg" },
             {
               type: "text",
               text: payerLabel.slice(0, 60),
@@ -613,7 +668,7 @@ function buildPaidRentFlex(args: {
 
   return {
     type: "flex" as const,
-    altText: `จ่ายครบแล้ว: ${propertyName} ${amountCompact} บาท`,
+    altText: `ยืนยันการรับชำระเงินสำเร็จ ${propertyName} ${amountCompact} บาท`,
     contents,
   };
 }
@@ -1301,13 +1356,16 @@ export async function POST(request: NextRequest) {
         if (paidBillTxId) {
           const propTitle = groupProperty.name?.trim() || "ทรัพย์";
           const payer = fromName?.trim() || "ผู้จ่าย";
-          const receiver = toName?.trim() || "ผู้รับ";
-          const channel = slipPaymentChannelLabel(parsed?.data?.rawSlip);
-          const line1 = `${payer} จ่ายแล้ว ${formatSlipAmountLine(slipAmount)} บาท ให้ ${receiver} โดย ${channel}`;
-          const line2 = `🥇 บิล "${propTitle}" จ่ายแล้ว`;
           const billUri = buildLiffPathUri(`/bill/${paidBillTxId}`);
+          const confirmationText = buildPaidRentConfirmationText({
+            propertyName: propTitle,
+            periodKey,
+            fromName,
+            toName,
+            slipAmount,
+          });
           await replyMessages(event.replyToken, [
-            { type: "text", text: `${line1}\n${line2}` },
+            { type: "text", text: confirmationText },
             buildPaidRentFlex({
               propertyName: propTitle,
               payerLabel: payer,
