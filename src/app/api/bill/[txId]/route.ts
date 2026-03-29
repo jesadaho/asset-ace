@@ -183,16 +183,12 @@ export async function GET(
   );
 
   let receiverBankLogoUrl: string;
-  let receiverBankLogoSource: "owner" | "slip" | "default";
   if (ownerRentBankKey) {
     receiverBankLogoUrl = bankLogoPath(ownerRentBankKey);
-    receiverBankLogoSource = "owner";
   } else if (slipReceiverLogoUrl) {
     receiverBankLogoUrl = slipReceiverLogoUrl;
-    receiverBankLogoSource = "slip";
   } else {
     receiverBankLogoUrl = DEFAULT_RECEIVER_LOGO_URL;
-    receiverBankLogoSource = "default";
   }
 
   const ownerRecvName = (
@@ -230,6 +226,5 @@ export async function GET(
     receiverBankCode: recv.bankCode,
     receiverAccountNumber: ownerRecvNumber || recv.accountNumber,
     receiverBankLogoUrl,
-    receiverBankLogoSource,
   });
 }

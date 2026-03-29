@@ -30,7 +30,6 @@ type BillPayload = {
   receiverAccountNumber?: string;
   /** Always set: bank from owner settings, slip, or default asset */
   receiverBankLogoUrl: string;
-  receiverBankLogoSource?: "owner" | "slip" | "default";
 };
 
 function CycleLine({ text }: { text: string }) {
@@ -264,9 +263,6 @@ export default function BillPage() {
       <div className="px-4 pt-4 space-y-4">
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
           <p className="text-sm font-medium text-slate-800">จ่ายแล้ว! 🎉</p>
-          <p className="mt-1 text-[11px] leading-snug text-slate-500">
-            โลโก้/ธนาคารด้านล่างคือฝั่งผู้โอน (ต้นทาง) ตามสลิป — ไม่ใช่ธนาคารของผู้รับเงิน
-          </p>
           <div className="mt-3 flex items-center gap-3">
             {data.payerBankLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- local SVG from API
@@ -304,11 +300,8 @@ export default function BillPage() {
 
         {showReceiver ? (
           <div>
-            <p className="mb-0.5 text-sm font-medium text-slate-600">
+            <p className="mb-2 text-sm font-medium text-slate-600">
               บัญชีรับเงิน (ปลายทาง)
-            </p>
-            <p className="mb-2 text-[11px] leading-snug text-slate-500">
-              โลโก้ปลายทาง: ข้อมูลทรัพย์ → สลิป → โลโก้เริ่มต้น (ตั้งค่าได้ในหน้าแก้ไขทรัพย์ภายหลัง)
             </p>
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
               <div className="flex items-start gap-3">
@@ -318,7 +311,7 @@ export default function BillPage() {
                   alt=""
                   width={44}
                   height={44}
-                  className="h-11 w-11 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-slate-100"
+                  className="h-11 w-11 shrink-0 rounded-xl bg-[#d8eeea] object-contain p-1 shadow-sm ring-1 ring-slate-100"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-900">
@@ -331,21 +324,6 @@ export default function BillPage() {
                         .join(" ")}
                     </p>
                   )}
-                  {data.receiverBankLogoSource === "default" ? (
-                    <p className="mt-1 text-[11px] text-slate-500">
-                      โลโก้เริ่มต้น — ตั้งค่าธนาคารรับค่าเช่าในหน้าแก้ไขทรัพย์ได้ภายหลัง
-                    </p>
-                  ) : null}
-                  {data.receiverBankLogoSource === "owner" ? (
-                    <p className="mt-1 text-[11px] text-slate-500">
-                      ธนาคารจากข้อมูลทรัพย์ที่คุณตั้งค่า
-                    </p>
-                  ) : null}
-                  {data.receiverBankLogoSource === "slip" ? (
-                    <p className="mt-1 text-[11px] text-slate-500">
-                      ธนาคารจากข้อมูลในสลิป (ถ้ามี)
-                    </p>
-                  ) : null}
                 </div>
               </div>
             </div>
