@@ -55,7 +55,7 @@ export interface IProperty {
   showOnAssetHub?: boolean;
   /**
    * Rent payout display on bill / future owner settings: bank logo key (e.g. kbank, scb)
-   * matching `public/bank-logos/{key}.svg`.
+   * matching `public/bank-logos/{SYMBOL}.png` (see bank-logo BANK_LOGO_FILE_KEYS).
    */
   rentReceiveBankKey?: string;
   rentReceiveAccountNumber?: string;

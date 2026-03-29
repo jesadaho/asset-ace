@@ -1,0 +1,6 @@
+Bank logo PNG files in this folder are static copies from the open-source
+repository https://github.com/casperstack/thai-banks-logo (symbols KBANK, SCB,
+BBL, KTB, TTB, BAY, GSB, BAAC, CIMB, UOB, LHB, TISCO, ICBC).
+
+That upstream repo is archived; trademarks belong to the respective banks.
+Review licensing and brand guidelines for your use case.

@@ -1,15 +1,26 @@
 /**
- * Map slip / API bank hints to a public logo path under /bank-logos/{key}.svg
- * (simple initial badges — not official trademarks).
+ * Map slip / API bank hints to vendored PNG paths under /bank-logos/{SYMBOL}.png
+ * (icons sourced from https://github.com/casperstack/thai-banks-logo — see public/bank-logos/NOTICE.txt).
  */
+
+/** PromptPay-style numeric bank id: coerce number or "4" → "004" for lookup. */
+function normalizeNumericBankId(
+  id: string | number | null | undefined
+): string | null {
+  if (id == null) return null;
+  const raw = String(id).trim();
+  if (!raw) return null;
+  if (!/^\d+$/.test(raw)) return null;
+  return raw.length <= 3 ? raw.padStart(3, "0") : raw;
+}
 
 /**
  * Thai slip / PromptPay style numeric bank id (e.g. EasySlip `sender.bank.id` "004").
  */
 export function bankLogoKeyFromNumericBankId(
-  id: string | null | undefined
+  id: string | number | null | undefined
 ): string | null {
-  const t = id?.trim();
+  const t = normalizeNumericBankId(id);
   if (!t) return null;
   const map: Record<string, string> = {
     "002": "bbl",
@@ -41,6 +52,7 @@ export function inferBankLogoKey(
     const byCode: Record<string, string> = {
       KBANK: "kbank",
       KBNK: "kbank",
+      KB: "kbank",
       SCB: "scb",
       BBL: "bbl",
       KTB: "ktb",
@@ -86,7 +98,7 @@ export function inferBankLogoKey(
   return null;
 }
 
-/** Keys that match files under `public/bank-logos/{key}.svg` */
+/** Keys that match `public/bank-logos/{KEY_UPPERCASE}.png` (e.g. kbank → KBANK.png) */
 export const BANK_LOGO_FILE_KEYS = [
   "kbank",
   "scb",
@@ -117,20 +129,43 @@ export function sanitizeRentReceiveBankKey(
 }
 
 export function bankLogoPath(key: string): string {
-  return `/bank-logos/${key}.svg`;
+  const k = key.trim().toLowerCase();
+  const symbol = BANK_LOGO_KEY_SET.has(k) ? k.toUpperCase() : key.trim().toUpperCase();
+  return `/bank-logos/${symbol}.png`;
 }
 
-/** EasySlip-style sender.bank { id, name, short } → logo key. */
+/** EasySlip-style sender.bank / sender.account.bank → logo key. */
 export function payerBankLogoKeyFromSenderBank(bank: {
-  id?: string;
+  id?: string | number;
   name?: string;
   short?: string;
+  code?: string;
 } | null | undefined): string | null {
   if (!bank || typeof bank !== "object") return null;
-  const name = typeof bank.name === "string" ? bank.name : null;
-  const short = typeof bank.short === "string" ? bank.short : null;
-  const id = typeof bank.id === "string" ? bank.id : null;
-  return inferBankLogoKey(name, short) || inferBankLogoKey(null, id);
+  const name =
+    typeof bank.name === "string" && bank.name.trim()
+      ? bank.name.trim()
+      : null;
+  const short =
+    typeof bank.short === "string" && bank.short.trim()
+      ? bank.short.trim()
+      : null;
+  const code =
+    typeof bank.code === "string" && bank.code.trim()
+      ? bank.code.trim()
+      : null;
+  const idNorm =
+    bank.id != null &&
+    (typeof bank.id === "string" || typeof bank.id === "number")
+      ? normalizeNumericBankId(bank.id) ?? String(bank.id).trim() || null
+      : null;
+
+  return (
+    inferBankLogoKey(name, short) ||
+    inferBankLogoKey(name, code) ||
+    inferBankLogoKey(null, code) ||
+    inferBankLogoKey(null, idNorm)
+  );
 }
 
 /** Collect short string leaves under `rawSlip.receiver` for bank-name inference. */

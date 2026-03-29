@@ -17,14 +17,24 @@ import {
 const DEFAULT_RECEIVER_LOGO_URL = "/bill-icons/receiver-default.svg";
 
 type EasySlipSenderBank = {
-  id?: string;
+  id?: string | number;
   name?: string;
   short?: string;
+};
+
+type SenderAccountBank = {
+  id?: string | number;
+  short?: string;
+  code?: string;
+  name?: { th?: string; en?: string } | string;
 };
 
 type RawSlipShape = {
   sender?: {
     bank?: EasySlipSenderBank;
+    account?: {
+      bank?: SenderAccountBank;
+    };
   };
   receiver?: {
     bank?: string | { name?: { th?: string; en?: string } | string; code?: string };
@@ -88,12 +98,37 @@ function receiverFromTxRaw(raw: Record<string, unknown> | undefined): {
 
 function senderBankFromRawSlip(
   rawSlip: unknown
-): EasySlipSenderBank | undefined {
+): {
+  id?: string | number;
+  name?: string;
+  short?: string;
+  code?: string;
+} | undefined {
   if (!rawSlip || typeof rawSlip !== "object") return undefined;
   const slip = rawSlip as RawSlipShape;
-  const bank = slip.sender?.bank;
-  if (!bank || typeof bank !== "object") return undefined;
-  return bank;
+  const top = slip.sender?.bank;
+  const accBank = slip.sender?.account?.bank;
+
+  const str = (v: unknown): string | undefined =>
+    typeof v === "string" && v.trim() ? v.trim() : undefined;
+
+  const idFrom = (
+    v: unknown
+  ): string | number | undefined => {
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+    return str(v);
+  };
+
+  const id = idFrom(top?.id) ?? (accBank ? idFrom(accBank.id) : undefined);
+  const short = str(top?.short) ?? (accBank ? str(accBank.short) : undefined);
+  let name = str(top?.name);
+  if (!name && accBank) {
+    name = bankNameFromField(accBank.name);
+  }
+  const code = accBank ? str(accBank.code) : undefined;
+
+  if (id == null && !name && !short && !code) return undefined;
+  return { id, name, short, code };
 }
 
 export async function GET(
@@ -149,7 +184,9 @@ export async function GET(
   const senderBank = senderBankFromRawSlip(rawSlip);
 
   const payerBankId =
-    typeof senderBank?.id === "string" ? senderBank.id.trim() : undefined;
+    senderBank?.id != null
+      ? String(senderBank.id).trim() || undefined
+      : undefined;
   const payerBankName =
     typeof senderBank?.name === "string" ? senderBank.name.trim() : undefined;
   const payerBankShort =

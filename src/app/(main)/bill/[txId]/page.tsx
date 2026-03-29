@@ -265,13 +265,13 @@ export default function BillPage() {
           <p className="text-sm font-medium text-slate-800">จ่ายแล้ว! 🎉</p>
           <div className="mt-3 flex items-center gap-3">
             {data.payerBankLogoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- local SVG from API
+              // eslint-disable-next-line @next/next/no-img-element -- local PNG from API
               <img
                 src={data.payerBankLogoUrl}
                 alt=""
                 width={48}
                 height={48}
-                className="h-12 w-12 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-slate-100"
+                className="h-12 w-12 shrink-0 rounded-xl bg-white object-contain p-1 shadow-sm ring-1 ring-slate-100"
               />
             ) : (
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-600">
@@ -305,13 +305,13 @@ export default function BillPage() {
             </p>
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
               <div className="flex items-start gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element -- local SVG from API */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- local PNG / default asset */}
                 <img
                   src={data.receiverBankLogoUrl}
                   alt=""
                   width={44}
                   height={44}
-                  className="h-11 w-11 shrink-0 rounded-xl bg-[#d8eeea] object-contain p-1 shadow-sm ring-1 ring-slate-100"
+                  className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain p-1 shadow-sm ring-1 ring-slate-100"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-900">
