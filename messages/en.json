@@ -253,6 +253,8 @@
     "propertyDescription": "Property description",
     "propertyDescriptionPlaceholder": "Describe your property...",
     "advancedDetails": "Advanced Details",
+    "additionalInfoAddressBlock": "Address & privacy",
+    "additionalInfoAreaBlock": "Floor area",
     "optional": "Optional",
     "squareMeters": "Square meters",
     "squareMetersPlaceholder": "e.g. 85",

@@ -253,6 +253,8 @@
     "propertyDescription": "รายละเอียดทรัพย์สิน",
     "propertyDescriptionPlaceholder": "อธิบายทรัพย์สินของคุณ...",
     "advancedDetails": "รายละเอียดเพิ่มเติม",
+    "additionalInfoAddressBlock": "ที่อยู่และความเป็นส่วนตัว",
+    "additionalInfoAreaBlock": "ขนาดพื้นที่",
     "optional": "ไม่บังคับ",
     "squareMeters": "พื้นที่ (ตร.ม.)",
     "squareMetersPlaceholder": "เช่น 85",

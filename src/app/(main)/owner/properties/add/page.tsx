@@ -55,6 +55,13 @@ const ROOM_STEPPER_MAX = 20;
 const stepperBtnClass =
   "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-[#0F172A] shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100 disabled:pointer-events-none disabled:opacity-35 tap-target";
 
+/** Top divider between major form sections (after photos). */
+const formSectionClass = "border-t border-slate-200 pt-8";
+const advancedCardClass =
+  "space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ring-1 ring-slate-100/80";
+const advancedCardTitleClass =
+  "text-xs font-semibold uppercase tracking-wider text-slate-500";
+
 export default function AddPropertyPage() {
   const router = useRouter();
   const t = useTranslations("propertyDetail");
@@ -70,8 +77,8 @@ export default function AddPropertyPage() {
   const [salePrice, setSalePrice] = useState("");
   const [monthlyRent, setMonthlyRent] = useState("");
   const [address, setAddress] = useState("");
-  const [bedroomCount, setBedroomCount] = useState(0);
-  const [bathroomCount, setBathroomCount] = useState(0);
+  const [bedroomCount, setBedroomCount] = useState(1);
+  const [bathroomCount, setBathroomCount] = useState(1);
   const [addressPrivate, setAddressPrivate] = useState(false);
   const [description, setDescription] = useState("");
   const [squareMeters, setSquareMeters] = useState("");
@@ -348,9 +355,9 @@ export default function AddPropertyPage() {
       </header>
 
       <form id="add-property-form" onSubmit={handleSubmit} className="max-w-lg mx-auto px-4 pb-28">
-        <div className="py-6 space-y-8">
+        <div className="space-y-0 py-6">
           <section>
-            <label className="block text-sm font-medium text-[#0F172A] mb-2">
+            <label className="mb-2 block text-sm font-medium text-[#0F172A]">
               {tEdit("propertyPhotos")}
             </label>
             {uploadProgress != null && (
@@ -446,8 +453,8 @@ export default function AddPropertyPage() {
             )}
           </section>
 
-          <section>
-            <label htmlFor="listing-type" className="block text-sm font-medium text-[#0F172A] mb-1">
+          <section className={formSectionClass}>
+            <label htmlFor="listing-type" className="mb-1 block text-sm font-medium text-[#0F172A]">
               {tEdit("homesSaleOrRent")}
             </label>
             <select
@@ -511,8 +518,8 @@ export default function AddPropertyPage() {
             )}
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+          <section className={`space-y-4 ${formSectionClass}`}>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[#0F172A]">
               {tEdit("basicInfo")}
             </h2>
             <div>
@@ -608,27 +615,10 @@ export default function AddPropertyPage() {
                 </p>
               </div>
             )}
-            <div>
-              <label htmlFor="address" className="mb-1 block text-sm font-medium text-[#0F172A]">
-                <span>{tEdit("address")}</span>
-                <span className="font-normal text-slate-500">
-                  {" "}
-                  · {tEdit("optional")}
-                </span>
-              </label>
-              <textarea
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder={tEdit("addressPlaceholder")}
-                rows={3}
-                className={`${inputBase} resize-none rounded-lg border border-slate-200 px-3 focus:border-[#003366]`}
-              />
-            </div>
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+          <section className={`space-y-4 ${formSectionClass}`}>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[#0F172A]">
               {tEdit("details")}
             </h2>
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -709,35 +699,8 @@ export default function AddPropertyPage() {
             </div>
           </section>
 
-          <section>
-            <div className="flex items-center justify-between gap-3">
-              <label htmlFor="address-private" className="text-sm font-medium text-[#0F172A]">
-                {tEdit("keepAddressPrivate")}
-              </label>
-              <button
-                id="address-private"
-                type="button"
-                role="switch"
-                aria-checked={addressPrivate}
-                onClick={() => setAddressPrivate((prev) => !prev)}
-                className={`relative inline-flex h-7 w-12 shrink-0 rounded-full border border-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#003366]/20 tap-target ${
-                  addressPrivate ? "bg-[#003366] border-[#003366]" : "bg-slate-100"
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition-transform ${
-                    addressPrivate ? "translate-x-5" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
-            </div>
-            <p className="mt-1.5 text-sm text-slate-500">
-              {tEdit("addressPrivateDescription")}
-            </p>
-          </section>
-
-          <section>
-            <label htmlFor="description" className="block text-sm font-medium text-[#0F172A] mb-1">
+          <section className={formSectionClass}>
+            <label htmlFor="description" className="mb-1 block text-sm font-medium text-[#0F172A]">
               {tEdit("propertyDescription")}
             </label>
             <textarea
@@ -750,30 +713,97 @@ export default function AddPropertyPage() {
             />
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide flex items-center gap-2">
-              {tEdit("advancedDetails")}
-              <span className="text-xs font-normal normal-case text-slate-500">{tEdit("optional")}</span>
-            </h2>
+          <section className={`space-y-5 ${formSectionClass}`}>
             <div>
-              <label htmlFor="square-meters" className="block text-sm font-medium text-[#0F172A] mb-1">
-                {tEdit("squareMeters")}
-              </label>
-              <input
-                id="square-meters"
-                type="text"
-                inputMode="decimal"
-                value={squareMeters}
-                onChange={(e) => setSquareMeters(e.target.value.replace(/[^\d.]/g, ""))}
-                placeholder={tEdit("squareMetersPlaceholder")}
-                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-              />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-[#0F172A]">
+                {tEdit("advancedDetails")}
+              </h2>
               <p className="mt-1 text-xs text-slate-500">{tEdit("optional")}</p>
+            </div>
+
+            <div className={advancedCardClass}>
+              <h3 className={advancedCardTitleClass}>
+                {tEdit("additionalInfoAddressBlock")}
+              </h3>
+              <div>
+                <label htmlFor="address" className="mb-1 block text-sm font-medium text-[#0F172A]">
+                  <span>{tEdit("address")}</span>
+                  <span className="font-normal text-slate-500">
+                    {" "}
+                    · {tEdit("optional")}
+                  </span>
+                </label>
+                <textarea
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder={tEdit("addressPlaceholder")}
+                  rows={3}
+                  className={`${inputBase} resize-none rounded-lg border border-slate-200 px-3 focus:border-[#003366]`}
+                />
+              </div>
+              <div className="border-t border-slate-100 pt-4">
+                <div className="flex items-center justify-between gap-3">
+                  <label
+                    htmlFor="address-private"
+                    className="text-sm font-medium text-[#0F172A]"
+                  >
+                    {tEdit("keepAddressPrivate")}
+                  </label>
+                  <button
+                    id="address-private"
+                    type="button"
+                    role="switch"
+                    aria-checked={addressPrivate}
+                    onClick={() => setAddressPrivate((prev) => !prev)}
+                    className={`relative inline-flex h-7 w-12 shrink-0 rounded-full border border-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#003366]/20 tap-target ${
+                      addressPrivate
+                        ? "border-[#003366] bg-[#003366]"
+                        : "bg-slate-100"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition-transform ${
+                        addressPrivate ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+                <p className="mt-2 text-sm text-slate-500">
+                  {tEdit("addressPrivateDescription")}
+                </p>
+              </div>
+            </div>
+
+            <div className={advancedCardClass}>
+              <h3 className={advancedCardTitleClass}>
+                {tEdit("additionalInfoAreaBlock")}
+              </h3>
+              <div>
+                <label
+                  htmlFor="square-meters"
+                  className="mb-1 block text-sm font-medium text-[#0F172A]"
+                >
+                  {tEdit("squareMeters")}
+                </label>
+                <input
+                  id="square-meters"
+                  type="text"
+                  inputMode="decimal"
+                  value={squareMeters}
+                  onChange={(e) =>
+                    setSquareMeters(e.target.value.replace(/[^\d.]/g, ""))
+                  }
+                  placeholder={tEdit("squareMetersPlaceholder")}
+                  className={`${inputBase} rounded-lg border border-slate-200 px-3`}
+                />
+                <p className="mt-1 text-xs text-slate-500">{tEdit("optional")}</p>
+              </div>
             </div>
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+          <section className={`space-y-4 ${formSectionClass}`}>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[#0F172A]">
               {t("amenities")}
             </h2>
             <div className="relative">
@@ -813,8 +843,8 @@ export default function AddPropertyPage() {
             </div>
           </section>
 
-          <section>
-            <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide mb-3">
+          <section className={formSectionClass}>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#0F172A]">
               {tEdit("rentalStatus")}
             </h2>
             <div className="flex rounded-lg border border-slate-200 p-1 bg-slate-50/50">
@@ -836,8 +866,8 @@ export default function AddPropertyPage() {
           </section>
 
           {status === "Occupied" && (
-            <section className="space-y-6">
-              <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
+            <section className={`space-y-6 ${formSectionClass}`}>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-[#0F172A]">
                 {tEdit("residentDetails")}
               </h2>
 
