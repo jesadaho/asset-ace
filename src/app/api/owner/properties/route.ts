@@ -139,12 +139,6 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
-  if (!address) {
-    return NextResponse.json(
-      { message: "address is required" },
-      { status: 400 }
-    );
-  }
   if (listingType === "sale" && (salePrice == null || Number.isNaN(salePrice) || salePrice < 0)) {
     return NextResponse.json(
       { message: "salePrice must be a non-negative number" },
@@ -188,7 +182,7 @@ export async function POST(request: NextRequest) {
         price,
         saleWithTenant,
       }),
-      address,
+      address: address || "",
       imageKeys,
       listingType,
       publicListing,

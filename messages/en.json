@@ -246,6 +246,8 @@
     "details": "Details",
     "bedroomsPlaceholder": "e.g. 2",
     "bathroomsPlaceholder": "e.g. 1",
+    "stepperMinusAria": "Decrease count",
+    "stepperPlusAria": "Increase count",
     "keepAddressPrivate": "Keep property address private",
     "addressPrivateDescription": "We won't show the exact address. The exact address helps us verify and list your property.",
     "propertyDescription": "Property description",

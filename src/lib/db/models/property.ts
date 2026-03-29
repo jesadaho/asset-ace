@@ -73,7 +73,7 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     price: { type: Number, required: true },
     salePrice: Number,
     monthlyRent: Number,
-    address: { type: String, required: true },
+    address: { type: String, default: "" },
     imageKeys: { type: [String], default: [] },
     listingType: String,
     saleWithTenant: Boolean,

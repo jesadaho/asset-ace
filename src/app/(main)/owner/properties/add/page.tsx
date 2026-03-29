@@ -10,6 +10,7 @@ import {
   X,
   Search,
   Plus,
+  Minus,
   Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -50,6 +51,10 @@ const inputBase =
   "w-full rounded-lg border-b border-slate-200 bg-white px-0 py-3 text-base text-[#0F172A] placeholder:text-slate-400 transition-colors focus:border-[#003366] focus:outline-none focus:ring-0 tap-target min-h-[44px]";
 const inputError = "border-red-500 focus:border-red-500";
 
+const ROOM_STEPPER_MAX = 20;
+const stepperBtnClass =
+  "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-[#0F172A] shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100 disabled:pointer-events-none disabled:opacity-35 tap-target";
+
 export default function AddPropertyPage() {
   const router = useRouter();
   const t = useTranslations("propertyDetail");
@@ -65,8 +70,8 @@ export default function AddPropertyPage() {
   const [salePrice, setSalePrice] = useState("");
   const [monthlyRent, setMonthlyRent] = useState("");
   const [address, setAddress] = useState("");
-  const [bedrooms, setBedrooms] = useState("");
-  const [bathrooms, setBathrooms] = useState("");
+  const [bedroomCount, setBedroomCount] = useState(0);
+  const [bathroomCount, setBathroomCount] = useState(0);
   const [addressPrivate, setAddressPrivate] = useState(false);
   const [description, setDescription] = useState("");
   const [squareMeters, setSquareMeters] = useState("");
@@ -257,13 +262,15 @@ export default function AddPropertyPage() {
         salePrice: listingType === "sale" ? numericSalePrice : undefined,
         monthlyRent:
           listingType === "rent" || saleWithTenant ? numericMonthlyRent : undefined,
-        address: address.trim(),
+        address: address.trim() || undefined,
         imageKeys,
         listingType: listingType || undefined,
         publicListing: listingType === "sale" ? true : undefined,
         saleWithTenant: listingType === "sale" ? saleWithTenant : false,
-        bedrooms: bedrooms || undefined,
-        bathrooms: bathrooms || undefined,
+        bedrooms:
+          bedroomCount > 0 ? String(bedroomCount) : undefined,
+        bathrooms:
+          bathroomCount > 0 ? String(bathroomCount) : undefined,
         addressPrivate: addressPrivate || undefined,
         description: description.trim() || undefined,
         squareMeters: squareMeters || undefined,
@@ -602,8 +609,12 @@ export default function AddPropertyPage() {
               </div>
             )}
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-[#0F172A] mb-1">
-                {tEdit("address")}
+              <label htmlFor="address" className="mb-1 block text-sm font-medium text-[#0F172A]">
+                <span>{tEdit("address")}</span>
+                <span className="font-normal text-slate-500">
+                  {" "}
+                  · {tEdit("optional")}
+                </span>
               </label>
               <textarea
                 id="address"
@@ -611,7 +622,7 @@ export default function AddPropertyPage() {
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder={tEdit("addressPlaceholder")}
                 rows={3}
-                className={`${inputBase} resize-none border border-slate-200 rounded-lg px-3 focus:border-[#003366]`}
+                className={`${inputBase} resize-none rounded-lg border border-slate-200 px-3 focus:border-[#003366]`}
               />
             </div>
           </section>
@@ -620,33 +631,81 @@ export default function AddPropertyPage() {
             <h2 className="text-sm font-semibold text-[#0F172A] uppercase tracking-wide">
               {tEdit("details")}
             </h2>
-            <div>
-              <label htmlFor="bedrooms" className="block text-sm font-medium text-[#0F172A] mb-1">
-                {t("bedrooms")}
-              </label>
-              <input
-                id="bedrooms"
-                type="text"
-                inputMode="numeric"
-                value={bedrooms}
-                onChange={(e) => setBedrooms(e.target.value.replace(/\D/g, ""))}
-                placeholder={tEdit("bedroomsPlaceholder")}
-                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-              />
-            </div>
-            <div>
-              <label htmlFor="bathrooms" className="block text-sm font-medium text-[#0F172A] mb-1">
-                {t("bathrooms")}
-              </label>
-              <input
-                id="bathrooms"
-                type="text"
-                inputMode="numeric"
-                value={bathrooms}
-                onChange={(e) => setBathrooms(e.target.value.replace(/\D/g, ""))}
-                placeholder={tEdit("bathroomsPlaceholder")}
-                className={`${inputBase} border border-slate-200 rounded-lg px-3`}
-              />
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="flex min-w-0 flex-col gap-2">
+                <span className="text-center text-sm font-medium text-[#0F172A]">
+                  {t("bedrooms")}
+                </span>
+                <div className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-1 py-2">
+                  <button
+                    type="button"
+                    className={stepperBtnClass}
+                    disabled={bedroomCount <= 0}
+                    onClick={() =>
+                      setBedroomCount((n) => Math.max(0, n - 1))
+                    }
+                    aria-label={`${tEdit("stepperMinusAria")} — ${t("bedrooms")}`}
+                  >
+                    <Minus className="h-5 w-5" aria-hidden />
+                  </button>
+                  <span
+                    className="min-w-[2.25rem] text-center text-lg font-semibold tabular-nums text-[#0F172A]"
+                    aria-live="polite"
+                  >
+                    {bedroomCount}
+                  </span>
+                  <button
+                    type="button"
+                    className={stepperBtnClass}
+                    disabled={bedroomCount >= ROOM_STEPPER_MAX}
+                    onClick={() =>
+                      setBedroomCount((n) =>
+                        Math.min(ROOM_STEPPER_MAX, n + 1)
+                      )
+                    }
+                    aria-label={`${tEdit("stepperPlusAria")} — ${t("bedrooms")}`}
+                  >
+                    <Plus className="h-5 w-5" aria-hidden />
+                  </button>
+                </div>
+              </div>
+              <div className="flex min-w-0 flex-col gap-2">
+                <span className="text-center text-sm font-medium text-[#0F172A]">
+                  {t("bathrooms")}
+                </span>
+                <div className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-1 py-2">
+                  <button
+                    type="button"
+                    className={stepperBtnClass}
+                    disabled={bathroomCount <= 0}
+                    onClick={() =>
+                      setBathroomCount((n) => Math.max(0, n - 1))
+                    }
+                    aria-label={`${tEdit("stepperMinusAria")} — ${t("bathrooms")}`}
+                  >
+                    <Minus className="h-5 w-5" aria-hidden />
+                  </button>
+                  <span
+                    className="min-w-[2.25rem] text-center text-lg font-semibold tabular-nums text-[#0F172A]"
+                    aria-live="polite"
+                  >
+                    {bathroomCount}
+                  </span>
+                  <button
+                    type="button"
+                    className={stepperBtnClass}
+                    disabled={bathroomCount >= ROOM_STEPPER_MAX}
+                    onClick={() =>
+                      setBathroomCount((n) =>
+                        Math.min(ROOM_STEPPER_MAX, n + 1)
+                      )
+                    }
+                    aria-label={`${tEdit("stepperPlusAria")} — ${t("bathrooms")}`}
+                  >
+                    <Plus className="h-5 w-5" aria-hidden />
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
 

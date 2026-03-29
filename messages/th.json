@@ -246,6 +246,8 @@
     "details": "รายละเอียด",
     "bedroomsPlaceholder": "เช่น 2",
     "bathroomsPlaceholder": "เช่น 1",
+    "stepperMinusAria": "ลดจำนวน",
+    "stepperPlusAria": "เพิ่มจำนวน",
     "keepAddressPrivate": "ไม่แสดงที่อยู่จริง",
     "addressPrivateDescription": "เราจะไม่แสดงที่อยู่จริง ที่อยู่ช่วยให้เราตรวจสอบและลงรายการทรัพย์สินได้",
     "propertyDescription": "รายละเอียดทรัพย์สิน",
