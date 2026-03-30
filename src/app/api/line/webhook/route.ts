@@ -1079,16 +1079,10 @@ export async function POST(request: NextRequest) {
           await replyText(event.replyToken, menuHint);
           continue;
         }
-        await replyText(
-          event.replyToken,
-          `Received: ${incoming || "(empty message)"}`
-        );
+        // Unrecognized text in group: no reply (avoid debug echo / chat noise in prod).
         continue;
       }
-      await replyText(
-        event.replyToken,
-        `Received: ${incoming || "(empty message)"}`
-      );
+      // Text outside group context (e.g. 1:1): no automatic reply.
       continue;
     }
 

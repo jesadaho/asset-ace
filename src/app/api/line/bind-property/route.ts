@@ -37,12 +37,6 @@ export async function POST(request: NextRequest) {
   // LINE Messaging API groupId usually starts with "C" (e.g. Cxxxxxxxxxx).
   // If we store a wrong id (e.g. UUID-like), push/webhook lookups will fail.
   const looksLikeMessagingGroupId = /^C[0-9A-Za-z]{6,}$/.test(groupId);
-  console.log("[bind-property] input", {
-    propertyId,
-    groupId,
-    lineUserId,
-    looksLikeMessagingGroupId,
-  });
   if (!looksLikeMessagingGroupId) {
     try {
       await connectDB();
