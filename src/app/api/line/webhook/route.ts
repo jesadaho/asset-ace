@@ -138,6 +138,27 @@ function verifySignature(
   return timingSafeEqual(signatureBuffer, expectedBuffer);
 }
 
+/** Set LINE_WEBHOOK_DEBUG_EVENTS=1 (or true) to log full webhook payloads (Vercel / server logs). */
+function lineWebhookEventDebugEnabled(): boolean {
+  const v = process.env.LINE_WEBHOOK_DEBUG_EVENTS?.trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
+function logLineWebhookDebug(phase: string, payload: unknown): void {
+  if (!lineWebhookEventDebugEnabled()) return;
+  const ts = new Date().toISOString();
+  try {
+    console.log(
+      `[line-webhook:debug ${ts}] ${phase}\n${JSON.stringify(payload, null, 2)}`
+    );
+  } catch (err) {
+    console.log(
+      `[line-webhook:debug ${ts}] ${phase} (JSON.stringify failed)`,
+      err
+    );
+  }
+}
+
 async function replyText(replyToken: string, text: string): Promise<void> {
   const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
   if (!accessToken) {
@@ -954,7 +975,27 @@ export async function POST(request: NextRequest) {
   }
 
   const events = payload.events ?? [];
-  for (const event of events) {
+
+  if (lineWebhookEventDebugEnabled()) {
+    try {
+      const full = JSON.parse(rawBody) as Record<string, unknown>;
+      logLineWebhookDebug("request_summary", {
+        destination: full.destination ?? null,
+        rawBodyLength: rawBody.length,
+        eventCount: Array.isArray(full.events) ? full.events.length : 0,
+      });
+      logLineWebhookDebug("events_array", full.events ?? []);
+    } catch (e) {
+      logLineWebhookDebug("parse_full_body_for_debug_failed", {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    logLineWebhookDebug(`event[${i}]`, event);
+
     if (!event.replyToken) continue;
 
     const source = event.source;
