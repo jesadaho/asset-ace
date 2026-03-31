@@ -159,6 +159,64 @@ function logLineWebhookDebug(phase: string, payload: unknown): void {
   }
 }
 
+/**
+ * Push webhook JSON into the group/DM (Push API — does not use replyToken).
+ * LINE_WEBHOOK_DEBUG_CHAT=1|true|image → image messages only (slip debug).
+ * LINE_WEBHOOK_DEBUG_CHAT=all → every message event.
+ */
+function lineWebhookDebugChatMode(): "off" | "image" | "all" {
+  const raw = process.env.LINE_WEBHOOK_DEBUG_CHAT?.trim();
+  if (!raw) return "off";
+  const v = raw.toLowerCase();
+  if (v === "all") return "all";
+  if (v === "1" || v === "true" || v === "yes" || v === "image") return "image";
+  return "off";
+}
+
+function shouldPushLineWebhookDebugChat(event: LineWebhookEvent): boolean {
+  const mode = lineWebhookDebugChatMode();
+  if (mode === "off") return false;
+  if (event.type !== "message") return false;
+  if (mode === "all") return true;
+  return event.message?.type === "image";
+}
+
+async function pushLineWebhookDebugToChat(args: {
+  to: string;
+  eventIndex: number;
+  event: LineWebhookEvent;
+}): Promise<void> {
+  const { to, eventIndex, event } = args;
+  let body: string;
+  try {
+    body = JSON.stringify(event, null, 2);
+  } catch {
+    body = String(event);
+  }
+  const prefix = `[🔧 webhook debug #${eventIndex}]\n`;
+  const full = prefix + body;
+  const maxPerText = 4800;
+  const maxMsgs = 5;
+  const chunks: string[] = [];
+  for (let i = 0; i < full.length; i += maxPerText) {
+    chunks.push(full.slice(i, i + maxPerText));
+  }
+  let texts = chunks.slice(0, maxMsgs);
+  if (chunks.length > maxMsgs) {
+    const suffix = `\n…(ตัด — รวม ${full.length} ตัวอักษร, ส่งได้ ${maxMsgs} ข้อความ)`;
+    const budget = Math.max(0, maxPerText - suffix.length);
+    const prev = texts[maxMsgs - 1] ?? "";
+    texts = [...texts.slice(0, maxMsgs - 1), prev.slice(0, budget) + suffix];
+  }
+  const result = await pushMessages(
+    to,
+    texts.map((text) => ({ type: "text", text }))
+  );
+  if (!result.sent) {
+    console.error("[line-webhook] debug chat push failed", result.message);
+  }
+}
+
 async function replyText(replyToken: string, text: string): Promise<void> {
   const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
   if (!accessToken) {
@@ -995,6 +1053,20 @@ export async function POST(request: NextRequest) {
   for (let i = 0; i < events.length; i++) {
     const event = events[i];
     logLineWebhookDebug(`event[${i}]`, event);
+
+    const srcEarly = event.source;
+    const groupIdEarly =
+      srcEarly?.type === "group" && srcEarly.groupId
+        ? srcEarly.groupId
+        : undefined;
+    const toDebug = groupIdEarly ?? srcEarly?.userId;
+    if (toDebug && shouldPushLineWebhookDebugChat(event)) {
+      await pushLineWebhookDebugToChat({
+        to: toDebug,
+        eventIndex: i,
+        event,
+      });
+    }
 
     if (!event.replyToken) continue;
 
