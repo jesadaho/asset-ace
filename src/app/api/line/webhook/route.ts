@@ -24,6 +24,8 @@ type LineWebhookEvent = {
     id?: string;
     type?: string;
     text?: string;
+    /** Present when multiple images are sent at once (album / multi-select). */
+    imageSet?: { id?: string; index?: number; total?: number };
   };
   postback?: {
     data?: string;
@@ -160,22 +162,35 @@ function logLineWebhookDebug(phase: string, payload: unknown): void {
 }
 
 /**
- * Push webhook JSON into the group/DM (Push API — does not use replyToken).
- * LINE_WEBHOOK_DEBUG_CHAT=1|true|image → image messages only (slip debug).
- * LINE_WEBHOOK_DEBUG_CHAT=all → every message event.
+ * Push webhook JSON into the same LINE chat (Push API — does not use replyToken).
+ * LINE_WEBHOOK_DEBUG_CHAT=1|true|image → image messages only (slip / album frames).
+ * LINE_WEBHOOK_DEBUG_CHAT=all → every `message` event (any subtype).
+ * LINE_WEBHOOK_DEBUG_CHAT=everything|* → every webhook event (follow, postback, …).
  */
-function lineWebhookDebugChatMode(): "off" | "image" | "all" {
+function lineWebhookDebugChatMode(): "off" | "image" | "all" | "everything" {
   const raw = process.env.LINE_WEBHOOK_DEBUG_CHAT?.trim();
   if (!raw) return "off";
   const v = raw.toLowerCase();
+  if (v === "everything" || v === "*" || v === "any") return "everything";
   if (v === "all") return "all";
   if (v === "1" || v === "true" || v === "yes" || v === "image") return "image";
   return "off";
 }
 
-function shouldPushLineWebhookDebugChat(event: LineWebhookEvent): boolean {
-  const mode = lineWebhookDebugChatMode();
+/** Prefer group / room so the debug line appears in the same chat (not only 1:1). */
+function lineWebhookPushTargetId(source?: LineSource): string | undefined {
+  if (!source) return undefined;
+  if (source.type === "group" && source.groupId) return source.groupId;
+  if (source.type === "room" && source.roomId) return source.roomId;
+  return source.userId;
+}
+
+function shouldPushLineWebhookDebugChat(
+  event: LineWebhookEvent,
+  mode: ReturnType<typeof lineWebhookDebugChatMode>
+): boolean {
   if (mode === "off") return false;
+  if (mode === "everything") return true;
   if (event.type !== "message") return false;
   if (mode === "all") return true;
   return event.message?.type === "image";
@@ -1055,17 +1070,21 @@ export async function POST(request: NextRequest) {
     logLineWebhookDebug(`event[${i}]`, event);
 
     const srcEarly = event.source;
-    const groupIdEarly =
-      srcEarly?.type === "group" && srcEarly.groupId
-        ? srcEarly.groupId
-        : undefined;
-    const toDebug = groupIdEarly ?? srcEarly?.userId;
-    if (toDebug && shouldPushLineWebhookDebugChat(event)) {
-      await pushLineWebhookDebugToChat({
-        to: toDebug,
-        eventIndex: i,
-        event,
-      });
+    const debugMode = lineWebhookDebugChatMode();
+    const toDebug = lineWebhookPushTargetId(srcEarly);
+    if (debugMode !== "off" && shouldPushLineWebhookDebugChat(event, debugMode)) {
+      if (toDebug) {
+        await pushLineWebhookDebugToChat({
+          to: toDebug,
+          eventIndex: i,
+          event,
+        });
+      } else {
+        console.warn(
+          "[line-webhook] LINE_WEBHOOK_DEBUG_CHAT: no push target (need groupId, roomId, or userId on source)",
+          JSON.stringify(srcEarly)
+        );
+      }
     }
 
     if (!event.replyToken) continue;
