@@ -111,6 +111,8 @@
     "lineGroupIdLabel": "LINE Group ID (bot)",
     "lineGroupIdHint": "Messaging API group id — not the invite link — used for the bot in group chat or entered from the app.",
     "rentDueDayLabel": "Rent due day (each month)",
+    "rentOverdueTitle": "Rent overdue (current period)",
+    "rentOverdueDescription": "Due {dueDate} — past the {graceDays}-day grace period ({daysPastGrace} day(s) overdue)",
     "lastRentPaidLabel": "Last rent payment (recorded)",
     "contractStart": "Contract start",
     "noValue": "—",

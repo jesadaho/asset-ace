@@ -63,6 +63,13 @@ type PropertyDetail = {
   reservedByName?: string;
   reservedByContact?: string;
   createdAt?: string;
+  rentOverdue?: {
+    isOverdue: boolean;
+    dueDate: string | null;
+    graceDays: number;
+    daysAfterDue: number;
+    daysPastGrace: number;
+  } | null;
 };
 
 type RentalHistoryItem = {
@@ -1261,6 +1268,22 @@ export default function PropertyDetailPage() {
                     </div>
                   )}
                 </div>
+              </section>
+            )}
+
+            {activeTab === "rental" && property.status === "Occupied" && property.rentOverdue?.isOverdue && property.rentOverdue.dueDate && (
+              <section
+                className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"
+                role="status"
+              >
+                <p className="font-semibold text-amber-900">{t("rentOverdueTitle")}</p>
+                <p className="mt-1 text-amber-800">
+                  {t("rentOverdueDescription", {
+                    dueDate: formatDMY(new Date(`${property.rentOverdue.dueDate}T12:00:00`)),
+                    graceDays: property.rentOverdue.graceDays,
+                    daysPastGrace: property.rentOverdue.daysPastGrace,
+                  })}
+                </p>
               </section>
             )}
 

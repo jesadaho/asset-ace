@@ -6,6 +6,11 @@ import { PropertyFollow } from "@/lib/db/models/propertyFollow";
 import { User } from "@/lib/db/models/user";
 import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { getPresignedGetUrl } from "@/lib/s3";
+import { getRentOverdueSnapshot } from "@/lib/rent/overdue";
+
+const RENT_OVERDUE_GRACE_DAYS = Number(
+  process.env.RENT_OVERDUE_GRACE_DAYS ?? 30
+);
 
 export async function GET(
   request: NextRequest,
@@ -99,6 +104,30 @@ export async function GET(
       }
       if (d.rentOverdueNotifiedForMonth != null) {
         payload.rentOverdueNotifiedForMonth = d.rentOverdueNotifiedForMonth;
+      }
+      if (status === "Occupied" && d.contractStartDate) {
+        const csd =
+          d.contractStartDate instanceof Date
+            ? d.contractStartDate
+            : new Date(d.contractStartDate);
+        const lp = d.lastRentPaidAt
+          ? d.lastRentPaidAt instanceof Date
+            ? d.lastRentPaidAt
+            : new Date(d.lastRentPaidAt)
+          : undefined;
+        const snap = getRentOverdueSnapshot({
+          contractStartDate: csd,
+          lastRentPaidAt: lp,
+          now: new Date(),
+          graceDays: RENT_OVERDUE_GRACE_DAYS,
+        });
+        payload.rentOverdue = {
+          isOverdue: snap.isOverdue,
+          dueDate: snap.dueDate,
+          graceDays: snap.graceDays,
+          daysAfterDue: snap.daysAfterDue,
+          daysPastGrace: snap.daysPastGrace,
+        };
       }
       if (d.contractStartDate != null) payload.contractStartDate = d.contractStartDate instanceof Date ? d.contractStartDate.toISOString().slice(0, 10) : String(d.contractStartDate).slice(0, 10);
       if (d.leaseDurationMonths != null) payload.leaseDurationMonths = d.leaseDurationMonths;

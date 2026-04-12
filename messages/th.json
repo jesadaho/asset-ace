@@ -111,6 +111,8 @@
     "lineGroupIdLabel": "LINE Group ID (บอท)",
     "lineGroupIdHint": "รหัสกลุ่มจาก Messaging API — ไม่ใช่ลิงก์เชิญ — ใช้ให้บอททำงานในกลุ่มหรือเติมจากแอป",
     "rentDueDayLabel": "วันครบกำหนดค่าเช้า (ของแต่ละเดือน)",
+    "rentOverdueTitle": "ค้างค่าเช่า (งวดที่ครบกำหนดแล้ว)",
+    "rentOverdueDescription": "ครบกำหนด {dueDate} — เกินช่วงผ่อนผัน {graceDays} วันแล้ว (ค้างเกินกำหนด {daysPastGrace} วัน)",
     "lastRentPaidLabel": "จ่ายค่าเช้าล่าสุด (บันทึก)",
     "contractStart": "วันเริ่มสัญญา",
     "noValue": "—",

@@ -15,6 +15,11 @@ import {
   getStoredPrimaryPrice,
 } from "@/lib/property-pricing";
 import { sanitizeRentReceiveBankKey } from "@/lib/bank-logo";
+import { getRentOverdueSnapshot } from "@/lib/rent/overdue";
+
+const RENT_OVERDUE_GRACE_DAYS = Number(
+  process.env.RENT_OVERDUE_GRACE_DAYS ?? 30
+);
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
 const STATUSES = ["Available", "Occupied", "Draft", "Paused", "Archived"] as const;
@@ -54,7 +59,6 @@ function toResponse(doc: PropertyDoc) {
     lastRentPaidAt: doc.lastRentPaidAt
       ? (doc.lastRentPaidAt as Date).toISOString()
       : undefined,
-    rentOverdueNotifiedForMonth: doc.rentOverdueNotifiedForMonth,
     contractStartDate: doc.contractStartDate
       ? (doc.contractStartDate as Date).toISOString().slice(0, 10)
       : undefined,
@@ -123,6 +127,40 @@ export async function GET(
       if (lineId && !isLineUid(lineId)) agentLineAccountId = lineId.replace(/^@/, "");
     }
     const property = toResponse(doc as unknown as PropertyDoc);
+    const d = doc as PropertyDoc;
+    let rentOverdue:
+      | {
+          isOverdue: boolean;
+          dueDate: string | null;
+          graceDays: number;
+          daysAfterDue: number;
+          daysPastGrace: number;
+        }
+      | null = null;
+    if (d.status === "Occupied" && d.contractStartDate) {
+      const csd =
+        d.contractStartDate instanceof Date
+          ? d.contractStartDate
+          : new Date(d.contractStartDate);
+      const lp = d.lastRentPaidAt
+        ? d.lastRentPaidAt instanceof Date
+          ? d.lastRentPaidAt
+          : new Date(d.lastRentPaidAt)
+        : undefined;
+      const snap = getRentOverdueSnapshot({
+        contractStartDate: csd,
+        lastRentPaidAt: lp,
+        now: new Date(),
+        graceDays: RENT_OVERDUE_GRACE_DAYS,
+      });
+      rentOverdue = {
+        isOverdue: snap.isOverdue,
+        dueDate: snap.dueDate,
+        graceDays: snap.graceDays,
+        daysAfterDue: snap.daysAfterDue,
+        daysPastGrace: snap.daysPastGrace,
+      };
+    }
     return NextResponse.json({
       property: {
         ...property,
@@ -131,6 +169,7 @@ export async function GET(
         contractUrl: contractUrl ?? undefined,
         followerCount,
         agentLineAccountId,
+        rentOverdue,
       },
     });
   } catch (err) {

@@ -3,82 +3,20 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/mongodb";
 import { Property } from "@/lib/db/models/property";
 import { pushMessage, pushToGroup } from "@/lib/line/push";
+import {
+  bangkokDateKey,
+  getRentOverdueSnapshot,
+  monthKeyForDue,
+  startOfDay,
+} from "@/lib/rent/overdue";
 
 const GRACE_DAYS = Number(process.env.RENT_OVERDUE_GRACE_DAYS ?? 30);
-
-function startOfDay(d: Date): Date {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
-}
-
-function clampDay(year: number, monthIndex: number, day: number): number {
-  const last = new Date(year, monthIndex + 1, 0).getDate();
-  return Math.min(day, last);
-}
-
-function toYMD(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
 
 function formatThaiDate(d: Date): string {
   const day = d.getDate();
   const month = d.getMonth() + 1;
   const year = d.getFullYear();
   return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
-}
-
-/** Most recent monthly due date that is strictly before `now` (start of day). */
-function getLastDueDateBeforeNow(rentDueDay: number, now: Date): Date {
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const d = clampDay(y, m, rentDueDay);
-  let due = new Date(y, m, d);
-  if (due >= now) {
-    const pm = m === 0 ? 11 : m - 1;
-    const py = m === 0 ? y - 1 : y;
-    const pd = clampDay(py, pm, rentDueDay);
-    due = new Date(py, pm, pd);
-  }
-  return startOfDay(due);
-}
-
-/**
- * Due date is computed from contractStartDate:
- * - Every month on the same day-of-month as contractStartDate (clamped to month end).
- * - Returns the most recent due date strictly before `now` (start of day), never before contractStartDate.
- */
-function getLastDueDateFromContractStart(contractStartDate: Date, now: Date): Date | null {
-  const start = startOfDay(contractStartDate);
-  if (Number.isNaN(start.getTime())) return null;
-  if (start >= now) return null;
-
-  const startDay = start.getDate();
-
-  // Start from current month and move backwards at most 24 months.
-  let cursorY = now.getFullYear();
-  let cursorM = now.getMonth();
-  for (let i = 0; i < 24; i++) {
-    const d = clampDay(cursorY, cursorM, startDay);
-    const due = startOfDay(new Date(cursorY, cursorM, d));
-    if (due < now && due >= start) return due;
-
-    if (cursorM === 0) {
-      cursorM = 11;
-      cursorY -= 1;
-    } else {
-      cursorM -= 1;
-    }
-  }
-  return null;
-}
-
-function daysBetween(a: Date, b: Date): number {
-  return Math.floor((b.getTime() - a.getTime()) / (86400 * 1000));
-}
-
-function monthKeyForDue(due: Date): string {
-  return `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -108,9 +46,11 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
     const todayStart = startOfDay(new Date());
+    const todayBangkok = bangkokDateKey();
     console.warn("[cron/rent-overdue] connected", {
       at: startedAt.toISOString(),
       todayStart: todayStart.toISOString(),
+      todayBangkok,
     });
 
     const candidates = await Property.find({
@@ -125,6 +65,7 @@ export async function GET(request: NextRequest) {
     let skippedGrace = 0;
     let skippedPaid = 0;
     let skippedAlreadyNotified = 0;
+    let skippedMigrationBump = 0;
     let skippedNoContract = 0;
     let attempted = 0;
 
@@ -135,37 +76,73 @@ export async function GET(request: NextRequest) {
         skipped++;
         continue;
       }
-      const due = getLastDueDateFromContractStart(
-        contractStartDate instanceof Date ? contractStartDate : new Date(contractStartDate),
-        todayStart
-      );
-      if (!due) {
+
+      const csd =
+        contractStartDate instanceof Date
+          ? contractStartDate
+          : new Date(contractStartDate);
+      const lastPaidRaw = (doc as { lastRentPaidAt?: Date }).lastRentPaidAt;
+      const lastPaid =
+        lastPaidRaw != null
+          ? lastPaidRaw instanceof Date
+            ? lastPaidRaw
+            : new Date(lastPaidRaw)
+          : undefined;
+
+      const snap = getRentOverdueSnapshot({
+        contractStartDate: csd,
+        lastRentPaidAt: lastPaid,
+        now: todayStart,
+        graceDays: GRACE_DAYS,
+      });
+
+      if (!snap.dueDate) {
         skippedNoDue++;
         skipped++;
         continue;
       }
-      if (daysBetween(due, todayStart) < GRACE_DAYS) {
-        skippedGrace++;
+
+      const due = new Date(snap.dueDate + "T12:00:00");
+      if (Number.isNaN(due.getTime())) {
+        skippedNoDue++;
         skipped++;
         continue;
       }
 
-      const lastPaid = (doc as { lastRentPaidAt?: Date }).lastRentPaidAt;
-      const paidForPeriod =
-        lastPaid != null &&
-        startOfDay(lastPaid instanceof Date ? lastPaid : new Date(lastPaid)) >= due;
-
-      if (paidForPeriod) {
-        skippedPaid++;
+      if (!snap.isOverdue) {
+        const dueForPaid = new Date(snap.dueDate + "T12:00:00");
+        const lp = lastPaid ? startOfDay(lastPaid) : null;
+        const paidOk =
+          lp != null &&
+          !Number.isNaN(dueForPaid.getTime()) &&
+          lp >= startOfDay(dueForPaid);
+        if (paidOk) {
+          skippedPaid++;
+        } else if (snap.daysAfterDue < GRACE_DAYS) {
+          skippedGrace++;
+        }
         skipped++;
         continue;
       }
 
       const mk = monthKeyForDue(due);
-      const already = (doc as { rentOverdueNotifiedForMonth?: string })
-        .rentOverdueNotifiedForMonth;
-      if (already === mk) {
+      const lastNotifiedDay = (doc as { rentOverdueLastNotifiedDay?: string })
+        .rentOverdueLastNotifiedDay?.trim();
+      const legacyMonth = (doc as { rentOverdueNotifiedForMonth?: string })
+        .rentOverdueNotifiedForMonth?.trim();
+
+      if (lastNotifiedDay === todayBangkok) {
         skippedAlreadyNotified++;
+        skipped++;
+        continue;
+      }
+
+      if (!lastNotifiedDay && legacyMonth === mk) {
+        await Property.updateOne(
+          { _id: (doc as { _id: mongoose.Types.ObjectId })._id },
+          { $set: { rentOverdueLastNotifiedDay: todayBangkok } }
+        );
+        skippedMigrationBump++;
         skipped++;
         continue;
       }
@@ -193,14 +170,13 @@ export async function GET(request: NextRequest) {
       if (sent) {
         await Property.updateOne(
           { _id: (doc as { _id: mongoose.Types.ObjectId })._id },
-          { $set: { rentOverdueNotifiedForMonth: mk } }
+          { $set: { rentOverdueLastNotifiedDay: todayBangkok } }
         );
         notified++;
       }
     }
 
     if (attempted === 0) {
-      // Surface clearly in Vercel logs (Error/Fatal filters) that nothing was sent.
       console.error("[cron/rent-overdue] no-outgoing-requests", {
         at: startedAt.toISOString(),
         candidates: candidates.length,
@@ -212,6 +188,7 @@ export async function GET(request: NextRequest) {
         skippedGrace,
         skippedPaid,
         skippedAlreadyNotified,
+        skippedMigrationBump,
       });
     }
 
@@ -226,6 +203,7 @@ export async function GET(request: NextRequest) {
       skippedGrace,
       skippedPaid,
       skippedAlreadyNotified,
+      skippedMigrationBump,
     });
 
     return NextResponse.json({
@@ -239,6 +217,7 @@ export async function GET(request: NextRequest) {
       skippedGrace,
       skippedPaid,
       skippedAlreadyNotified,
+      skippedMigrationBump,
     });
   } catch (err) {
     console.error("[GET /api/cron/rent-overdue]", err);
