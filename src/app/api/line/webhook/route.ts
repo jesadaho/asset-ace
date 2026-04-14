@@ -7,6 +7,7 @@ import { BindCode } from "@/lib/db/models/bindCode";
 import { RentTransaction } from "@/lib/db/models/rentTransaction";
 import { periodKeyFromSlipDate, rentPeriodThaiMonthYear } from "@/lib/rent/period";
 import { User } from "@/lib/db/models/user";
+import { getInferredMonthlyRent } from "@/lib/property-pricing";
 import { pushMessages, pushToGroup } from "@/lib/line/push";
 
 type LineSource = {
@@ -1238,13 +1239,19 @@ export async function POST(request: NextRequest) {
             name?: string;
             monthlyRent?: number;
             contractStartDate?: Date;
+            listingType?: string;
+            price?: number;
+            salePrice?: number;
+            saleWithTenant?: boolean;
           }
         | undefined;
       if (groupId) {
         try {
           await connectDB();
           const prop = await Property.findOne({ lineGroupId: groupId })
-            .select("_id name monthlyRent contractStartDate")
+            .select(
+              "_id name monthlyRent contractStartDate listingType price salePrice saleWithTenant"
+            )
             .lean();
           if (!prop) {
             groupProperty = undefined;
@@ -1254,6 +1261,10 @@ export async function POST(request: NextRequest) {
               name?: string;
               monthlyRent?: number;
               contractStartDate?: Date;
+              listingType?: string;
+              price?: number;
+              salePrice?: number;
+              saleWithTenant?: boolean;
             };
           }
         } catch (e) {
@@ -1306,7 +1317,13 @@ export async function POST(request: NextRequest) {
           parsed?.data?.rawSlip?.receiver?.account?.name?.en ||
           undefined;
 
-        const rent = groupProperty.monthlyRent;
+        const rent = getInferredMonthlyRent({
+          listingType: groupProperty.listingType,
+          price: groupProperty.price,
+          monthlyRent: groupProperty.monthlyRent,
+          salePrice: groupProperty.salePrice,
+          saleWithTenant: groupProperty.saleWithTenant,
+        });
         const contractStartDate = groupProperty.contractStartDate;
         const slipDate = slipDateRaw ? new Date(slipDateRaw) : null;
 
