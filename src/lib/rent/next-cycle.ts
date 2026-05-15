@@ -15,7 +15,8 @@ function toYmdLocal(d: Date): string {
 
 function addCalendarDays(d: Date, days: number): Date {
   const x = startOfDay(d);
-  x.setDate(x.getDate() + days);
+  const n = Math.floor(Number(days));
+  x.setDate(x.getDate() + (Number.isFinite(n) ? n : 0));
   return x;
 }
 

@@ -9,8 +9,11 @@ import {
   monthKeyForDue,
   startOfDay,
 } from "@/lib/rent/overdue";
-
-const GRACE_DAYS = Number(process.env.RENT_OVERDUE_GRACE_DAYS ?? 30);
+import {
+  appendRentNotifyLog,
+  buildRentNotifyLogEntry,
+} from "@/lib/rent/notification-log";
+import { getRentOverdueGraceDays } from "@/lib/rent/grace-days";
 
 function formatThaiDate(d: Date): string {
   const day = d.getDate();
@@ -20,6 +23,7 @@ function formatThaiDate(d: Date): string {
 }
 
 export async function GET(request: NextRequest) {
+  const GRACE_DAYS = getRentOverdueGraceDays();
   const startedAt = new Date();
   console.warn("[cron/rent-overdue] start", {
     at: startedAt.toISOString(),
@@ -68,8 +72,10 @@ export async function GET(request: NextRequest) {
     let skippedMigrationBump = 0;
     let skippedNoContract = 0;
     let attempted = 0;
+    let failed = 0;
 
     for (const doc of candidates) {
+      const propertyId = (doc as { _id: mongoose.Types.ObjectId })._id;
       const contractStartDate = (doc as { contractStartDate?: Date }).contractStartDate;
       if (!contractStartDate) {
         skippedNoContract++;
@@ -156,23 +162,87 @@ export async function GET(request: NextRequest) {
         `ครบกำหนดชำระแล้ว (${formatThaiDate(due)})\n` +
         `(ขออภัยหากชำระเรียบร้อยแล้วค่ะ) 🙏 💚`;
 
+      const dueYmd = snap.dueDate;
       let sent = false;
+      let successChannel: "group" | "owner" | undefined;
+      const errors: string[] = [];
       attempted++;
+
+      if (!groupId && !ownerId) {
+        failed++;
+        const msg = "ไม่มี lineGroupId และ ownerId สำหรับส่งแจ้งเตือน";
+        errors.push(msg);
+        console.warn("[cron/rent-overdue] push failed", {
+          propertyId: propertyId.toString(),
+          dueDate: dueYmd,
+          reason: msg,
+        });
+        await appendRentNotifyLog(
+          propertyId,
+          buildRentNotifyLogEntry({
+            status: "error",
+            dueDate: dueYmd,
+            message: msg,
+          })
+        );
+        continue;
+      }
+
       if (groupId) {
         const r = await pushToGroup(groupId, text);
-        sent = r.sent;
+        if (r.sent) {
+          sent = true;
+          successChannel = "group";
+        } else {
+          errors.push(
+            `กลุ่ม${r.status != null ? ` HTTP ${r.status}` : ""}: ${r.message ?? "ส่งไม่สำเร็จ"}`
+          );
+        }
       }
       if (!sent && ownerId) {
         const r2 = await pushMessage(ownerId, text);
-        sent = r2.sent;
+        if (r2.sent) {
+          sent = true;
+          successChannel = "owner";
+        } else {
+          errors.push(
+            `เจ้าของ${r2.status != null ? ` HTTP ${r2.status}` : ""}: ${r2.message ?? "ส่งไม่สำเร็จ"}`
+          );
+        }
       }
 
       if (sent) {
         await Property.updateOne(
-          { _id: (doc as { _id: mongoose.Types.ObjectId })._id },
+          { _id: propertyId },
           { $set: { rentOverdueLastNotifiedDay: todayBangkok } }
         );
+        await appendRentNotifyLog(
+          propertyId,
+          buildRentNotifyLogEntry({
+            status: "success",
+            channel: successChannel,
+            dueDate: dueYmd,
+          })
+        );
         notified++;
+      } else {
+        failed++;
+        const message = errors.join(" · ") || "ส่งแจ้งเตือนไม่สำเร็จ";
+        console.warn("[cron/rent-overdue] push failed", {
+          propertyId: propertyId.toString(),
+          dueDate: dueYmd,
+          groupId: groupId ? `${groupId.slice(0, 6)}…` : null,
+          ownerId: ownerId ? `${ownerId.slice(0, 6)}…` : null,
+          message,
+        });
+        await appendRentNotifyLog(
+          propertyId,
+          buildRentNotifyLogEntry({
+            status: "error",
+            dueDate: dueYmd,
+            message,
+          })
+        );
       }
     }
 
@@ -197,6 +267,7 @@ export async function GET(request: NextRequest) {
       candidates: candidates.length,
       attempted,
       notified,
+      failed,
       skipped,
       skippedNoContract,
       skippedNoDue,
@@ -211,6 +282,7 @@ export async function GET(request: NextRequest) {
       candidates: candidates.length,
       attempted,
       notified,
+      failed,
       skipped,
       skippedNoContract,
       skippedNoDue,

@@ -17,10 +17,11 @@ import {
 import { sanitizeRentReceiveBankKey } from "@/lib/bank-logo";
 import { getRentOverdueSnapshot } from "@/lib/rent/overdue";
 import { getNextRentCycleSnapshot } from "@/lib/rent/next-cycle";
-
-const RENT_OVERDUE_GRACE_DAYS = Number(
-  process.env.RENT_OVERDUE_GRACE_DAYS ?? 30
-);
+import { getRentOverdueGraceDays } from "@/lib/rent/grace-days";
+import {
+  sortRentNotifyLogsNewestFirst,
+  type RentNotifyLogEntry,
+} from "@/lib/rent/notification-log";
 
 const PROPERTY_TYPES = ["Condo", "House", "Apartment"] as const;
 const STATUSES = ["Available", "Occupied", "Draft", "Paused", "Archived"] as const;
@@ -76,6 +77,10 @@ function toResponse(doc: PropertyDoc) {
     rentReceiveBankKey: doc.rentReceiveBankKey,
     rentReceiveAccountNumber: doc.rentReceiveAccountNumber,
     rentReceiveAccountName: doc.rentReceiveAccountName,
+    rentOverdueLastNotifiedDay: doc.rentOverdueLastNotifiedDay,
+    rentNotifyLogs: sortRentNotifyLogsNewestFirst(
+      (doc as PropertyDoc & { rentNotifyLogs?: RentNotifyLogEntry[] }).rentNotifyLogs
+    ),
     createdAt: doc.createdAt,
   };
 }
@@ -148,6 +153,7 @@ export async function GET(
         }
       | null = null;
     if (d.status === "Occupied" && d.contractStartDate) {
+      const graceDays = getRentOverdueGraceDays();
       const csd =
         d.contractStartDate instanceof Date
           ? d.contractStartDate
@@ -161,7 +167,7 @@ export async function GET(
         contractStartDate: csd,
         lastRentPaidAt: lp,
         now: new Date(),
-        graceDays: RENT_OVERDUE_GRACE_DAYS,
+        graceDays,
       });
       rentOverdue = {
         isOverdue: snap.isOverdue,
@@ -174,7 +180,7 @@ export async function GET(
         contractStartDate: csd,
         lastRentPaidAt: lp,
         now: new Date(),
-        graceDays: RENT_OVERDUE_GRACE_DAYS,
+        graceDays,
       });
     }
     return NextResponse.json({

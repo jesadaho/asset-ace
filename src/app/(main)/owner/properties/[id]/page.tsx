@@ -77,6 +77,16 @@ type PropertyDetail = {
     notifyDate: string;
     graceDays: number;
   } | null;
+  rentOverdueLastNotifiedDay?: string;
+  rentNotifyLogs?: Array<{
+    at: string;
+    kind: string;
+    status: string;
+    channel?: string;
+    dueDate?: string;
+    httpStatus?: number;
+    message?: string;
+  }>;
 };
 
 type RentalHistoryItem = {
@@ -1321,6 +1331,74 @@ export default function PropertyDetailPage() {
                     </p>
                   </div>
                 </dl>
+                {(property.rentOverdueLastNotifiedDay ||
+                  (property.rentNotifyLogs && property.rentNotifyLogs.length > 0)) && (
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <h4 className="text-xs font-semibold text-slate-600 mb-2">
+                      {t("rentNotifyLogsTitle")}
+                    </h4>
+                    {property.rentOverdueLastNotifiedDay && (
+                      <p className="text-xs text-slate-500 mb-2">
+                        {t("rentNotifyLastSuccess")}:{" "}
+                        {formatDMY(
+                          new Date(`${property.rentOverdueLastNotifiedDay}T12:00:00`)
+                        )}
+                      </p>
+                    )}
+                    {property.rentNotifyLogs && property.rentNotifyLogs.length > 0 && (
+                      <ul className="space-y-2 max-h-48 overflow-y-auto">
+                        {property.rentNotifyLogs.map((log, i) => {
+                          const isError = log.status === "error";
+                          const at = new Date(log.at);
+                          const when = Number.isNaN(at.getTime())
+                            ? log.at
+                            : `${formatDMY(at)} ${at.toLocaleTimeString("th-TH", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}`;
+                          const channelLabel =
+                            log.channel === "group"
+                              ? t("rentNotifyLogChannelGroup")
+                              : log.channel === "owner"
+                                ? t("rentNotifyLogChannelOwner")
+                                : null;
+                          return (
+                            <li
+                              key={`${log.at}-${i}`}
+                              className={
+                                "rounded-lg border px-3 py-2 text-xs " +
+                                (isError
+                                  ? "border-red-200 bg-red-50 text-red-900"
+                                  : "border-emerald-200 bg-emerald-50 text-emerald-900")
+                              }
+                            >
+                              <p className="font-medium flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <span>{when}</span>
+                                <span>
+                                  {isError
+                                    ? t("rentNotifyLogError")
+                                    : t("rentNotifyLogSuccess")}
+                                </span>
+                                {channelLabel ? <span>· {channelLabel}</span> : null}
+                              </p>
+                              {log.dueDate && (
+                                <p className="mt-0.5 opacity-90">
+                                  {t("rentNotifyLogDue")}:{" "}
+                                  {formatDMY(new Date(`${log.dueDate}T12:00:00`))}
+                                </p>
+                              )}
+                              {log.message && (
+                                <p className="mt-1 break-words font-mono text-[11px] leading-snug opacity-95">
+                                  {log.message}
+                                </p>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </section>
             )}
 

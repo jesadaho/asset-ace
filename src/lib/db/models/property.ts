@@ -43,6 +43,16 @@ export interface IProperty {
   rentOverdueNotifiedForMonth?: string;
   /** YYYY-MM-DD (Asia/Bangkok) when we last sent overdue LINE push (daily dedupe) */
   rentOverdueLastNotifiedDay?: string;
+  /** Recent rent overdue LINE push attempts (newest last in DB; UI shows newest first). */
+  rentNotifyLogs?: Array<{
+    at: string;
+    kind: string;
+    status: string;
+    channel?: string;
+    dueDate?: string;
+    httpStatus?: number;
+    message?: string;
+  }>;
   contractStartDate?: Date;
   openForAgent?: boolean;
   publicListing?: boolean;
@@ -98,6 +108,17 @@ const PropertySchema = new mongoose.Schema<IProperty>(
     lastRentPaidAt: Date,
     rentOverdueNotifiedForMonth: String,
     rentOverdueLastNotifiedDay: String,
+    rentNotifyLogs: [
+      {
+        at: String,
+        kind: String,
+        status: String,
+        channel: String,
+        dueDate: String,
+        httpStatus: Number,
+        message: String,
+      },
+    ],
     contractStartDate: Date,
     openForAgent: Boolean,
     publicListing: Boolean,

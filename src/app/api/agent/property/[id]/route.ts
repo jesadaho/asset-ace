@@ -8,9 +8,7 @@ import { getLineUserIdFromRequest } from "@/lib/auth/liff";
 import { getPresignedGetUrl } from "@/lib/s3";
 import { getRentOverdueSnapshot } from "@/lib/rent/overdue";
 
-const RENT_OVERDUE_GRACE_DAYS = Number(
-  process.env.RENT_OVERDUE_GRACE_DAYS ?? 30
-);
+import { getRentOverdueGraceDays } from "@/lib/rent/grace-days";
 
 export async function GET(
   request: NextRequest,
@@ -106,6 +104,7 @@ export async function GET(
         payload.rentOverdueNotifiedForMonth = d.rentOverdueNotifiedForMonth;
       }
       if (status === "Occupied" && d.contractStartDate) {
+        const graceDays = getRentOverdueGraceDays();
         const csd =
           d.contractStartDate instanceof Date
             ? d.contractStartDate
@@ -119,7 +118,7 @@ export async function GET(
           contractStartDate: csd,
           lastRentPaidAt: lp,
           now: new Date(),
-          graceDays: RENT_OVERDUE_GRACE_DAYS,
+          graceDays,
         });
         payload.rentOverdue = {
           isOverdue: snap.isOverdue,
