@@ -16,6 +16,7 @@ import {
 } from "@/lib/property-pricing";
 import { sanitizeRentReceiveBankKey } from "@/lib/bank-logo";
 import { getRentOverdueSnapshot } from "@/lib/rent/overdue";
+import { getNextRentCycleSnapshot } from "@/lib/rent/next-cycle";
 
 const RENT_OVERDUE_GRACE_DAYS = Number(
   process.env.RENT_OVERDUE_GRACE_DAYS ?? 30
@@ -137,6 +138,15 @@ export async function GET(
           daysPastGrace: number;
         }
       | null = null;
+    let nextRentCycle:
+      | {
+          dueDate: string;
+          periodKey: string;
+          cycleLabel: string | null;
+          notifyDate: string;
+          graceDays: number;
+        }
+      | null = null;
     if (d.status === "Occupied" && d.contractStartDate) {
       const csd =
         d.contractStartDate instanceof Date
@@ -160,6 +170,12 @@ export async function GET(
         daysAfterDue: snap.daysAfterDue,
         daysPastGrace: snap.daysPastGrace,
       };
+      nextRentCycle = getNextRentCycleSnapshot({
+        contractStartDate: csd,
+        lastRentPaidAt: lp,
+        now: new Date(),
+        graceDays: RENT_OVERDUE_GRACE_DAYS,
+      });
     }
     return NextResponse.json({
       property: {
@@ -170,6 +186,7 @@ export async function GET(
         followerCount,
         agentLineAccountId,
         rentOverdue,
+        nextRentCycle,
       },
     });
   } catch (err) {

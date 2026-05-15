@@ -70,6 +70,13 @@ type PropertyDetail = {
     daysAfterDue: number;
     daysPastGrace: number;
   } | null;
+  nextRentCycle?: {
+    dueDate: string;
+    periodKey: string;
+    cycleLabel: string | null;
+    notifyDate: string;
+    graceDays: number;
+  } | null;
 };
 
 type RentalHistoryItem = {
@@ -1284,6 +1291,36 @@ export default function PropertyDetailPage() {
                     daysPastGrace: property.rentOverdue.daysPastGrace,
                   })}
                 </p>
+              </section>
+            )}
+
+            {activeTab === "rental" && property.nextRentCycle && (
+              <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <h3 className="text-sm font-semibold text-[#0F172A] mb-3">
+                  {t("nextRentCycleTitle")}
+                </h3>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2.5">
+                    <dt className="text-xs text-slate-500 mb-0.5">{t("nextRentCycleDue")}</dt>
+                    <dd className="font-medium text-[#0F172A]">
+                      {formatDMY(new Date(`${property.nextRentCycle.dueDate}T12:00:00`))}
+                    </dd>
+                    {property.nextRentCycle.cycleLabel && (
+                      <p className="text-xs text-slate-500 mt-1">{property.nextRentCycle.cycleLabel}</p>
+                    )}
+                  </div>
+                  <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2.5">
+                    <dt className="text-xs text-slate-500 mb-0.5">{t("nextRentCycleNotify")}</dt>
+                    <dd className="font-medium text-[#0F172A]">
+                      {formatDMY(new Date(`${property.nextRentCycle.notifyDate}T12:00:00`))}
+                    </dd>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {t("nextRentCycleNotifyHint", {
+                        graceDays: property.nextRentCycle.graceDays,
+                      })}
+                    </p>
+                  </div>
+                </dl>
               </section>
             )}
 
